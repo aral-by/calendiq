@@ -1,8 +1,10 @@
 # Calendiq
 
-> A local-first, AI-powered calendar application designed for tablets
+> A local-first, AI-powered calendar application
 
 Calendiq is a privacy-focused calendar app that runs entirely on your device. Built with React, TypeScript, and IndexedDB, it offers AI-powered event creation through natural language and voice input while keeping all your data local.
+
+**Current MVP:** Optimized for 10.5" tablets (landscape mode). Mobile phone support planned for future releases.
 
 ## Features
 
@@ -14,7 +16,7 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 - **PIN Authentication** - Secure 4-digit PIN with SHA-256 hashing
 - **Offline Capable** - Works completely offline for calendar operations
 - **PWA Support** - Install as a native app on tablets
-- **Tablet-Optimized** - Designed specifically for 10.5" landscape tablets
+- **Tablet-Optimized** - MVP designed for 10.5" landscape tablets (mobile support coming soon)
 
 ## Tech Stack
 
@@ -103,11 +105,14 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
    vercel --prod
    ```
 
-### Install as PWA on Tablet
+### Install as PWA
 
-1. Open deployed URL in Safari (iPad) or Chrome (Android)
+**On Tablet:**
+1. Open deployed URL in Safari (iPad) or Chrome (Android tablet)
 2. Tap Share → Add to Home Screen
 3. Launch from home screen for fullscreen experience
+
+**On Phone:** Mobile-responsive version coming in future updates
 
 ## Usage
 
@@ -224,9 +229,10 @@ Each phase has detailed documentation in `docs/phases/`. Complete phases sequent
 
 ## Browser Support
 
-- **Recommended:** Safari on iPad, Chrome on Android tablets
+- **Recommended:** Safari on iPad, Chrome on Android tablets/phones
 - **Requirements:** Modern browser with IndexedDB support
-- **Tested on:** iPad (10.5"), Android tablets (10.1")
+- **MVP Tested on:** iPad (10.5"), Android tablets (10.1")
+- **Mobile Support:** Coming soon
 
 ## Known Limitations
 
@@ -237,7 +243,7 @@ This is an MVP with intentional scope limitations:
 - Single user only
 - No PIN recovery
 - No timezone management
-- Not mobile-responsive
+- Mobile phone UI not yet optimized (tablet-first MVP)
 - No calendar import/export
 
 See [docs/known-limitations.md](docs/phases/phase-10.md#known-limitations) for complete list.
@@ -266,12 +272,12 @@ Contributions are welcome! This is a hobby project and open to improvements.
 
 ## Future Plans
 
+- **Mobile Phone Support** - Responsive UI for smartphones
 - **Oscar Integration** - Connect to Oscar backend via REST API
 - **Recurring Events** - Support for repeating calendar entries
 - **PIN Recovery** - Secure PIN reset mechanism
 - **Export/Import** - iCal format support
 - **Multi-user** - Shared calendars
-- **Mobile Responsive** - Phone support
 
 ## License
 
