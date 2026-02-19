@@ -5,24 +5,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export function SetupWizard() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // 0 = splash
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [pin, setPin] = useState('');
-  const [pinConfirm, setPinConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [currentInput, setCurrentInput] = useState('');
 
   const { createUser } = useUser();
 
+  // Start splash animation
+  useState(() => {
+    const timer = setTimeout(() => setStep(1), 2000);
+    return () => clearTimeout(timer);
+  });
+
   async function handleNext() {
     setError('');
 
     if (step === 1) {
       if (!currentInput.trim()) {
-        setError('Lütfen adınızı girin');
+        setError('Please enter your first name');
         return;
       }
       setFirstName(currentInput);
@@ -30,7 +35,7 @@ export function SetupWizard() {
       setStep(2);
     } else if (step === 2) {
       if (!currentInput.trim()) {
-        setError('Lütfen soyadınızı girin');
+        setError('Please enter your last name');
         return;
       }
       setLastName(currentInput);
@@ -38,7 +43,7 @@ export function SetupWizard() {
       setStep(3);
     } else if (step === 3) {
       if (!currentInput) {
-        setError('Lütfen doğum tarihinizi seçin');
+        setError('Please select your birth date');
         return;
       }
       setBirthDate(currentInput);
@@ -46,7 +51,7 @@ export function SetupWizard() {
       setStep(4);
     } else if (step === 4) {
       if (currentInput.length !== 4 || !/^\d{4}$/.test(currentInput)) {
-        setError('PIN tam olarak 4 rakam olmalı');
+        setError('PIN must be exactly 4 digits');
         return;
       }
       setPin(currentInput);
@@ -54,11 +59,10 @@ export function SetupWizard() {
       setStep(5);
     } else if (step === 5) {
       if (currentInput !== pin) {
-        setError('PIN eşleşmiyor. Tekrar deneyin.');
+        setError('PIN does not match. Try again.');
         setCurrentInput('');
         return;
       }
-      setPinConfirm(currentInput);
       await handleSubmit();
     }
   }
@@ -80,7 +84,7 @@ export function SetupWizard() {
       
       console.log('[Setup] User profile created successfully');
     } catch (err) {
-      setError('Bir şeyler yanlış gitti. Lütfen tekrar deneyin.');
+      setError('Something went wrong. Please try again.');
       console.error('[Setup] Error:', err);
       setStep(1);
       setCurrentInput('');
@@ -103,30 +107,43 @@ export function SetupWizard() {
     }
   }
 
+  // Splash Screen
+  if (step === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="animate-in fade-in zoom-in duration-1000">
+          <h1 className="text-7xl font-light text-white tracking-tight">
+            Calendiq
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
   const renderStep = () => {
     switch (step) {
       case 1:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="text-center space-y-3">
-              <h1 className="text-5xl font-bold text-indigo-600">
-                Calendiq'e Hoş Geldin!
-              </h1>
-              <p className="text-2xl text-gray-600">
-                Seni tanıyalım
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
+            <div className="space-y-2">
+              <h2 className="text-5xl font-light text-gray-900 tracking-tight">
+                Welcome
+              </h2>
+              <p className="text-lg text-gray-500 font-light">
+                Let's get to know you
               </p>
             </div>
-            <div className="space-y-4 mt-12">
-              <p className="text-xl text-gray-700 text-center">
-                İlk soruyla başlayalım. Adın ne?
+            <div className="space-y-3 mt-16">
+              <p className="text-sm text-gray-400 uppercase tracking-wider">
+                What's your first name?
               </p>
               <Input
                 type="text"
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Adınızı girin"
-                className="text-2xl text-center p-8"
+                placeholder="Enter first name"
+                className="text-3xl font-light border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
                 autoFocus
                 disabled={loading}
               />
@@ -136,26 +153,26 @@ export function SetupWizard() {
 
       case 2:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="text-center space-y-3">
-              <h1 className="text-5xl font-bold text-indigo-600">
-                Merhaba {firstName}!
-              </h1>
-              <p className="text-2xl text-gray-600">
-                Tanıştığımıza memnun olduk
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
+            <div className="space-y-2">
+              <h2 className="text-5xl font-light text-gray-900 tracking-tight">
+                Hi {firstName}
+              </h2>
+              <p className="text-lg text-gray-500 font-light">
+                Nice to meet you
               </p>
             </div>
-            <div className="space-y-4 mt-12">
-              <p className="text-xl text-gray-700 text-center">
-                Peki soyadın ne, {firstName}?
+            <div className="space-y-3 mt-16">
+              <p className="text-sm text-gray-400 uppercase tracking-wider">
+                And your last name?
               </p>
               <Input
                 type="text"
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Soyadınızı girin"
-                className="text-2xl text-center p-8"
+                placeholder="Enter last name"
+                className="text-3xl font-light border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
                 autoFocus
                 disabled={loading}
               />
@@ -165,26 +182,24 @@ export function SetupWizard() {
 
       case 3:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="text-center space-y-3">
-              <h1 className="text-5xl font-bold text-indigo-600">
-                Harika, {firstName}!
-              </h1>
-              <p className="text-2xl text-gray-600">
-                Bir adım daha yaklaştık
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
+            <div className="space-y-2">
+              <h2 className="text-5xl font-light text-gray-900 tracking-tight">
+                Perfect
+              </h2>
+              <p className="text-lg text-gray-500 font-light">
+                One more thing
               </p>
             </div>
-            <div className="space-y-4 mt-12">
-              <p className="text-xl text-gray-700 text-center">
-                Takviminde doğum günü hatırlatması yapalım mı?
-                <br />
-                <span className="text-lg text-gray-500">Doğum tarihin nedir?</span>
+            <div className="space-y-3 mt-16">
+              <p className="text-sm text-gray-400 uppercase tracking-wider">
+                When's your birthday?
               </p>
               <Input
                 type="date"
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
-                className="text-2xl text-center p-8"
+                className="text-3xl font-light border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
                 autoFocus
                 disabled={loading}
               />
@@ -194,25 +209,24 @@ export function SetupWizard() {
 
       case 4:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="text-center space-y-3">
-              <h1 className="text-5xl font-bold text-amber-600">
-                İşte son adım!
-              </h1>
-              <p className="text-2xl text-gray-600">
-                Neredeyse hazırız
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
+            <div className="space-y-2">
+              <h2 className="text-5xl font-light text-gray-900 tracking-tight">
+                Final step
+              </h2>
+              <p className="text-lg text-gray-500 font-light">
+                Secure your calendar
               </p>
             </div>
-            <div className="space-y-6 mt-12">
-              <p className="text-xl text-gray-700 text-center">
-                Takvinine erişmek için 4 haneli bir PIN oluştur
+            <div className="space-y-6 mt-16">
+              <p className="text-sm text-gray-400 uppercase tracking-wider">
+                Create a 4-digit PIN
               </p>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
-                <p className="text-lg text-amber-800 text-center font-medium">
-                  Bu PIN'i unutursan tüm verilerine erişimini kaybedersin!
-                </p>
-                <p className="text-sm text-amber-700 text-center mt-2">
-                  Kimseyle paylaşma ve güvenli bir yere yaz.
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 font-light">
+                  If you forget this PIN, all your data will be lost.
+                  <br />
+                  Keep it safe and don't share it with anyone.
                 </p>
               </div>
               <Input
@@ -223,7 +237,7 @@ export function SetupWizard() {
                 onChange={(e) => setCurrentInput(e.target.value.replace(/\D/g, ''))}
                 onKeyPress={handleKeyPress}
                 placeholder="••••"
-                className="text-4xl text-center p-8 tracking-widest"
+                className="text-5xl font-light border-0 border-b border-gray-200 rounded-none px-0 text-center tracking-[0.5em] focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
                 autoFocus
                 disabled={loading}
               />
@@ -233,18 +247,18 @@ export function SetupWizard() {
 
       case 5:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="text-center space-y-3">
-              <h1 className="text-5xl font-bold text-green-600">
-                Neredeyse bitti!
-              </h1>
-              <p className="text-2xl text-gray-600">
-                Emin olmak için bir kez daha
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
+            <div className="space-y-2">
+              <h2 className="text-5xl font-light text-gray-900 tracking-tight">
+                Confirm PIN
+              </h2>
+              <p className="text-lg text-gray-500 font-light">
+                Just to be sure
               </p>
             </div>
-            <div className="space-y-4 mt-12">
-              <p className="text-xl text-gray-700 text-center">
-                PIN'ini tekrar gir
+            <div className="space-y-3 mt-16">
+              <p className="text-sm text-gray-400 uppercase tracking-wider">
+                Re-enter your PIN
               </p>
               <Input
                 type="password"
@@ -254,7 +268,7 @@ export function SetupWizard() {
                 onChange={(e) => setCurrentInput(e.target.value.replace(/\D/g, ''))}
                 onKeyPress={handleKeyPress}
                 placeholder="••••"
-                className="text-4xl text-center p-8 tracking-widest"
+                className="text-5xl font-light border-0 border-b border-gray-200 rounded-none px-0 text-center tracking-[0.5em] focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
                 autoFocus
                 disabled={loading}
               />
@@ -268,65 +282,63 @@ export function SetupWizard() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-8">
-      <div className="w-full max-w-3xl">
-        {/* Progress indicator */}
-        <div className="mb-12">
-          <div className="flex items-center justify-center gap-2">
+    <div className="min-h-screen flex items-center justify-center bg-white px-8 py-16">
+      <div className="w-full max-w-2xl">
+        {/* Progress dots */}
+        <div className="mb-20">
+          <div className="flex items-center justify-center gap-3">
             {[1, 2, 3, 4, 5].map((s) => (
               <div
                 key={s}
-                className={`h-2 rounded-full transition-all duration-500 ${
+                className={`h-1.5 w-1.5 rounded-full transition-all duration-500 ${
                   s === step
-                    ? 'w-16 bg-indigo-600'
+                    ? 'bg-gray-900 scale-150'
                     : s < step
-                    ? 'w-12 bg-indigo-400'
-                    : 'w-8 bg-gray-300'
+                    ? 'bg-gray-400'
+                    : 'bg-gray-200'
                 }`}
               />
             ))}
           </div>
-          <p className="text-center text-sm text-gray-500 mt-4">
-            Adım {step} / 5
-          </p>
         </div>
 
         {/* Main content */}
-        <div className="bg-white rounded-2xl shadow-2xl p-12">
+        <div className="space-y-12">
           {renderStep()}
 
           {error && (
-            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl animate-in fade-in slide-in-from-top-2">
-              <p className="text-red-600 text-center font-medium">{error}</p>
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <p className="text-sm text-gray-600 font-light">{error}</p>
             </div>
           )}
 
-          {/* Navigation buttons */}
-          <div className="flex gap-4 mt-12">
+          {/* Navigation */}
+          <div className="flex gap-6 pt-8">
             {step > 1 && (
-              <Button
-                variant="outline"
+              <button
                 onClick={handleBack}
                 disabled={loading}
-                className="flex-1 text-lg py-6"
+                className="text-sm text-gray-400 hover:text-gray-900 transition-colors font-light uppercase tracking-wider disabled:opacity-50"
               >
-                Geri
-              </Button>
+                Back
+              </button>
             )}
-            <Button
+            <button
               onClick={handleNext}
               disabled={loading || (step === 4 && currentInput.length !== 4) || (step === 5 && currentInput.length !== 4)}
-              className="flex-1 text-lg py-6"
+              className="ml-auto text-sm text-gray-900 hover:text-gray-600 transition-colors font-light uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              {loading ? 'Kaydediliyor...' : step === 5 ? 'Tamamla' : 'İleri'}
-            </Button>
+              {loading ? 'Please wait...' : step === 5 ? 'Finish' : 'Continue'}
+            </button>
           </div>
         </div>
 
         {/* Footer hint */}
-        <p className="text-center text-gray-500 mt-8 text-sm">
-          Enter tuşuna basarak devam edebilirsin
-        </p>
+        <div className="mt-20 text-center">
+          <p className="text-xs text-gray-300 font-light uppercase tracking-wider">
+            Press Enter to continue
+          </p>
+        </div>
       </div>
     </div>
   );
