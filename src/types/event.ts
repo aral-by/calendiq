@@ -56,12 +56,12 @@ export interface CategoryDefinition {
 
 // Predefined Categories
 export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
-  { id: 'work', name: 'Work', color: '#3b82f6', icon: '💼', isSystem: true },
-  { id: 'personal', name: 'Personal', color: '#10b981', icon: '🏠', isSystem: true },
-  { id: 'health', name: 'Health', color: '#ef4444', icon: '❤️', isSystem: true },
-  { id: 'social', name: 'Social', color: '#f59e0b', icon: '👥', isSystem: true },
-  { id: 'finance', name: 'Finance', color: '#8b5cf6', icon: '💰', isSystem: true },
-  { id: 'education', name: 'Education', color: '#06b6d4', icon: '📚', isSystem: true },
+  { id: 'work', name: 'Work', color: '#3b82f6', icon: 'Briefcase', isSystem: true },
+  { id: 'personal', name: 'Personal', color: '#10b981', icon: 'User', isSystem: true },
+  { id: 'health', name: 'Health', color: '#ef4444', icon: 'Heart', isSystem: true },
+  { id: 'social', name: 'Social', color: '#f59e0b', icon: 'Users', isSystem: true },
+  { id: 'finance', name: 'Finance', color: '#8b5cf6', icon: 'DollarSign', isSystem: true },
+  { id: 'education', name: 'Education', color: '#06b6d4', icon: 'BookOpen', isSystem: true },
 ];
 
 // Reminder Options

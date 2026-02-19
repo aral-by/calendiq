@@ -37,26 +37,30 @@ function App() {
           
           <div className="space-y-3 text-left">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">✅</span>
+              <span className="text-green-600 font-bold">[OK]</span>
               <span className="text-gray-700">Type Definitions</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl">✅</span>
+              <span className="text-green-600 font-bold">[OK]</span>
               <span className="text-gray-700">Dexie Database Instance</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl">✅</span>
+              <span className="text-green-600 font-bold">[OK]</span>
               <span className="text-gray-700">Repository Pattern</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl">✅</span>
+              <span className="text-green-600 font-bold">[OK]</span>
               <span className="text-gray-700">Utility Functions</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl">
-                {dbStatus === 'checking' && '⏳'}
-                {dbStatus === 'ready' && '✅'}
-                {dbStatus === 'error' && '❌'}
+              <span className={`font-bold ${
+                dbStatus === 'checking' ? 'text-yellow-600' : 
+                dbStatus === 'ready' ? 'text-green-600' : 
+                'text-red-600'
+              }`}>
+                {dbStatus === 'checking' && '[...]'}
+                {dbStatus === 'ready' && '[OK]'}
+                {dbStatus === 'error' && '[ERR]'}
               </span>
               <span className="text-gray-700">
                 Database Status: <strong>{dbStatus}</strong>
@@ -67,10 +71,10 @@ function App() {
           {dbStatus === 'ready' && (
             <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-800 font-medium">
-                🎉 Phase 2 Complete!
+                Phase 2 Complete!
               </p>
               <p className="text-sm text-green-600 mt-1">
-                IndexedDB ready · Repository pattern implemented
+                IndexedDB ready - Repository pattern implemented
               </p>
             </div>
           )}
