@@ -1,92 +1,54 @@
-import { useEffect, useState } from 'react';
-import { db } from './db';
+import { UserProvider, useUser } from '@/context/UserContext';
+import { SetupWizard } from '@/components/Setup/SetupWizard';
+import { PINScreen } from '@/components/PIN/PINScreen';
 
-function App() {
-  const [dbStatus, setDbStatus] = useState<'checking' | 'ready' | 'error'>('checking');
+function AppContent() {
+  const { isSetupComplete, isAuthenticated, loading } = useUser();
 
-  useEffect(() => {
-    async function initializeDB() {
-      try {
-        // Test database connection
-        await db.open();
-        console.log('[DB] Dexie database initialized successfully');
-        console.log('[DB] Stores:', Object.keys(db._dbSchema));
-        
-        setDbStatus('ready');
-      } catch (error) {
-        console.error('[DB] Database initialization failed:', error);
-        setDbStatus('error');
-      }
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-    initializeDB();
-  }, []);
+  if (!isSetupComplete) {
+    return <SetupWizard />;
+  }
+
+  if (!isAuthenticated) {
+    return <PINScreen />;
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 p-4">
       <div className="text-center">
-        <h1 className="text-6xl font-bold text-indigo-600 mb-4">
-          Calendiq
+        <h1 className="text-5xl font-bold text-green-600 mb-4">
+          Phase 3 Complete!
         </h1>
-        <p className="text-xl text-gray-600 mb-8">
-          Your AI-Powered Calendar Assistant
+        <p className="text-xl text-gray-700 mb-8">
+          Authentication system is working
         </p>
-        
-        <div className="bg-white rounded-lg shadow-lg p-6 max-w-md">
-          <h2 className="text-2xl font-semibold mb-4">Phase 2: Database Layer</h2>
-          
-          <div className="space-y-3 text-left">
-            <div className="flex items-center gap-2">
-              <span className="text-green-600 font-bold">[OK]</span>
-              <span className="text-gray-700">Type Definitions</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-600 font-bold">[OK]</span>
-              <span className="text-gray-700">Dexie Database Instance</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-600 font-bold">[OK]</span>
-              <span className="text-gray-700">Repository Pattern</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-600 font-bold">[OK]</span>
-              <span className="text-gray-700">Utility Functions</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className={`font-bold ${
-                dbStatus === 'checking' ? 'text-yellow-600' : 
-                dbStatus === 'ready' ? 'text-green-600' : 
-                'text-red-600'
-              }`}>
-                {dbStatus === 'checking' && '[...]'}
-                {dbStatus === 'ready' && '[OK]'}
-                {dbStatus === 'error' && '[ERR]'}
-              </span>
-              <span className="text-gray-700">
-                Database Status: <strong>{dbStatus}</strong>
-              </span>
-            </div>
-          </div>
-
-          {dbStatus === 'ready' && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-800 font-medium">
-                Phase 2 Complete!
-              </p>
-              <p className="text-sm text-green-600 mt-1">
-                IndexedDB ready - Repository pattern implemented
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-8 flex gap-3 justify-center animate-pulse">
-          <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
-          <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-          <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md">
+          <h2 className="text-2xl font-semibold mb-4">What's Next?</h2>
+          <p className="text-gray-600">
+            Phase 4: Calendar UI & Manual CRUD
+          </p>
         </div>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <UserProvider>
+      <AppContent />
+    </UserProvider>
   );
 }
 
