@@ -442,4 +442,34 @@ README aşağıdaki bilgileri içermelidir:
 
 ---
 
+## 18. Future Enhancements (MVP Dışı)
+
+Aşağıdaki özellikler MVP kapsamında **değildir**, ancak ileride eklenebilir:
+
+### 18.1 Kompleks AI Komutları (Batch Actions)
+Mevcut MVP'de AI tek bir action döner (CREATE, UPDATE, DELETE, QUERY). İleride şu tür kompleks komutlar desteklenebilir:
+- **"Haftasonu planlarımı iptal et ve yerine doldur"** → Birden fazla DELETE + CREATE işlemi
+- **"Yarınki toplantıları 1 saat ertele"** → Birden fazla UPDATE işlemi
+- **Çözüm:** AI'dan action array dönmesi sağlanır: `{ type: 'BATCH', actions: [...] }`
+
+### 18.2 Telegram Chatbot Entegrasyonu
+Telegram üzerinden Calendiq ile konuşabilme özelliği:
+- Telegram Bot API üzerinden komut alma
+- Event ekleme/düzenleme/silme işlemlerini Telegram'dan yapabilme
+- Hatırlatıcıların Telegram'a da gönderilmesi
+- **Teknik Gereksinim:** Backend service (Vercel Serverless Functions veya ayrı Node.js servisi)
+- **Güvenlik:** Telegram User ID ile kullanıcı doğrulama, IndexedDB ile senkronizasyon mekanizması
+
+### 18.3 Diğer İyileştirmeler
+- Recurring events (tekrarlayan etkinlikler)
+- Multi-user support (Oscar entegrasyonu ile)
+- Event şablonları
+- Export/import (.ics dosyası)
+- Dark mode
+- Mobil telefon responsive desteği
+- Gelişmiş conflict detection (alternatif slot önerisi)
+- Snooze özelliği (bildirimleri ertele)
+
+---
+
 *Bu doküman Calendiq MVP'nin teknik ve ürün gereksinimlerini tanımlar. Copilot veya benzeri bir AI kod asistanına yönelik hazırlanmıştır.*

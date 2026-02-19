@@ -345,6 +345,69 @@ Calendiq → OscarAPIEventRepository → Oscar REST API → PostgreSQL
 
 ---
 
+## Notification Architecture
+
+### Overview
+Calendiq uses **Web Notifications API** for event reminders. Notifications work both when the PWA is open and when it's in the background (via Service Worker).
+
+### Permission Flow
+```
+App Initialization → Check notification permission
+    ↓
+If not granted → Request permission on first event with reminder
+    ↓
+User grants/denies → Store preference (optional)
+```
+
+### Reminder Check Service
+```
+Background Timer (every 1 minute)
+    ↓
+Query IndexedDB for upcoming events with reminders
+    ↓
+Check if reminder time has passed
+    ↓
+If yes → Send notification via Service Worker
+    ↓
+Mark reminder as sent (prevent duplicates)
+```
+
+### Notification Payload
+```typescript
+interface NotificationPayload {
+  title: string;              // Event title
+  body: string;               // "Starts at [time]"
+  icon: string;               // App icon
+  badge: string;              // Small badge icon
+  tag: string;                // Event ID (for deduplication)
+  data: {
+    eventId: string;
+    action: 'open-event';
+  };
+}
+```
+
+### Click Handling
+- User clicks notification → PWA opens (if closed)
+- Navigate to event detail or calendar view
+- Highlight the event in FullCalendar
+
+### Technical Implementation
+- **Service Worker registration:** `src/sw.js` or Vite PWA plugin
+- **Reminder scheduler:** `src/services/reminderService.ts`
+- **Notification sender:** `src/services/notificationService.ts`
+- **Permission manager:** `src/hooks/useNotificationPermission.ts`
+
+### MVP Scope
+✅ Basic notification sending  
+✅ Click to open event  
+✅ Reminder time options (5, 10, 15, 30, 60 min, 1 day)  
+✅ Persist reminder preference in event model  
+❌ Snooze functionality (future enhancement)  
+❌ Custom notification sounds (future enhancement)  
+
+---
+
 ## Performance Considerations
 
 ### Local-First Benefits
