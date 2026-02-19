@@ -1,8 +1,8 @@
-# Phase 10: Documentation & Release
+# Phase 11: Documentation & Release
 
 **Status:** Not Started  
 **Estimated Time:** 2-3 hours  
-**Dependencies:** Phase 9
+**Dependencies:** Phase 10
 
 ---
 
@@ -298,6 +298,136 @@ See [README](https://github.com/YOUR_USERNAME/calendiq#installation)
 - PIN recovery
 
 Thanks for trying Calendiq!
+```
+
+---
+
+## 11.8 Future Enhancements (Post-MVP Roadmap)
+
+**docs/future-enhancements.md:**
+```markdown
+# Future Enhancements
+
+This document outlines features planned for post-MVP releases.
+
+## Phase X: Batch Actions for Complex AI Commands
+
+**Current:** AI returns single action per command  
+**Goal:** Support complex multi-step commands
+
+**Examples:**
+- "Haftasonudaki planlarımı iptal et" → Multiple DELETE actions
+- "Yarınki toplantıları 1 saat ertele" → Multiple UPDATE actions
+- "Haftasonu planlarımı iptal ve yerine doldur" → DELETE + CREATE batch
+
+**Implementation:**
+```typescript
+z.object({
+  type: z.literal('BATCH'),
+  actions: z.array(AIActionSchema),
+})
+```
+
+**Benefits:**
+- More natural language understanding
+- Complex calendar operations in one command
+- Better user experience for bulk edits
+
+---
+
+## Phase Y: Telegram Chatbot Integration
+
+**Goal:** Manage calendar via Telegram bot
+
+**Features:**
+- Send commands to Calendiq via Telegram
+- Receive event reminders in Telegram
+- Create/update/delete events from chat
+- Query upcoming events
+- Two-way sync between PWA and Telegram
+
+**Technical Requirements:**
+- Telegram Bot API integration
+- Backend service (Node.js + Express or Vercel Serverless)
+- User authentication (Telegram User ID → Calendiq user mapping)
+- Webhook or polling for messages
+- IndexedDB sync mechanism (or migrate to cloud database)
+
+**Security Considerations:**
+- Telegram user ID verification
+- Secure token exchange
+- Rate limiting to prevent abuse
+
+**Architecture:**
+```
+Telegram App
+    ↓
+Telegram Bot API
+    ↓
+Backend Service (Node.js/Vercel)
+    ↓
+┌───────────────┐         ┌─────────────────┐
+│   Calendiq    │ ←sync→  │  Database       │
+│   PWA         │         │  (Future: PG)   │
+└───────────────┘         └─────────────────┘
+```
+
+**Deployment:**
+- Vercel Serverless Functions for webhook
+- Environment variable: `TELEGRAM_BOT_TOKEN`
+- Webhook URL: `https://calendiq.vercel.app/api/telegram`
+
+**MVP Scope:** NOT INCLUDED (future enhancement)
+
+---
+
+## Other Future Features
+
+### Recurring Events
+- Support daily/weekly/monthly repetitions
+- RRULE standard compatibility
+- Edit single or all instances
+
+### Multi-User Support (Oscar Integration)
+- Migrate to cloud database (PostgreSQL)
+- User accounts with auth
+- Shared calendars
+- Permission management
+
+### Advanced Conflict Detection
+- Suggest alternative time slots
+- Visual conflict highlighting
+- Automatic rescheduling suggestions
+
+### Calendar Import/Export
+- .ics file support
+- Google Calendar sync
+- Outlook integration
+
+### Snooze Notifications
+- Snooze reminder for 5, 10, 15 minutes
+- Multiple snooze attempts
+- Custom snooze duration
+
+### Mobile Phone Support
+- Responsive design for smaller screens
+- Portrait mode optimization
+- Touch gesture improvements
+
+### Dark Mode
+- System preference detection
+- Manual toggle
+- Persistent theme setting
+
+### Enhanced AI Features
+- Natural language date parsing improvements
+- Context-aware suggestions
+- Event templates learned from history
+- Smart time slot recommendations
+
+---
+
+**Timeline:** These features will be prioritized based on user feedback and project roadmap.
 ```
 
 ---

@@ -12,6 +12,7 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 - **AI-Powered Event Creation** - Create events using natural language via OpenAI GPT-4o
 - **Voice Input** - Speak your events using Deepgram speech-to-text
 - **Manual Event Management** - Full CRUD operations without AI
+- **Event Reminders** - Set reminders (5, 10, 15, 30 min, 1 hour, 1 day before) with browser notifications
 - **Conflict Detection** - Automatically warns about overlapping events
 - **PIN Authentication** - Secure 4-digit PIN with SHA-256 hashing
 - **Offline Capable** - Works completely offline for calendar operations
@@ -191,7 +192,7 @@ See [docs/directory-structure.md](docs/directory-structure.md) for complete stru
 
 ## Development Phases
 
-This project is organized into 10 phases for systematic development:
+This project is organized into 11 phases for systematic development:
 
 1. **Project Setup & Infrastructure**
 2. **Database Layer & Repository Pattern**
@@ -199,10 +200,11 @@ This project is organized into 10 phases for systematic development:
 4. **Calendar UI & Manual CRUD**
 5. **Chat Interface & AI Integration**
 6. **Speech-to-Text Integration (Deepgram)**
-7. **Conflict Detection & Validation**
-8. **PWA Configuration & Deployment**
-9. **Testing & Optimization**
-10. **Documentation & Release**
+7. **Reminder & Notification System**
+8. **Conflict Detection & Validation**
+9. **PWA Configuration & Deployment**
+10. **Testing & Optimization**
+11. **Documentation & Release**
 
 Each phase has detailed documentation in `docs/phases/`. Complete phases sequentially for best results.
 
