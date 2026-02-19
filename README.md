@@ -274,12 +274,30 @@ Contributions are welcome! This is a hobby project and open to improvements.
 
 ## Future Plans
 
+Priority roadmap for post-MVP releases:
+
+### Phase X: Batch Actions for Complex AI Commands
+- Support multi-step operations ("cancel weekend plans and reschedule")
+- AI returns action arrays for complex workflows
+- Enhanced natural language understanding
+
+### Phase Y: Telegram Chatbot Integration
+- Manage calendar via Telegram bot
+- Receive reminders in Telegram
+- Two-way sync between PWA and Telegram messages
+- Voice and text commands from mobile
+
+### Other Enhancements
 - **Mobile Phone Support** - Responsive UI for smartphones
 - **Oscar Integration** - Connect to Oscar backend via REST API
 - **Recurring Events** - Support for repeating calendar entries
 - **PIN Recovery** - Secure PIN reset mechanism
 - **Export/Import** - iCal format support
 - **Multi-user** - Shared calendars
+- **Snooze Reminders** - Defer notifications
+- **Dark Mode** - Theme toggle
+
+See [docs/phases/phase-11.md](docs/phases/phase-11.md#future-enhancements) for detailed future roadmap.
 
 ## License
 
