@@ -9,12 +9,12 @@ function App() {
       try {
         // Test database connection
         await db.open();
-        console.log('✅ Dexie database initialized successfully');
-        console.log('📊 Stores:', Object.keys(db._dbSchema));
+        console.log('[DB] Dexie database initialized successfully');
+        console.log('[DB] Stores:', Object.keys(db._dbSchema));
         
         setDbStatus('ready');
       } catch (error) {
-        console.error('❌ Database initialization failed:', error);
+        console.error('[DB] Database initialization failed:', error);
         setDbStatus('error');
       }
     }
