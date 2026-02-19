@@ -369,6 +369,34 @@ Add ChatProvider and integrate ChatPanel with CalendarView in MainLayout.
 
 ---
 
+## Future Enhancement: Batch Actions (Post-MVP)
+
+**Current MVP:** AI returns single action per command.
+
+**Future Goal:** Support complex commands that require multiple actions:
+- "Haftasonudaki planlarımı iptal et" → Multiple DELETE actions
+- "Yarınki toplantıları 1 saat ertele" → Multiple UPDATE actions
+- "Haftasonu planlarımı iptal ve yerine doldur" → Multiple DELETE + CREATE actions
+
+**Implementation Strategy:**
+1. Update AIActionSchema to support batch:
+   ```typescript
+   z.object({
+     type: z.literal('BATCH'),
+     actions: z.array(AIActionSchema),
+   })
+   ```
+
+2. Update system prompt to return action arrays for complex commands
+
+3. Update action executor to loop through batch actions sequentially
+
+4. Enhanced conflict detection for batch operations
+
+**Note:** This is NOT required for MVP. Single-action commands are sufficient for core functionality.
+
+---
+
 ## Next Phase
 
 Proceed to **Phase 6: Speech-to-Text Integration (Deepgram)**

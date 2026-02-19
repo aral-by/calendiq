@@ -519,6 +519,142 @@ Dexie.put() or .add() fails
 
 ---
 
+## 13. Reminder Notification Flow
+
+### Setting a Reminder (Manual or AI)
+
+```
+User creates/edits event
+    │
+    ├─► Manual Form:
+    │   └─► Select reminder option (dropdown)
+    │       ├─ 0 minutes (at event time)
+    │       ├─ 5, 10, 15, 30, 60 minutes before
+    │       └─ 1440 minutes (1 day) before
+    │
+    └─► AI Command:
+        └─► Parse: "10 dakika önce hatırlat"
+            └─► Extract reminder: 10 (minutes)
+    
+    ▼
+Save event with reminder field
+    │
+    └─► IndexedDB (events) with reminder value
+```
+
+### Notification Permission Request
+
+```
+App Initialization OR First Event with Reminder
+    │
+    ├─► Check Notification.permission
+    │       ├─ "granted" → Skip
+    │       ├─ "denied" → Show warning (can't send notifications)
+    │       └─ "default" → Request permission
+    │                   │
+    │                   ├─► User grants → Continue
+    │                   └─► User denies → Disable notifications
+    │
+    └─► Store permission state in memory
+```
+
+### Background Reminder Check
+
+```
+Service Worker (every 1 minute timer)
+    │
+    ├─► Current time = Now
+    │
+    ├─► Query IndexedDB (events):
+    │   └─► WHERE reminder IS NOT NULL
+    │       AND start - reminder <= Now
+    │       AND start > Now (event hasn't started yet)
+    │       AND notificationSent != true
+    │
+    ├─► For each matching event:
+    │   │
+    │   ├─► Calculate reminder time
+    │   │   └─► reminderTime = event.start - event.reminder minutes
+    │   │
+    │   ├─► If reminderTime <= Now:
+    │   │   │
+    │   │   ├─► Create notification payload:
+    │   │   │   {
+    │   │   │     title: event.title,
+    │   │   │     body: `Starts at ${formatTime(event.start)}`,
+    │   │   │     icon: '/icon-192.png',
+    │   │   │     tag: event.id,
+    │   │   │     data: { eventId: event.id, action: 'open-event' }
+    │   │   │   }
+    │   │   │
+    │   │   ├─► Send notification via Service Worker
+    │   │   │   └─► self.registration.showNotification(...)
+    │   │   │
+    │   │   └─► Mark event as notified:
+    │   │       └─► Update event.notificationSent = true
+    │   │           (or store in separate reminders_sent array)
+    │   │
+    │   └─► Continue to next event
+    │
+    └─► Wait 1 minute → Repeat
+```
+
+### Notification Click Handling
+
+```
+User clicks notification
+    │
+    ├─► Service Worker receives 'notificationclick' event
+    │
+    ├─► Extract eventId from notification.data
+    │
+    ├─► Close notification
+    │
+    ├─► Open PWA window (or focus existing)
+    │   └─► clients.openWindow('/') or clients.matchAll()
+    │
+    └─► Navigate to event:
+        ├─► Option 1: URL with eventId query param
+        │   └─► '/?eventId=abc123'
+        │
+        └─► Option 2: PostMessage to client
+            └─► client.postMessage({ action: 'open-event', eventId })
+    
+    ▼
+Main App receives message
+    │
+    ├─► Find event by ID
+    │
+    ├─► Open Event Detail Modal
+    │
+    └─► Highlight event in FullCalendar
+```
+
+### Edge Cases
+
+```
+PWA is closed:
+    └─► Service Worker still runs (background)
+        └─► Notification sent ✅
+        └─► Click opens PWA ✅
+
+Browser is closed completely:
+    └─► Service Worker may not run (browser dependent)
+        └─► Notification may not be sent ⚠️
+        └─► Limitation: Not a native app
+
+Notification permission denied:
+    └─► Skip notification sending
+        └─► Log warning to console
+        └─► Event still has reminder field (for future permission grant)
+
+Multiple reminders for same event:
+    └─► MVP: Single reminder per event
+        └─► Future: Array of reminders
+```
+
+---
+
 ## Data Flow Diagrams Summary
 
 ```

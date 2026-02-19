@@ -1,274 +1,280 @@
-# Phase 8: PWA Configuration & Deployment
+# Phase 7: Conflict Detection & Validation
 
 **Status:** Not Started  
 **Estimated Time:** 2-3 hours  
-**Dependencies:** Phase 7
+**Dependencies:** Phase 4
 
 ---
 
 ## Objectives
 
-- Configure PWA manifest
-- Set up service worker for offline caching
-- Generate app icons
-- Deploy to Vercel
-- Test PWA installation on tablet
+- Implement robust event overlap detection
+- Create conflict warning UI
+- Add validation for all event inputs
+- Handle edge cases (all-day events, etc.)
 
 ---
 
 ## Tasks
 
-### 8.1 Install PWA Plugin
+### 7.1 Create Conflict Detection Service
 
-```bash
-npm install vite-plugin-pwa workbox-window -D
-```
-
----
-
-### 8.2 Configure Vite PWA Plugin
-
-**vite.config.ts:**
+**src/services/conflictDetector.ts:**
 ```typescript
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
+import type { CalendarEvent } from '@/types/event';
 
-export default defineConfig({
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
-      manifest: {
-        name: 'Calendiq',
-        short_name: 'Calendiq',
-        description: 'Local-first AI-powered calendar for tablets',
-        theme_color: '#4f46e5',
-        background_color: '#ffffff',
-        display: 'standalone',
-        orientation: 'landscape',
-        start_url: '/',
-        icons: [
-          {
-            src: '/icons/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: '/icons/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-          {
-            src: '/icons/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable',
-          },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-        ],
-      },
-    }),
-  ],
-});
-```
+export function detectConflicts(
+  events: CalendarEvent[],
+  newStart: string,
+  newEnd: string,
+  excludeId?: string
+): CalendarEvent[] {
+  return events.filter(event => {
+    // Skip the event being updated
+    if (excludeId && event.id === excludeId) return false;
 
----
+    // Check for overlap
+    const eventStart = new Date(event.start);
+    const eventEnd = new Date(event.end);
+    const checkStart = new Date(newStart);
+    const checkEnd = new Date(newEnd);
 
-### 8.3 Generate App Icons
+    // Overlap logic: (start1 < end2) AND (end1 > start2)
+    return checkStart < eventEnd && checkEnd > eventStart;
+  });
+}
 
-Use a tool like [PWA Asset Generator](https://github.com/elegantapp/pwa-asset-generator):
+export function formatConflictMessage(conflicts: CalendarEvent[]): string {
+  if (conflicts.length === 0) return '';
+  
+  if (conflicts.length === 1) {
+    const event = conflicts[0];
+    return `This time conflicts with "${event.title}" (${new Date(event.start).toLocaleString()})`;
+  }
 
-```bash
-npx pwa-asset-generator logo.svg public/icons --background "#4f46e5" --splash-only false
-```
-
-Or create manually:
-- 192x192 icon
-- 512x512 icon
-- favicon.ico
-
-Place in `public/icons/`
-
----
-
-### 8.4 Create robots.txt
-
-**public/robots.txt:**
-```
-User-agent: *
-Allow: /
-```
-
----
-
-### 8.5 Update index.html
-
-**index.html:**
-```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Local-first AI calendar for tablets" />
-    <meta name="theme-color" content="#4f46e5" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-    <title>Calendiq</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
-```
-
----
-
-### 8.6 Configure Vercel Deployment
-
-**vercel.json:**
-```json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "functions": {
-    "api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
-  "headers": [
-    {
-      "source": "/sw.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        }
-      ]
-    }
-  ]
+  return `This time conflicts with ${conflicts.length} other events`;
 }
 ```
 
 ---
 
-### 8.7 Deploy to Vercel
+### 7.2 Create Conflict Warning Modal
 
-```bash
-# Install Vercel CLI
-npm i -g vercel
+**src/components/Calendar/ConflictWarning.tsx:**
+```typescript
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import type { CalendarEvent } from '@/types/event';
 
-# Login
-vercel login
+interface ConflictWarningProps {
+  open: boolean;
+  conflicts: CalendarEvent[];
+  onContinue: () => void;
+  onCancel: () => void;
+}
 
-# Deploy
-vercel
-
-# Deploy to production
-vercel --prod
+export function ConflictWarning({ open, conflicts, onContinue, onCancel }: ConflictWarningProps) {
+  return (
+    <AlertDialog open={open}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Schedule Conflict</AlertDialogTitle>
+          <AlertDialogDescription>
+            This event conflicts with:
+            <ul className="mt-2 space-y-1">
+              {conflicts.map(event => (
+                <li key={event.id} className="text-sm">
+                  • {event.title} ({new Date(event.start).toLocaleTimeString()} - {new Date(event.end).toLocaleTimeString()})
+                </li>
+              ))}
+            </ul>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onContinue}>Save Anyway</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 ```
 
 ---
 
-### 8.8 Add Environment Variables on Vercel
+### 7.3 Update Event Form with Conflict Detection
 
-1. Go to Vercel Dashboard
-2. Select project
-3. Settings → Environment Variables
-4. Add:
-   - `OPENAI_API_KEY`
-   - `DEEPGRAM_API_KEY`
-5. Redeploy
+**src/components/Calendar/EventForm.tsx (update):**
+```typescript
+import { useState } from 'react';
+import { useEvents } from '@/context/EventContext';
+import { detectConflicts } from '@/services/conflictDetector';
+import { ConflictWarning } from './ConflictWarning';
 
----
+export function EventForm({ eventId, onSuccess }: EventFormProps) {
+  const [conflicts, setConflicts] = useState<CalendarEvent[]>([]);
+  const [showConflictWarning, setShowConflictWarning] = useState(false);
+  const { events, createEvent, updateEvent } = useEvents();
 
-### 8.9 Test PWA Installation
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
 
-**On iPad/Android Tablet:**
+    // Validate dates
+    if (new Date(endDate) <= new Date(startDate)) {
+      setError('End time must be after start time');
+      return;
+    }
 
-1. Open in Safari/Chrome
-2. Tap Share → Add to Home Screen
-3. Open from home screen
-4. Verify standalone mode (no browser UI)
-5. Test offline functionality
+    // Check for conflicts
+    const foundConflicts = detectConflicts(
+      events,
+      startDate,
+      endDate,
+      eventId || undefined
+    );
 
----
+    if (foundConflicts.length > 0) {
+      setConflicts(foundConflicts);
+      setShowConflictWarning(true);
+      return;
+    }
 
-### 8.10 Create .env.example
+    await saveEvent();
+  }
 
-**.env.example:**
+  async function saveEvent() {
+    // Save logic...
+    onSuccess();
+  }
+
+  return (
+    <>
+      <form onSubmit={handleSubmit}>
+        {/* Form fields... */}
+      </form>
+
+      <ConflictWarning
+        open={showConflictWarning}
+        conflicts={conflicts}
+        onContinue={() => {
+          setShowConflictWarning(false);
+          saveEvent();
+        }}
+        onCancel={() => setShowConflictWarning(false)}
+      />
+    </>
+  );
+}
 ```
-# OpenAI API Key for AI chat functionality
-OPENAI_API_KEY=
 
-# Deepgram API Key for speech-to-text
-DEEPGRAM_API_KEY=
+---
+
+### 7.4 Add Input Validation
+
+**src/lib/validators.ts:**
+```typescript
+import { z } from 'zod';
+
+export const EventFormSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+  description: z.string().max(1000).optional(),
+  location: z.string().max(200).optional(),
+  start: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid start date'),
+  end: z.string().refine(val => !isNaN(Date.parse(val)), 'Invalid end date'),
+  allDay: z.boolean(),
+  color: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
+  status: z.enum(['planned', 'done', 'cancelled']).optional(),
+  tags: z.array(z.string()).optional(),
+}).refine(data => new Date(data.end) > new Date(data.start), {
+  message: 'End time must be after start time',
+  path: ['end'],
+});
+```
+
+---
+
+### 7.5 Add Offline Detection
+
+**src/hooks/useOnlineStatus.ts:**
+```typescript
+import { useState, useEffect } from 'react';
+
+export function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    function handleOnline() {
+      setIsOnline(true);
+    }
+
+    function handleOffline() {
+      setIsOnline(false);
+    }
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return isOnline;
+}
+```
+
+---
+
+### 7.6 Update Chat Input with Offline Warning
+
+**src/components/Chat/ChatInput.tsx (update):**
+```typescript
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+
+export function ChatInput({ onSend }: ChatInputProps) {
+  const isOnline = useOnlineStatus();
+
+  return (
+    <div>
+      {!isOnline && (
+        <div className="bg-yellow-100 text-yellow-800 p-2 rounded mb-2 text-sm">
+          You're offline. AI features unavailable. Use manual event creation.
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        {/* Input fields... */}
+        <Button disabled={!isOnline || sending}>Send</Button>
+      </form>
+    </div>
+  );
+}
 ```
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] PWA manifest configured correctly
-- [ ] Icons generated and placed
-- [ ] Service worker caches assets
-- [ ] App works offline (calendar & manual CRUD)
-- [ ] App installable on tablet
-- [ ] Standalone mode works (no browser chrome)
-- [ ] Landscape orientation enforced
-- [ ] Deployed to Vercel successfully
-- [ ] Environment variables configured
-
----
-
-## Testing Checklist
-
-- [ ] Install on tablet home screen
-- [ ] Open from home screen (fullscreen)
-- [ ] Create event offline
-- [ ] Go online, use AI chat
-- [ ] Go offline, verify calendar still works
-- [ ] Close and reopen app
-- [ ] Check IndexedDB persists
+- [ ] Conflict detection works for overlapping events
+- [ ] Warning modal shows conflicting events
+- [ ] User can choose to save anyway or cancel
+- [ ] All-day events handled correctly
+- [ ] Input validation prevents invalid data
+- [ ] Error messages clear and helpful
+- [ ] Offline status detected
+- [ ] AI chat disabled when offline
 
 ---
 
 ## Next Phase
 
-Proceed to **Phase 9: Testing & Optimization**
+Proceed to **Phase 8: PWA Configuration & Deployment**

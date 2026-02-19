@@ -1,330 +1,304 @@
-# Phase 10: Documentation & Release
+# Phase 9: Testing & Optimization
 
 **Status:** Not Started  
-**Estimated Time:** 2-3 hours  
-**Dependencies:** Phase 9
+**Estimated Time:** 3-4 hours  
+**Dependencies:** Phase 8
 
 ---
 
 ## Objectives
 
-- Create comprehensive README
-- Write deployment guide
-- Document known issues
-- Prepare for open-source release
-- Create release checklist
+- Comprehensive end-to-end testing
+- Performance optimization
+- UI/UX refinements
+- Bug fixes and error handling
+- Accessibility improvements
 
 ---
 
 ## Tasks
 
-### 10.1 Update README.md
+### 9.1 Manual Testing Scenarios
 
-See main README.md (created separately with full content)
+**Setup & Authentication:**
+- [ ] First-time setup completes successfully
+- [ ] PIN validation works correctly
+- [ ] Wrong PIN shows error
+- [ ] Setup data persists after reload
 
-**Key sections:**
-- Project description
-- Features
-- Tech stack
-- Installation instructions
-- Deployment guide
-- Environment variables
-- Usage guide
-- Contributing guidelines
-- License
+**Manual Event CRUD:**
+- [ ] Create event via form
+- [ ] Edit existing event
+- [ ] Delete event with confirmation
+- [ ] All event fields save correctly
+- [ ] Conflict detection triggers
+- [ ] Conflict warning allows save anyway
+
+**AI Chat:**
+- [ ] Send text message to AI
+- [ ] AI creates event correctly
+- [ ] AI updates event
+- [ ] AI deletes event
+- [ ] Chat history persists
+- [ ] Error handling for API failures
+
+**Voice Input:**
+- [ ] Mic permission requested
+- [ ] Recording starts/stops correctly
+- [ ] Transcript populates input
+- [ ] User can edit transcript
+- [ ] Error handling for mic denied
+
+**Offline Mode:**
+- [ ] App loads offline
+- [ ] Manual CRUD works offline
+- [ ] AI chat disabled offline
+- [ ] Offline banner displays
+- [ ] Online/offline transitions smooth
+
+**PWA:**
+- [ ] Install to home screen works
+- [ ] App launches fullscreen
+- [ ] Landscape orientation locked
+- [ ] Icons display correctly
 
 ---
 
-### 10.2 Create CONTRIBUTING.md
+### 9.2 Performance Optimizations
 
-**CONTRIBUTING.md:**
-```markdown
-# Contributing to Calendiq
+**Code Splitting:**
+```typescript
+// Lazy load heavy components
+const CalendarView = lazy(() => import('@/components/Calendar/CalendarView'));
+const ChatPanel = lazy(() => import('@/components/Chat/ChatPanel'));
+```
 
-Thank you for considering contributing to Calendiq!
+**Memoization:**
+```typescript
+// In CalendarView
+const eventItems = useMemo(() => 
+  events.map(e => ({
+    id: e.id,
+    title: e.title,
+    start: e.start,
+    end: e.end,
+  })),
+  [events]
+);
+```
 
-## Development Setup
+**IndexedDB Indexes:**
+```typescript
+// Ensure proper indexing in db/index.ts
+this.version(1).stores({
+  events: 'id, start, end, status, [start+end]', // Compound index
+});
+```
 
-1. Fork and clone the repository
-2. Install dependencies: `npm install`
-3. Create `.env` file with API keys
-4. Run dev server: `npm run dev`
+**Debounce Conflict Detection:**
+```typescript
+import { debounce } from 'lodash-es';
 
-## Development Phases
-
-This project is organized in phases. See `docs/phases/` for details.
-
-## Code Style
-
-- Use TypeScript
-- Follow existing patterns
-- Add types for all props
-- Keep components small and focused
-
-## Pull Request Process
-
-1. Create a feature branch
-2. Make your changes
-3. Test thoroughly
-4. Submit PR with clear description
-
-## Questions?
-
-Open an issue for discussion!
+const debouncedConflictCheck = debounce((start, end) => {
+  const conflicts = detectConflicts(events, start, end);
+  setConflicts(conflicts);
+}, 300);
 ```
 
 ---
 
-### 10.3 Create LICENSE
+### 9.3 UI/UX Refinements
 
-**LICENSE (MIT):**
+**Loading States:**
+- Add skeleton loaders for calendar
+- Show spinner during AI processing
+- Display progress indicator for voice recording
+
+**Empty States:**
+```typescript
+// In CalendarView
+{events.length === 0 && (
+  <div className="text-center p-8 text-muted-foreground">
+    <p>No events yet. Click a date to create one!</p>
+  </div>
+)}
 ```
-MIT License
 
-Copyright (c) 2026 [Your Name]
+**Toast Notifications:**
+```typescript
+import { useToast } from '@/components/ui/use-toast';
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+const { toast } = useToast();
 
-[Full MIT license text]
+toast({
+  title: "Event created",
+  description: "Your event has been added to the calendar.",
+});
 ```
+
+**Touch Targets:**
+- Ensure all buttons are min 44x44px
+- Increase tap areas for calendar events
+- Add visual feedback on tap
 
 ---
 
-### 10.4 Create CHANGELOG.md
+### 9.4 Accessibility Improvements
 
-**CHANGELOG.md:**
-```markdown
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-## [1.0.0] - 2026-02-XX
-
-### Added
-- Initial MVP release
-- Local-first calendar with IndexedDB
-- AI-powered event creation (OpenAI GPT-4o)
-- Voice input via Deepgram
-- PIN-based authentication
-- Manual event CRUD operations
-- Conflict detection
-- PWA support for tablets
-- Offline functionality
-
-### Known Issues
-- PIN reset not implemented (future)
-- No recurring events (future)
-- Single user only
+**ARIA Labels:**
+```typescript
+<button
+  aria-label="Record voice message"
+  onClick={startRecording}
+>
+  <Mic />
+</button>
 ```
+
+**Keyboard Navigation:**
+- Tab through form fields
+- Enter to submit forms
+- Escape to close modals
+
+**Focus Management:**
+```typescript
+// Auto-focus PIN input
+<Input
+  ref={inputRef}
+  autoFocus
+  type="password"
+/>
+```
+
+**Color Contrast:**
+- Ensure text meets WCAG AA standards
+- Test with Chrome DevTools accessibility audit
 
 ---
 
-### 10.5 Document Known Limitations
+### 9.5 Error Handling
 
-**docs/known-limitations.md:**
-```markdown
-# Known Limitations
+**Global Error Boundary:**
+```typescript
+class ErrorBoundary extends React.Component {
+  componentDidCatch(error, errorInfo) {
+    console.error('App error:', error, errorInfo);
+  }
 
-This is an MVP with intentional scope limitations:
-
-## Not Included
-- Recurring events
-- Cloud sync
-- Multi-user support
-- PIN recovery
-- Timezone management
-- Mobile responsive design
-- Email notifications
-- Calendar import/export
-
-## Browser Support
-- Tested on Safari (iPad)
-- Tested on Chrome (Android tablet)
-- Requires modern browser with IndexedDB support
-
-## Performance Notes
-- Chat history unlimited (may slow down with 1000+ messages)
-- No pagination in calendar (loads all events)
+  render() {
+    if (this.state.hasError) {
+      return <div>Something went wrong. Please refresh.</div>;
+    }
+    return this.props.children;
+  }
+}
 ```
 
----
-
-### 10.6 Create Deployment Checklist
-
-**deployment-checklist.md:**
-```markdown
-# Deployment Checklist
-
-## Pre-Deployment
-
-- [ ] All phases completed
-- [ ] Tests passing
-- [ ] No console errors
-- [ ] Bundle optimized
-- [ ] Icons generated
-- [ ] Environment variables documented
-
-## Vercel Setup
-
-- [ ] Project created on Vercel
-- [ ] GitHub repo connected
-- [ ] Environment variables added:
-  - [ ] OPENAI_API_KEY
-  - [ ] DEEPGRAM_API_KEY
-- [ ] Build settings correct (Vite framework)
-- [ ] Custom domain configured (optional)
-
-## Post-Deployment
-
-- [ ] Test on actual tablet device
-- [ ] Install as PWA
-- [ ] Verify offline mode
-- [ ] Test all features in production
-- [ ] Monitor Vercel logs for errors
-
-## GitHub Release
-
-- [ ] Tag version: `git tag v1.0.0`
-- [ ] Push tags: `git push --tags`
-- [ ] Create GitHub release
-- [ ] Add release notes
+**API Error Handling:**
+```typescript
+async function sendMessage(message: string) {
+  try {
+    const response = await fetch('/api/ai', { ... });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    toast({
+      title: "Connection error",
+      description: "Unable to reach AI. Check your connection.",
+      variant: "destructive",
+    });
+    return null;
+  }
+}
 ```
 
 ---
 
-### 10.7 Add Screenshots
+### 9.6 Bundle Size Optimization
 
-Create `docs/screenshots/` folder with:
-- setup-screen.png
-- pin-screen.png
-- calendar-view.png
-- event-modal.png
-- chat-panel.png
+**Analyze Bundle:**
+```bash
+npm run build
+npx vite-bundle-visualizer
+```
 
-Reference in README.
+**Tree Shaking:**
+- Import only needed lodash functions
+- Use specific imports from icon libraries
 
----
-
-### 10.8 Create Usage Guide
-
-**docs/usage-guide.md:**
-```markdown
-# Calendiq Usage Guide
-
-## First Time Setup
-
-1. Open app in tablet browser
-2. Fill in your name, birth date, and create a 4-digit PIN
-3. Remember your PIN (no recovery available in MVP)
-
-## Using the Calendar
-
-### Manual Event Creation
-- Tap any time slot → Event modal opens
-- Fill in event details
-- Save
-
-### Editing Events
-- Tap existing event → Edit modal opens
-- Modify fields
-- Save or delete
-
-### AI Event Creation
-- Type natural language: "Meeting with Sarah tomorrow at 3pm"
-- AI parses and creates event
-- Review and confirm
-
-### Voice Input
-- Tap microphone icon
-- Speak your request
-- Review transcript
-- Send to AI
-
-## Tips
-
-- Use conflict warnings to avoid double-booking
-- Chat history shows all AI interactions
-- Events saved locally (no internet needed after creation)
+**Production Build:**
+```bash
+npm run build
+# Check dist/ size
+du -sh dist/
 ```
 
 ---
 
-### 10.9 Final Code Cleanup
+### 9.7 Browser Console Cleanup
 
-- [ ] Remove unused imports
-- [ ] Delete test files
-- [ ] Clean up commented code
-- [ ] Verify all TODOs resolved
-- [ ] Run linter: `npm run lint --fix`
-- [ ] Format code: `npx prettier --write .`
+- Remove all `console.log()` from production code
+- Keep only `console.error()` for critical errors
+- Add production environment check:
+
+```typescript
+if (import.meta.env.DEV) {
+  console.log('Debug info');
+}
+```
 
 ---
 
-### 10.10 Release Preparation
+### 9.8 Security Audit
 
-**GitHub Release Notes (v1.0.0):**
-```markdown
-# Calendiq v1.0.0 - Initial Release
+- [ ] API keys not in bundle
+- [ ] No sensitive data in localStorage
+- [ ] CSP headers configured
+- [ ] HTTPS enforced
+- [ ] PIN hashed, never plain text
 
-A local-first, AI-powered calendar app designed for tablets.
+---
 
-## Features
-- 🗓️ Local-first calendar (IndexedDB)
-- 🤖 AI event creation (GPT-4o)
-- 🎤 Voice input (Deepgram)
-- 🔒 PIN authentication
-- ✏️ Manual event management
-- ⚠️ Conflict detection
-- 📱 PWA support
-- 🚫 Offline-ready
+### 9.9 Documentation Updates
 
-## Installation
-
-See [README](https://github.com/YOUR_USERNAME/calendiq#installation)
-
-## Requirements
-- OpenAI API key
-- Deepgram API key
-- Vercel account
-
-## What's Next
-- Recurring events
-- Calendar import/export
-- PIN recovery
-
-Thanks for trying Calendiq!
-```
+- [ ] Update README with setup instructions
+- [ ] Document environment variables
+- [ ] Add screenshots
+- [ ] List known limitations
+- [ ] Credit open-source dependencies
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] README complete and accurate
-- [ ] All docs created
-- [ ] Screenshots added
-- [ ] License included
-- [ ] CHANGELOG up to date
-- [ ] Code cleaned up
-- [ ] Deployment successful
-- [ ] GitHub release created
-- [ ] Project marked as public
+- [ ] All manual test scenarios pass
+- [ ] No console errors in production
+- [ ] Bundle size < 500KB (gzipped)
+- [ ] Lighthouse PWA score > 90
+- [ ] Lighthouse Performance score > 80
+- [ ] All ARIA labels in place
+- [ ] Touch targets properly sized
+- [ ] Error states handled gracefully
+- [ ] Loading states smooth
 
 ---
 
-## Post-Release
+## Performance Targets
 
-- Share on Twitter/LinkedIn
-- Post on Reddit (r/webdev, r/SideProject)
-- Add to GitHub topics: `calendar`, `pwa`, `ai`, `local-first`
-- Monitor issues and feedback
+| Metric | Target |
+|--------|--------|
+| First Contentful Paint | < 1.5s |
+| Largest Contentful Paint | < 2.5s |
+| Time to Interactive | < 3.5s |
+| Bundle Size (gzipped) | < 500KB |
+| IndexedDB Query Time | < 50ms |
 
 ---
 
-**Congratulations! 🎉**
+## Next Phase
 
-You've completed all 10 phases of Calendiq development!
+Proceed to **Phase 10: Documentation & Release**
