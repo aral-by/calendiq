@@ -106,6 +106,9 @@ Calendiq is a **local-first**, **frontend-heavy** calendar application designed 
 - Manage event CRUD operations
 - Hash and verify PIN
 - Orchestrate data flow
+- Process recurring events (RRULE)
+- Auto-categorize events
+- Schedule reminders and daily summaries
 
 ### 3. Repository Layer
 **Pattern:** Repository Pattern with interface abstraction
@@ -233,6 +236,8 @@ src/
 - `useEvents()` - Event CRUD and queries
 - `useChat()` - Chat history and AI interaction
 - `useConflictDetection()` - Event overlap checking
+- `useNotificationPermission()` - Browser notification permissions
+- `useRecurringEvents()` - RRULE computation and exceptions
 
 ---
 
@@ -277,7 +282,7 @@ User confirms → Continue to OpenAI flow
 ### Action Schema
 ```typescript
 type AIAction =
-  | { type: 'CREATE_EVENT'; payload: Partial<CalendarEvent> }
+  | { type: 'CREATE_EVENT'; payload: Partial<CalendarEvent> } // includes rrule, category
   | { type: 'UPDATE_EVENT'; id: string; payload: Partial<CalendarEvent> }
   | { type: 'DELETE_EVENT'; id: string }
   | { type: 'QUERY_EVENTS'; filter: EventFilter }
@@ -334,7 +339,9 @@ Calendiq → OscarAPIEventRepository → Oscar REST API → PostgreSQL
 | **Frontend Framework** | React 18 + TypeScript |
 | **UI Library** | shadcn/ui (Radix + TailwindCSS) |
 | **Calendar** | FullCalendar (MIT edition) |
+| **Recurring Events** | rrule + @fullcalendar/rrule |
 | **Database** | IndexedDB (Dexie.js) |
+| **Date Utilities** | date-fns |
 | **Validation** | Zod |
 | **API Proxy** | Vercel Serverless Functions |
 | **AI** | OpenAI GPT-4o |
@@ -408,6 +415,142 @@ interface NotificationPayload {
 
 ---
 
+## Recurring Events Architecture
+
+### RRULE Integration
+**Library:** `rrule` (RFC 5545 standard)
+**FullCalendar Plugin:** `@fullcalendar/rrule`
+
+### Data Model
+```typescript
+interface CalendarEvent {
+  // ... existing fields
+  rrule?: string;              // RRULE string (e.g., "FREQ=WEEKLY;BYDAY=MO")
+  recurringEventId?: string;   // Parent event ID for instances
+  exceptionDates?: string[];   // Skipped dates (when editing single instance)
+  isRecurring?: boolean;       // Quick check flag
+}
+```
+
+### Storage Strategy
+- **Store parent event** with RRULE string
+- **Compute instances on-demand** (FullCalendar handles expansion)
+- **Exception dates** stored as ISO strings array
+- **Single instance edits** create new non-recurring events + add exception to parent
+
+### Services
+```typescript
+// src/services/rruleService.ts
+- createRRuleString(pattern: RecurrencePattern): string
+- parseRRuleString(rrule: string): RecurrencePattern
+- getRecurringDates(rrule: string, start: Date, end: Date): Date[]
+```
+
+### Edit Flow
+- **Edit Series:** Update parent event's RRULE
+- **Edit Single Instance:** Add exception + create new event
+- **Delete Series:** Delete parent event
+- **Delete Single Instance:** Add exception to parent
+
+---
+
+## Category & Color Coding Architecture
+
+### Predefined Categories
+```typescript
+export const DEFAULT_CATEGORIES = [
+  { id: 'work', name: 'Work', color: '#3b82f6', icon: 'Briefcase' },
+  { id: 'personal', name: 'Personal', color: '#10b981', icon: 'User' },
+  { id: 'health', name: 'Health', color: '#ef4444', icon: 'Heart' },
+  { id: 'social', name: 'Social', color: '#f97316', icon: 'Users' },
+  { id: 'finance', name: 'Finance', color: '#8b5cf6', icon: 'DollarSign' },
+  { id: 'education', name: 'Education', color: '#06b6d4', icon: 'BookOpen' },
+];
+```
+
+### Auto-Categorization
+**Approach:** Keyword matching with confidence scoring
+
+```typescript
+// src/services/categoryService.ts
+- categorizeEvent(title: string, description?: string): Promise<{
+    category: EventCategory;
+    confidence: number; // 0.0 - 1.0
+  }>
+```
+
+**AI Integration:** GPT-4o assigns category in CREATE_EVENT action
+**User Override:** Manual category selection in Event Form
+
+### Visual Organization
+- **Color-coded events** in all calendar views
+- **Category legend** with filtering (click to hide/show)
+- **Category badges** in List View
+
+---
+
+## Multiple Views Architecture
+
+### Supported Views
+| View | FullCalendar Plugin | Description |
+|------|---------------------|-------------|
+| **Week** | timeGridWeek | Default view, 7-day timeline |
+| **Day** | timeGridDay | Single day detailed view |
+| **Month** | dayGridMonth | Month overview grid |
+| **List** | listWeek | Agenda-style list |
+| **Timeline** | timeline (optional) | Horizontal timeline (post-MVP) |
+
+### View Switching
+- **Header Toolbar Buttons:** Week, Day, Month, List
+- **Keyboard Shortcuts:** Ctrl+1/2/3/4
+- **User Preference:** Persist to localStorage
+
+### Implementation
+```typescript
+// src/components/Calendar/CalendarView.tsx
+plugins={[
+  dayGridPlugin,
+  timeGridPlugin,
+  listPlugin,
+  interactionPlugin,
+  rrulePlugin
+]}
+```
+
+---
+
+## Daily Summary Architecture
+
+### Scheduler Service
+```typescript
+// src/services/dailySummaryService.ts
+- startDailySummaryScheduler(): void
+- stopDailySummaryScheduler(): void
+- checkAndSendDailySummary(): Promise<void>
+```
+
+### Schedule
+- **Time:** 08:00 every morning (fixed in MVP)
+- **Check Interval:** Every 60 minutes
+- **Deduplication:** localStorage flag (lastDailySummaryDate)
+
+### Notification Content
+```typescript
+{
+  title: "Good morning! You have X events today",
+  body: "09:00 [work] Team Meeting\n13:00 [health] Gym\n...",
+  tag: "daily-summary",
+  data: { eventId: 'daily-summary', action: 'open-calendar' }
+}
+```
+
+### User Preferences
+- **Enable/Disable:** Setting in preferences panel
+- **Storage:** localStorage key 'dailySummaryEnabled'
+- **Default:** Enabled
+
+---
+
 ## Performance Considerations
 
 ### Local-First Benefits
@@ -421,6 +564,8 @@ interface NotificationPayload {
 - Debounce conflict detection
 - IndexedDB indexes on `start` and `end` for queries
 - Memoize expensive computations (useMemo)
+- **RRULE computation cached** by FullCalendar
+- **Category filtering** uses Set for O(1) lookups
 
 ---
 

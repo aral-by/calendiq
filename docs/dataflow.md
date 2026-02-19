@@ -697,4 +697,314 @@ Multiple reminders for same event:
 
 ---
 
+## 14. Recurring Event Creation Flow
+
+```
+User creates event with recurrence
+    │
+    ├─► Manual Form:
+    │   └─► Enable "Repeat event" toggle
+    │       └─► Recurrence Editor opens
+    │           ├─ Select frequency (daily/weekly/monthly/yearly)
+    │           ├─ Set interval (every N days/weeks/etc.)
+    │           ├─ [Weekly only] Select weekdays
+    │           └─ Click "Update Recurrence"
+    │                   │
+    │                   └─► Generate RRULE string
+    │                       (e.g., "FREQ=WEEKLY;BYDAY=MO,WE,FR")
+    │
+    └─► AI Command:
+        └─► Parse natural language
+            ├─ "her pazartesi" → "FREQ=WEEKLY;BYDAY=MO"
+            ├─ "her gün" → "FREQ=DAILY"
+            └─ "her 2 haftada bir" → "FREQ=WEEKLY;INTERVAL=2"
+    
+    ▼
+Validate and Save Event
+    │
+    ├─► Create CalendarEvent object:
+    │   ├─ rrule: "FREQ=WEEKLY;BYDAY=MO"
+    │   ├─ isRecurring: true
+    │   ├─ recurringEventId: null (this IS the parent)
+    │   └─ exceptionDates: []
+    │
+    ├─► Save to IndexedDB (events)
+    │
+    └─► FullCalendar expands RRULE:
+        └─► Renders multiple event instances
+            (computed on-the-fly, not stored)
+```
+
+---
+
+## 15. Recurring Event Edit Flow
+
+### Edit Single Instance
+
+```
+User clicks on recurring event instance
+    │
+    ├─► Open Event Modal
+    │   └─► Show "This is a recurring event" notice
+    │
+    ├─► User makes changes (e.g., change time)
+    │
+    ├─► User clicks "Save"
+    │
+    ├─► Show dialog: "Edit this event" or "Edit all events in series"
+    │
+    ├─► User selects "Edit this event"
+    │
+    ├─► Find parent event (via recurringEventId or this IS parent)
+    │
+    ├─► Add instance date to parent's exceptionDates array:
+    │   └─► exceptionDates: [...existing, "2026-02-24T10:00:00Z"]
+    │
+    ├─► Update parent event in IndexedDB
+    │
+    ├─► Create NEW non-recurring event:
+    │   ├─ id: new UUID
+    │   ├─ rrule: undefined
+    │   ├─ isRecurring: false
+    │   ├─ recurringEventId: parent.id
+    │   └─ ... modified fields (new time, etc.)
+    │
+    ├─► Save new event to IndexedDB
+    │
+    └─► Refresh FullCalendar:
+        ├─ Parent event instances skip exception date
+        └─ New event renders at modified time
+```
+
+### Edit Series
+
+```
+User clicks on recurring event instance
+    │
+    ├─► Show dialog: "Edit this event" or "Edit all events in series"
+    │
+    ├─► User selects "Edit all events in series"
+    │
+    ├─► Find parent event
+    │
+    ├─► User makes changes:
+    │   ├─ Update RRULE (e.g., change weekdays)
+    │   └─ Or update title, description, etc.
+    │
+    ├─► Update parent event in IndexedDB:
+    │   └─► All future instances reflect changes
+    │
+    └─► Refresh FullCalendar
+```
+
+### Delete Single Instance
+
+```
+User deletes recurring event instance
+    │
+    ├─► Show dialog: "Delete this event" or "Delete all events in series"
+    │
+    ├─► User selects "Delete this event"
+    │
+    ├─► Add instance date to parent's exceptionDates:
+    │   └─► exceptionDates: [...existing, "2026-02-24T10:00:00Z"]
+    │
+    ├─► Update parent event in IndexedDB
+    │
+    └─► Refresh FullCalendar:
+        └─ Instance no longer renders
+```
+
+### Delete Series
+
+```
+User deletes recurring event instance
+    │
+    ├─► User selects "Delete all events in series"
+    │
+    ├─► Delete parent event from IndexedDB
+    │
+    ├─► Delete all child events (instances with recurringEventId)
+    │
+    └─► Refresh FullCalendar:
+        └─ All instances removed
+```
+
+---
+
+## 16. Category Auto-Assignment Flow
+
+### Manual Event Creation
+
+```
+User creates event manually
+    │
+    ├─► User types event title/description
+    │
+    ├─► Auto-categorization triggered (debounced 500ms)
+    │   │
+    │   └─► CategoryService.categorizeEvent(title, description)
+    │       │
+    │       ├─► Extract keywords from text
+    │       │
+    │       ├─► Score against 6 categories:
+    │       │   ├─ Work: "toplantı", "meeting", "presentation", "proje"
+    │       │   ├─ Personal: "kişisel", "ev", "home"
+    │       │   ├─ Health: "doktor", "gym", "sağlık", "spor"
+    │       │   ├─ Social: "akşam yemeği", "kahve", "party"
+    │       │   ├─ Finance: "fatura", "bill", "banka", "ödeme"
+    │       │   └─ Education: "ders", "class", "okul", "kurs"
+    │       │
+    │       ├─► Return highest scoring category + confidence:
+    │       │   └─► { category: 'work', confidence: 0.85 }
+    │       │
+    │       └─► Update form state:
+    │           ├─ Set category dropdown to 'work'
+    │           ├─ Set categoryColor to '#3b82f6'
+    │           └─ Show confidence badge: "AI Confidence: 85%"
+    │
+    ├─► User can override category (dropdown change)
+    │
+    └─► User saves event:
+        └─► Store with:
+            ├─ category: 'work'
+            ├─ categoryColor: '#3b82f6'
+            └─ autoCategorizationConfidence: 0.85
+```
+
+### AI Event Creation
+
+```
+User sends AI command: "Yarın saat 15'te doktor randevum var"
+    │
+    ├─► /api/ai receives message
+    │
+    ├─► GPT-4o analyzes event type
+    │
+    ├─► AI assigns category in JSON response:
+    │   {
+    │     "type": "CREATE_EVENT",
+    │     "payload": {
+    │       "title": "Doktor Randevusu",
+    │       "start": "2026-02-24T15:00:00Z",
+    │       "end": "2026-02-24T16:00:00Z",
+    │       "category": "health",
+    │       "categoryColor": "#ef4444"
+    │     }
+    │   }
+    │
+    ├─► Action executor creates event with category
+    │
+    └─► Event renders in calendar with red color (health)
+```
+
+### Category Filtering
+
+```
+User views calendar
+    │
+    ├─► Category Legend displays at top:
+    │   ├─ [🔵 Work] [🟢 Personal] [🔴 Health]
+    │   ├─ [🟠 Social] [🟣 Finance] [🔵 Education]
+    │   └─ All categories active by default
+    │
+    ├─► User clicks category badge (e.g., "Work")
+    │   │
+    │   ├─► Toggle category in activeCategories Set
+    │   │   └─► If active: remove from Set
+    │   │       If inactive: add to Set
+    │   │
+    │   └─► Filter events:
+    │       └─► Only show events where category IN activeCategories
+    │
+    └─► FullCalendar re-renders with filtered events
+```
+
+---
+
+## 17. Daily Summary Notification Flow
+
+### Scheduler Initialization
+
+```
+App Start
+    │
+    ├─► Start Reminder Scheduler (Phase 7)
+    │
+    └─► Start Daily Summary Scheduler:
+        │
+        ├─► Set interval: every 60 minutes
+        │
+        └─► Run immediately on start (then hourly)
+```
+
+### Daily Check Logic
+
+```
+Every 60 minutes:
+    │
+    ├─► Get current time
+    │
+    ├─► Check if current hour == 8 (08:00)
+    │   ├─ No → Skip this cycle
+    │   └─ Yes ↓
+    │
+    ├─► Check localStorage: lastDailySummaryDate
+    │   ├─ Today's date already sent? → Skip
+    │   └─ New day ↓
+    │
+    ├─► Check user preference: dailySummaryEnabled
+    │   ├─ false → Skip
+    │   └─ true ↓
+    │
+    ├─► Query IndexedDB:
+    │   └─► events WHERE start >= startOfDay(today)
+    │                 AND start <= endOfDay(today)
+    │
+    ├─► No events today?
+    │   └─► Skip (no notification)
+    │
+    ├─► Sort events by start time
+    │
+    ├─► Format event list:
+    │   └─► For each event:
+    │       └─► "09:00 [work] Team Meeting"
+    │           "13:00 [health] Gym Session"
+    │           "18:00 [social] Dinner with friends"
+    │
+    ├─► Create notification:
+    │   {
+    │     title: "Good morning! You have 3 events today",
+    │     body: eventList (joined by \n),
+    │     tag: "daily-summary",
+    │     data: { eventId: 'daily-summary', action: 'open-calendar' }
+    │   }
+    │
+    ├─► Send notification via Service Worker
+    │
+    ├─► Save to localStorage:
+    │   └─► lastDailySummaryDate = today.toDateString()
+    │
+    └─► Log: "Daily summary sent"
+```
+
+### User Settings
+
+```
+User opens Settings panel
+    │
+    ├─► Toggle: "Daily Morning Summary (08:00)"
+    │   └─► Default: Checked (enabled)
+    │
+    ├─► User unchecks toggle
+    │
+    ├─► Save to localStorage:
+    │   └─► dailySummaryEnabled = 'false'
+    │
+    └─► Daily summary scheduler respects setting:
+        └─► Will not send notifications until re-enabled
+```
+
+---
+
 *This data flow document maps all user interactions and system processes in Calendiq.*
