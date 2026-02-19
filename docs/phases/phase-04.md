@@ -275,6 +275,99 @@ export function useConflictDetection() {
 
 ---
 
+### 4.8 Add Multiple Calendar Views
+
+Update FullCalendar to support multiple view types.
+
+**Required Plugins:**
+```bash
+npm install @fullcalendar/daygrid @fullcalendar/list
+```
+
+**src/components/Calendar/CalendarView.tsx (update):**
+```typescript
+import FullCalendar from '@fullcalendar/react';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import listPlugin from '@fullcalendar/list';
+import interactionPlugin from '@fullcalendar/interaction';
+import { useEvents } from '@/context/EventContext';
+import { useState } from 'react';
+
+export function CalendarView() {
+  const { events } = useEvents();
+  const [currentView, setCurrentView] = useState('timeGridWeek');
+
+  return (
+    <>
+      <FullCalendar
+        plugins={[
+          dayGridPlugin,
+          timeGridPlugin,
+          listPlugin,
+          interactionPlugin
+        ]}
+        initialView="timeGridWeek"
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+        }}
+        views={{
+          timeGridWeek: { buttonText: 'Week' },
+          timeGridDay: { buttonText: 'Day' },
+          dayGridMonth: { buttonText: 'Month' },
+          listWeek: { buttonText: 'List' }
+        }}
+        viewDidMount={(info) => setCurrentView(info.view.type)}
+        events={events.map(e => ({
+          id: e.id,
+          title: e.title,
+          start: e.start,
+          end: e.end,
+          allDay: e.allDay,
+          backgroundColor: e.categoryColor || e.color
+        }))}
+        // ... rest of config
+      />
+    </>
+  );
+}
+```
+
+**View Keyboard Shortcuts (optional):**
+```typescript
+useEffect(() => {
+  function handleKeyPress(e: KeyboardEvent) {
+    if (e.ctrlKey || e.metaKey) {
+      switch(e.key) {
+        case '1': calendarRef.current?.getApi().changeView('timeGridDay'); break;
+        case '2': calendarRef.current?.getApi().changeView('timeGridWeek'); break;
+        case '3': calendarRef.current?.getApi().changeView('dayGridMonth'); break;
+        case '4': calendarRef.current?.getApi().changeView('listWeek'); break;
+      }
+    }
+  }
+  window.addEventListener('keydown', handleKeyPress);
+  return () => window.removeEventListener('keydown', handleKeyPress);
+}, []);
+```
+
+**Persist User View Preference:**
+```typescript
+// Save to localStorage
+useEffect(() => {
+  localStorage.setItem('preferredCalendarView', currentView);
+}, [currentView]);
+
+// Load on mount
+const [initialView] = useState(() => 
+  localStorage.getItem('preferredCalendarView') || 'timeGridWeek'
+);
+```
+
+---
+
 ## Acceptance Criteria
 
 - [ ] FullCalendar displays in week view
@@ -287,6 +380,11 @@ export function useConflictDetection() {
 - [ ] Delete event removes from DB and UI
 - [ ] Conflict detection warns user
 - [ ] Layout is 65/35 split
+- [ ] **5 calendar views available** (Week, Day, Month, List, Timeline optional)
+- [ ] **View switcher in header toolbar**
+- [ ] **Keyboard shortcuts work** (Ctrl+1/2/3/4)
+- [ ] **User view preference persists** across sessions
+- [ ] **Category colors display** in all views
 
 ---
 

@@ -355,6 +355,97 @@ Add ChatProvider and integrate ChatPanel with CalendarView in MainLayout.
 
 ---
 
+### 5.9 Add AI Auto-Categorization
+
+Enhance AI prompt to automatically assign categories to events.
+
+**Update api/ai.ts system prompt:**
+```typescript
+const systemPrompt = `You are a calendar assistant. Parse user requests and return JSON actions.
+
+Available actions:
+- CREATE_EVENT: { type: 'CREATE_EVENT', payload: { title, start, end, description?, location?, allDay?, category?, categoryColor? } }
+- UPDATE_EVENT: { type: 'UPDATE_EVENT', id, payload: { ...updates } }
+- DELETE_EVENT: { type: 'DELETE_EVENT', id }
+- QUERY_EVENTS: { type: 'QUERY_EVENTS', filter?: {...} }
+- NO_ACTION: { type: 'NO_ACTION', message: 'your response' }
+
+Always return valid JSON. Dates in ISO 8601 format.
+
+EVENT CATEGORIES:
+Assign appropriate category when creating events:
+- "work": meetings, presentations, deadlines, projects (color: #3b82f6)
+- "personal": home tasks, personal appointments, errands (color: #10b981)
+- "health": doctor visits, gym, exercise, wellness (color: #ef4444)
+- "social": dinners, parties, meetups with friends (color: #f97316)
+- "finance": bill payments, bank appointments, taxes (color: #8b5cf6)
+- "education": classes, courses, training, learning (color: #06b6d4)
+
+Examples:
+User: "Yarın saat 15'te doktor randevum var"
+Response: {
+  "type": "CREATE_EVENT",
+  "payload": {
+    "title": "Doktor Randevusu",
+    "start": "2026-02-24T15:00:00Z",
+    "end": "2026-02-24T16:00:00Z",
+    "category": "health",
+    "categoryColor": "#ef4444"
+  }
+}
+
+User: "Pazartesi saat 10'da toplantı ekle"
+Response: {
+  "type": "CREATE_EVENT",
+  "payload": {
+    "title": "Toplantı",
+    "start": "2026-02-24T10:00:00Z",
+    "end": "2026-02-24T11:00:00Z",
+    "category": "work",
+    "categoryColor": "#3b82f6"
+  }
+}
+`;
+```
+
+**Update src/types/ai.ts to include category:**
+```typescript
+z.object({
+  type: z.literal('CREATE_EVENT'),
+  payload: z.object({
+    title: z.string(),
+    start: z.string(),
+    end: z.string(),
+    description: z.string().optional(),
+    location: z.string().optional(),
+    allDay: z.boolean().optional(),
+    category: z.enum(['work', 'personal', 'health', 'social', 'finance', 'education']).optional(),
+    categoryColor: z.string().optional(),
+  }),
+}),
+```
+
+**Update ChatPanel to include category in event creation:**
+```typescript
+async function handleSendMessage(message: string) {
+  const action = await sendMessage(message);
+  
+  if (!action) return;
+
+  switch (action.type) {
+    case 'CREATE_EVENT':
+      await createEvent({
+        ...action.payload,
+        autoCategorizationConfidence: 0.85, // AI categorization confidence
+      });
+      break;
+    // ... other cases
+  }
+}
+```
+
+---
+
 ## Acceptance Criteria
 
 - [ ] Chat panel displays in right column
@@ -366,6 +457,9 @@ Add ChatProvider and integrate ChatPanel with CalendarView in MainLayout.
 - [ ] Chat history saved to IndexedDB
 - [ ] Chat history displays on reload
 - [ ] Error handling for offline/failed requests
+- [ ] **AI assigns categories** to created events
+- [ ] **Category colors** applied automatically
+- [ ] **AI categorization confidence** stored (for Phase 13 UI)
 
 ---
 
