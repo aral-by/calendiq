@@ -429,6 +429,154 @@ Update OpenAI system prompt to parse reminder phrases:
 
 ---
 
+### 7.10 Add Daily Summary Notifications
+
+Send a morning summary of the day's events at 08:00.
+
+**src/services/dailySummaryService.ts:**
+```typescript
+import { db } from '@/db/db';
+import { sendNotification } from './notificationService';
+import { startOfDay, endOfDay } from 'date-fns';
+
+let dailySummaryInterval: NodeJS.Timeout | null = null;
+
+export function startDailySummaryScheduler() {
+  if (dailySummaryInterval) {
+    console.warn('Daily summary scheduler already running');
+    return;
+  }
+
+  console.log('Starting daily summary scheduler');
+
+  // Check every hour if it's 08:00
+  dailySummaryInterval = setInterval(async () => {
+    await checkAndSendDailySummary();
+  }, 60 * 60 * 1000); // 1 hour
+
+  // Run immediately on start (if it's 08:00)
+  checkAndSendDailySummary();
+}
+
+export function stopDailySummaryScheduler() {
+  if (dailySummaryInterval) {
+    clearInterval(dailySummaryInterval);
+    dailySummaryInterval = null;
+    console.log('Daily summary scheduler stopped');
+  }
+}
+
+async function checkAndSendDailySummary() {
+  try {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // Only send at 08:00 (hour 8)
+    if (currentHour !== 8) return;
+
+    // Check if we already sent today (using localStorage flag)
+    const lastSentDate = localStorage.getItem('lastDailySummaryDate');
+    const today = now.toDateString();
+
+    if (lastSentDate === today) {
+      console.log('Daily summary already sent today');
+      return;
+    }
+
+    // Get user preference (check if daily summary is enabled)
+    const dailySummaryEnabled = localStorage.getItem('dailySummaryEnabled') !== 'false'; // Default: enabled
+    if (!dailySummaryEnabled) return;
+
+    // Get today's events
+    const todayStart = startOfDay(now).toISOString();
+    const todayEnd = endOfDay(now).toISOString();
+
+    const todayEvents = await db.events
+      .where('start')
+      .between(todayStart, todayEnd, true, true)
+      .toArray();
+
+    if (todayEvents.length === 0) {
+      console.log('No events today, skipping daily summary');
+      return;
+    }
+
+    // Sort by start time
+    todayEvents.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+
+    // Format event list
+    const eventList = todayEvents
+      .map((event) => {
+        const time = new Date(event.start).toLocaleTimeString('tr-TR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const category = event.category ? `[${event.category}]` : '';
+        return `${time} ${category} ${event.title}`;
+      })
+      .join('\n');
+
+    // Send notification
+    await sendNotification({
+      title: `Good morning! You have ${todayEvents.length} event${todayEvents.length > 1 ? 's' : ''} today`,
+      body: eventList,
+      tag: 'daily-summary',
+      data: {
+        eventId: 'daily-summary',
+        action: 'open-calendar',
+      },
+    });
+
+    // Mark as sent
+    localStorage.setItem('lastDailySummaryDate', today);
+    console.log('Daily summary sent');
+  } catch (error) {
+    console.error('Error sending daily summary:', error);
+  }
+}
+```
+
+**Update src/App.tsx to start daily summary scheduler:**
+```typescript
+import { startDailySummaryScheduler, stopDailySummaryScheduler } from '@/services/dailySummaryService';
+
+useEffect(() => {
+  startReminderScheduler();
+  startDailySummaryScheduler(); // Add this
+
+  return () => {
+    stopReminderScheduler();
+    stopDailySummaryScheduler(); // Add this
+  };
+}, []);
+```
+
+**Add user setting to toggle daily summary (optional, for user preferences):**
+
+**src/components/Settings/SettingsPanel.tsx:**
+```typescript
+const [dailySummaryEnabled, setDailySummaryEnabled] = useState(() => 
+  localStorage.getItem('dailySummaryEnabled') !== 'false'
+);
+
+function handleToggleDailySummary(enabled: boolean) {
+  setDailySummaryEnabled(enabled);
+  localStorage.setItem('dailySummaryEnabled', enabled.toString());
+}
+
+// In JSX
+<div className="flex items-center justify-between">
+  <Label>Daily Morning Summary (08:00)</Label>
+  <input
+    type="checkbox"
+    checked={dailySummaryEnabled}
+    onChange={(e) => handleToggleDailySummary(e.target.checked)}
+  />
+</div>
+```
+
+---
+
 ## Testing Checklist
 
 - [ ] Reminder field added to Event model
@@ -442,6 +590,11 @@ Update OpenAI system prompt to parse reminder phrases:
 - [ ] AI commands parse reminder correctly ("10 dakika önce hatırlat")
 - [ ] Multiple events with different reminders work correctly
 - [ ] notificationSent flag prevents duplicate notifications
+- [ ] **Daily summary sends at 08:00** (test by changing time check)
+- [ ] **Daily summary lists all today's events** with times and categories
+- [ ] **Daily summary only sends once per day** (localStorage flag works)
+- [ ] **User can disable daily summary** in settings
+- [ ] **Daily summary doesn't send** if no events today
 
 ---
 
@@ -455,6 +608,10 @@ Update OpenAI system prompt to parse reminder phrases:
 - [ ] Works both when PWA is open and in background
 - [ ] AI can parse reminder phrases from user input
 - [ ] No duplicate notifications for same event
+- [ ] **Daily summary notification sent at 08:00 every morning**
+- [ ] **Summary includes event count, times, and categories**
+- [ ] **User can enable/disable daily summary** in settings
+- [ ] **Daily summary skipped** if no events scheduled for today
 
 ---
 
@@ -463,7 +620,9 @@ Update OpenAI system prompt to parse reminder phrases:
 - **Browser closed completely:** Service worker may not run, notifications may not fire (platform-dependent)
 - **iOS Safari PWA:** Background notifications have limited support
 - **Single reminder per event:** MVP supports only one reminder time (future: multiple reminders)
-- **No snooze:** Users cannot snooze notifications (future enhancement)
+- [ **No snooze:** Users cannot snooze notifications (future enhancement)
+- **Fixed daily summary time (08:00):** MVP doesn't support custom summary times (post-MVP feature)
+- **No daily summary customization:** MVP sends all events, no filtering by category/priority (post-MVP)
 
 ---
 
