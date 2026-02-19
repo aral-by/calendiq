@@ -139,7 +139,21 @@ interface CalendarEvent {
   tags?: string[];
   priority?: 'low' | 'medium' | 'high';
   status?: 'planned' | 'done' | 'cancelled';
-  reminder?: number;   // Dakika cinsinden hatırlatıcı (0, 5, 10, 15, 30, 60, 1440=1gün)
+  
+  // Recurring Events (Phase 12)
+  rrule?: string;              // RRULE string (RFC 5545 format)
+  recurringEventId?: string;   // Parent recurring event ID
+  exceptionDates?: string[];   // ISO dates to skip
+  isRecurring?: boolean;       // Quick flag
+  
+  // Categories (Phase 13)
+  category?: 'work' | 'personal' | 'health' | 'social' | 'finance' | 'education' | 'custom';
+  categoryColor?: string;      // Override default category color
+  
+  // Reminders
+  reminder?: number;           // Dakika cinsinden (0, 5, 10, 15, 30, 60, 1440)
+  notificationSent?: boolean;  // Reminder sent flag
+  
   createdAt: string;
   updatedAt: string;
 }
