@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
 import { hashPIN } from '@/lib/hashUtils';
 import { Input } from '@/components/ui/input';
+import { Calendar } from 'lucide-react';
 
 export function SetupWizard() {
   const [step, setStep] = useState(0); // 0 = splash
@@ -111,9 +112,12 @@ export function SetupWizard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="animate-in fade-in zoom-in duration-1000">
-          <h1 className="text-7xl font-light text-white tracking-tight">
-            Calendiq
-          </h1>
+          <div className="flex items-center gap-4">
+            <Calendar className="w-16 h-16 text-white" strokeWidth={1.5} />
+            <h1 className="text-7xl font-normal text-white tracking-tight">
+              Calendiq
+            </h1>
+          </div>
         </div>
       </div>
     );
@@ -125,10 +129,10 @@ export function SetupWizard() {
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
             <div className="space-y-2">
-              <h2 className="text-5xl font-light text-gray-900 tracking-tight">
+              <h2 className="text-5xl font-normal text-gray-900 tracking-tight">
                 Welcome
               </h2>
-              <p className="text-lg text-gray-500 font-light">
+              <p className="text-lg text-gray-500">
                 Let's get to know you
               </p>
             </div>
@@ -142,7 +146,7 @@ export function SetupWizard() {
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Enter first name"
-                className="text-3xl font-light border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
+                className="text-3xl border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
                 autoFocus
                 disabled={loading}
               />
@@ -154,10 +158,10 @@ export function SetupWizard() {
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
             <div className="space-y-2">
-              <h2 className="text-5xl font-light text-gray-900 tracking-tight">
+              <h2 className="text-5xl font-normal text-gray-900 tracking-tight">
                 Hi {firstName}
               </h2>
-              <p className="text-lg text-gray-500 font-light">
+              <p className="text-lg text-gray-500">
                 Nice to meet you
               </p>
             </div>
@@ -171,7 +175,7 @@ export function SetupWizard() {
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Enter last name"
-                className="text-3xl font-light border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
+                className="text-3xl border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
                 autoFocus
                 disabled={loading}
               />
@@ -183,10 +187,10 @@ export function SetupWizard() {
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
             <div className="space-y-2">
-              <h2 className="text-5xl font-light text-gray-900 tracking-tight">
+              <h2 className="text-5xl font-normal text-gray-900 tracking-tight">
                 Perfect
               </h2>
-              <p className="text-lg text-gray-500 font-light">
+              <p className="text-lg text-gray-500">
                 One more thing
               </p>
             </div>
@@ -198,7 +202,7 @@ export function SetupWizard() {
                 type="date"
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
-                className="text-3xl font-light border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
+                className="text-3xl border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
                 autoFocus
                 disabled={loading}
               />
@@ -210,10 +214,10 @@ export function SetupWizard() {
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
             <div className="space-y-2">
-              <h2 className="text-5xl font-light text-gray-900 tracking-tight">
+              <h2 className="text-5xl font-normal text-gray-900 tracking-tight">
                 Final step
               </h2>
-              <p className="text-lg text-gray-500 font-light">
+              <p className="text-lg text-gray-500">
                 Secure your calendar
               </p>
             </div>
@@ -222,7 +226,7 @@ export function SetupWizard() {
                 Create a 4-digit PIN
               </p>
               <div className="space-y-4">
-                <p className="text-sm text-gray-600 font-light">
+                <p className="text-sm text-gray-600">
                   If you forget this PIN, all your data will be lost.
                   <br />
                   Keep it safe and don't share it with anyone.
@@ -248,10 +252,10 @@ export function SetupWizard() {
         return (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
             <div className="space-y-2">
-              <h2 className="text-5xl font-light text-gray-900 tracking-tight">
+              <h2 className="text-5xl font-normal text-gray-900 tracking-tight">
                 Confirm PIN
               </h2>
-              <p className="text-lg text-gray-500 font-light">
+              <p className="text-lg text-gray-500">
                 Just to be sure
               </p>
             </div>
@@ -307,7 +311,7 @@ export function SetupWizard() {
 
           {error && (
             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-              <p className="text-sm text-gray-600 font-light">{error}</p>
+              <p className="text-sm text-gray-600">{error}</p>
             </div>
           )}
 
@@ -317,7 +321,7 @@ export function SetupWizard() {
               <button
                 onClick={handleBack}
                 disabled={loading}
-                className="text-sm text-gray-400 hover:text-gray-900 transition-colors font-light uppercase tracking-wider disabled:opacity-50"
+                className="text-sm text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider disabled:opacity-50"
               >
                 Back
               </button>
@@ -325,7 +329,7 @@ export function SetupWizard() {
             <button
               onClick={handleNext}
               disabled={loading || (step === 4 && currentInput.length !== 4) || (step === 5 && currentInput.length !== 4)}
-              className="ml-auto text-sm text-gray-900 hover:text-gray-600 transition-colors font-light uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
+              className="ml-auto text-sm text-gray-900 hover:text-gray-600 transition-colors uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {loading ? 'Please wait...' : step === 5 ? 'Finish' : 'Continue'}
             </button>
@@ -334,7 +338,7 @@ export function SetupWizard() {
 
         {/* Footer hint */}
         <div className="mt-20 text-center">
-          <p className="text-xs text-gray-300 font-light uppercase tracking-wider">
+          <p className="text-xs text-gray-300 uppercase tracking-wider">
             Press Enter to continue
           </p>
         </div>

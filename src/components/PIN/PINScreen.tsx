@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useUser } from '@/context/UserContext';
 import { Input } from '@/components/ui/input';
+import { Calendar } from 'lucide-react';
 
 export function PINScreen() {
   const [pin, setPin] = useState('');
@@ -43,11 +44,14 @@ export function PINScreen() {
         <div className="space-y-16">
           {/* Header */}
           <div className="space-y-2">
-            <h1 className="text-6xl font-light text-gray-900 tracking-tight">
-              Calendiq
-            </h1>
+            <div className="flex items-center gap-3">
+              <Calendar className="w-12 h-12 text-gray-900" strokeWidth={1.5} />
+              <h1 className="text-6xl font-normal text-gray-900 tracking-tight">
+                Calendiq
+              </h1>
+            </div>
             {user && (
-              <p className="text-lg text-gray-500 font-light">
+              <p className="text-lg text-gray-500">
                 Welcome back, {user.firstName}
               </p>
             )}
@@ -66,14 +70,14 @@ export function PINScreen() {
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
               onKeyPress={handleKeyPress}
               placeholder="••••"
-              className="text-6xl font-light border-0 border-b border-gray-200 rounded-none px-0 text-center tracking-[0.5em] focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
+              className="text-6xl border-0 border-b border-gray-200 rounded-none px-0 text-center tracking-[0.5em] focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
               autoFocus
               disabled={loading}
             />
 
             {error && (
               <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                <p className="text-sm text-gray-600 font-light">{error}</p>
+                <p className="text-sm text-gray-600">{error}</p>
               </div>
             )}
 
@@ -81,7 +85,7 @@ export function PINScreen() {
             <button
               onClick={() => handleSubmit()}
               disabled={loading || pin.length !== 4}
-              className="w-full text-sm text-gray-900 hover:text-gray-600 transition-colors font-light uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed pt-8"
+              className="w-full text-sm text-gray-900 hover:text-gray-600 transition-colors uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed pt-8"
             >
               {loading ? 'Please wait...' : 'Continue'}
             </button>
@@ -89,7 +93,7 @@ export function PINScreen() {
 
           {/* Footer hint */}
           <div className="text-center pt-8">
-            <p className="text-xs text-gray-300 font-light uppercase tracking-wider">
+            <p className="text-xs text-gray-300 uppercase tracking-wider">
               Press Enter to continue
             </p>
           </div>
