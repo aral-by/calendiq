@@ -279,14 +279,165 @@ Her event için opsiyonel hatırlatıcı (reminder) ayarlanabilir. Hatırlatıc�
 
 ---
 
-## 11. Tablet Layout
+## 11. Recurring Events (Tekrarlayan Etkinlikler) - Phase 12
+
+### Genel Yaklaşım
+Calendiq, **RFC 5545 RRULE formatını** kullanarak tekrarlayan etkinlikleri destekler. Kullanıcılar hem manuel hem de AI ile recurring event oluşturabilir.
+
+### Desteklenen Tekrarlama Tipleri
+- **Günlük:** Her gün, 2 günde bir, hafta içi her gün
+- **Haftalık:** Her hafta belirli günlerde (Pazartesi, Çarşamba, Cuma vb.)
+- **Aylık:** Ayın belirli günü (her ayın 1'i) veya belirli haftası (her ayın ilk pazartesi)
+- **Yıllık:** Her yıl aynı tarih
+
+### RRULE Format Örnekleri
+```
+"FREQ=WEEKLY;BYDAY=MO,WE,FR"        → Her pazartesi, çarşamba, cuma
+"FREQ=DAILY;INTERVAL=2"             → 2 günde bir
+"FREQ=MONTHLY;BYMONTHDAY=1"         → Her ayın 1'i
+"FREQ=WEEKLY;BYDAY=MO;UNTIL=20261231" → Her pazartesi (2026 sonuna kadar)
+```
+
+### AI Doğal Dil Örnekleri
+- "Her pazartesi saat 10'da toplantı ekle"
+- "Her gün sabah 7'de spor yap"
+- "Ayın ilk pazartesi doktor randevusu"
+- "2 günde bir ilaç hatırlatması"
+
+### Recurring Event Yönetimi
+- **Edit Single:** Tek bir instance'ı düzenle (exception oluştur)
+- **Edit Series:** Tüm seriyi düzenle
+- **Delete Single:** Tek instance sil (exceptionDates'e ekle)
+- **Delete Series:** Tüm seriyi sil
+
+### Teknik Detaylar
+- **Library:** `rrule` npm paketi
+- **FullCalendar Plugin:** `@fullcalendar/rrule`
+- **Storage:** Parent event + computed instances
+- **Exceptions:** `exceptionDates` array ile skip edilen tarihler
+
+### MVP Kapsamı
+- Temel recurring patterns: **Var**
+- AI parsing: **Var**
+- Single/Series edit: **Var**
+- Complex patterns (ör: "her ayın son cuma"): **MVP dışı**
+
+---
+
+## 12. Multiple Calendar Views - Phase 4 Enhancement
+
+### Desteklenen Görünümler
+Calendiq, farklı kullanım senaryoları için **5 farklı takvim görünümü** sunar:
+
+| View | Açıklama | Kullanım Senaryosu | FullCalendar Plugin |
+|------|----------|---------------------|---------------------|
+| **Week View** | Haftalık detaylı görünüm (default) | Günlük planlama, detaylı zaman yönetimi | `timeGridWeek` |
+| **Day View** | Tek gün detaylı görünüm | Gün içi planlama, saat bazlı görünüm | `timeGridDay` |
+| **Month View** | Aylık genel bakış | Uzun vadeli planlama, genel görünüm | `dayGridMonth` |
+| **List View** | Ajanda tarzı liste | Event listesi, mobil-friendly | `listWeek` |
+| **Timeline View** | Gantt chart tarzı timeline | Proje yönetimi (opsiyonel) | `@fullcalendar/timeline` |
+
+### View Switching
+- Toolbar'da view selector butonları
+- Keyboard shortcuts: `w` (week), `d` (day), `m` (month), `l` (list)
+- User preference kayıt edilir (son seçilen view açılışta açılır)
+
+### Layout Düzenlemesi
+- Week/Day/Month view'lar sol panelde (65% genişlik)
+- List view tam genişlik (chat paneli kapanabilir)
+- Timeline view'da chat paneli alt kısma iner (opsiyonel)
+
+### MVP Kapsamı
+- Week, Day, Month, List views: **Var**
+- Timeline view: **MVP dışı** (premium FullCalendar özelliği)
+- View preference persistence: **Var**
+
+---
+
+## 13. Categories & Color Coding - Phase 13
+
+### Kategori Sistemi
+Calendiq, **6 adet predefined kategori** + custom kategori desteği ile event'leri organize eder.
+
+### Predefined Kategoriler
+| Kategori | Renk | Icon | Açıklama |
+|----------|------|------|----------|
+| **Work** | Mavi (#3b82f6) | 💼 | İş toplantıları, görevler |
+| **Personal** | Yeşil (#10b981) | 🏠 | Kişisel işler, hobiler |
+| **Health** | Kırmızı (#ef4444) | ❤️ | Doktor, spor, sağlık |
+| **Social** | Turuncu (#f59e0b) | 👥 | Arkadaşlar, sosyal etkinlikler |
+| **Finance** | Mor (#8b5cf6) | 💰 | Fatura, banka, finans |
+| **Education** | Turkuaz (#06b6d4) | 📚 | Kurs, eğitim, öğrenme |
+
+### AI Auto-Categorization
+AI, event başlığı ve açıklamasına göre **otomatik kategori atar**:
+- "Doktor randevusu ekle" → **Health** (kırmızı)
+- "Ekip toplantısı" → **Work** (mavi)
+- "Ali ile akşam yemeği" → **Social** (turuncu)
+- "Fatura ödeme hatırlatması" → **Finance** (mor)
+
+AI, confidence score (0-1) ile birlikte kategori önerir. Kullanıcı manuel değiştirebilir.
+
+### Visual Organization
+- Takvimde event'ler kategori renginde gösterilir
+- Category legend (filtreli görünüm için)
+- Category bazlı filtering (checkbox ile kategori gizle/göster)
+- Color override: Kullanıcı event'e özel renk atayabilir
+
+### MVP Kapsamı
+- 6 predefined kategori: **Var**
+- Custom kategori: **MVP dışı** (Phase 13'te eklenebilir)
+- AI auto-categorization: **Var**
+- Category filtering: **Var**
+- Color picker override: **Var**
+
+---
+
+## 14. Daily Summary Notifications - Phase 7 Enhancement
+
+### Genel Yaklaşım
+Her sabah **08:00'de** kullanıcıya **günlük özet bildirimi** gönderilir. Bugünün tüm event'leri listelenirve kullanıcı günün planını görür.
+
+### Notification İçeriği
+```
+📅 Bugün 3 etkinliğiniz var:
+
+• 10:00 - Ekip Toplantısı (Work)
+• 14:00 - Doktor Randevusu (Health)
+• 18:00 - Ali ile Akşam Yemeği (Social)
+
+İyi günler! ☀️
+```
+
+### Özellıkler
+- **Zamanlama:** Sabah 08:00 (user preference ile değiştirilebilir)
+- **Koşul:** En az 1 event varsa gönderilir
+- **İçerik:** Başlık, saat, kategori
+- **Action:** Bildirime tıklayınca bugünün takvimi açılır
+- **Toggle:** Kullanıcı ayarlardan açıp kapatabilir
+
+### Teknik Detaylar
+- Service Worker scheduled task
+- LocalStorage'da user preference (enabled/disabled, time)
+- Daily scheduler check (her gece 00:01'de yarın için schedule edilir)
+- Notification API permission required
+
+### MVP Kapsamı
+- Daily summary (08:00): **Var**
+- User toggle (enable/disable): **Var**
+- Custom time selection: **MVP dışı** (sabit 08:00)
+- Weekly summary: **MVP dışı**
+
+---
+
+## 15. Tablet Layout
 
 ### Genel Yapı
 Sabit iki kolon, **10.5 inç yatay (landscape) tablet** için optimize edilmiştir. Web browser'da da çalışır.
 
 | Kolon | İçerik | Genişlik |
 |---|---|---|
-| Sol | Haftalık takvim (FullCalendar week view) | ~65% |
+| Sol | Takvim (multiple views: Week/Day/Month/List) | ~65% |
 | Sağ | Chat paneli (geçmiş + input) | ~35% |
 
 ### Layout Kuralları
@@ -297,7 +448,7 @@ Sabit iki kolon, **10.5 inç yatay (landscape) tablet** için optimize edilmişt
 
 ---
 
-## 12. PWA Özellikleri
+## 16. PWA Özellikleri
 
 | Özellik | Durum |
 |---|---|
