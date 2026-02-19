@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
 import { hashPIN } from '@/lib/hashUtils';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export function SetupWizard() {
@@ -17,10 +16,10 @@ export function SetupWizard() {
   const { createUser } = useUser();
 
   // Start splash animation
-  useState(() => {
+  useEffect(() => {
     const timer = setTimeout(() => setStep(1), 2000);
     return () => clearTimeout(timer);
-  });
+  }, []);
 
   async function handleNext() {
     setError('');
