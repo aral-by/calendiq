@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { UserProfile } from '@/types/user';
 import { IndexedDBUserRepository } from '@/db/repositories';
-import { hashPIN, verifyPIN } from '@/lib/hashUtils';
+import { verifyPIN } from '@/lib/hashUtils';
 
 interface UserContextValue {
   user: UserProfile | null;
