@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
 import { hashPIN } from '@/lib/hashUtils';
 import { Calendar, Moon, Sun, GraduationCap, Briefcase, Heart, Sparkles } from 'lucide-react';
-import { CursorProvider, Cursor } from '@/components/animate-ui/components/animate/cursor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -116,36 +115,30 @@ export function SetupWizard() {
 
   if (step === 0) {
     return (
-      <CursorProvider>
-        <Cursor />
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center space-y-6 animate-in fade-in duration-1000">
-            <Calendar className="w-20 h-20 mx-auto text-foreground" strokeWidth={1.5} />
-            <h1 className="text-5xl font-light tracking-tight">Calendiq</h1>
-          </div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-6 animate-in fade-in duration-1000">
+          <Calendar className="w-20 h-20 mx-auto text-foreground" strokeWidth={1.5} />
+          <h1 className="text-5xl font-light tracking-tight">Calendiq</h1>
         </div>
-      </CursorProvider>
+      </div>
     );
   }
 
   if (step === 8) {
     return (
-      <CursorProvider>
-        <Cursor />
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center space-y-6 max-w-md animate-in fade-in zoom-in duration-500">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center">
-              <Sparkles className="h-16 w-16 text-foreground" strokeWidth={1.5} />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-4xl font-light">All Set!</h2>
-              <p className="text-muted-foreground">
-                Calendiq has everything you need. You're ready to go!
-              </p>
-            </div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-6 max-w-md animate-in fade-in zoom-in duration-500">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center">
+            <Sparkles className="h-16 w-16 text-foreground" strokeWidth={1.5} />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-4xl font-light">All Set!</h2>
+            <p className="text-muted-foreground">
+              Calendiq has everything you need. You're ready to go!
+            </p>
           </div>
         </div>
-      </CursorProvider>
+      </div>
     );
   }
 

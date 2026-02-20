@@ -1,5 +1,5 @@
 import { useState, ReactNode, useEffect } from 'react';
-import { Calendar, Sun, Moon, TrendingUp, Home, MessageSquare, ChevronUp, User, Settings, LogOut, Bell, Search } from 'lucide-react';
+import { Calendar, Sun, Moon, TrendingUp, Home, Sparkles, ChevronUp, User, Settings, LogOut, Bell, Search } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useUser } from '@/context/UserContext';
 import { NotificationDialog } from '@/components/Notifications/NotificationDialog';
@@ -119,7 +119,7 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
                       onClick={() => onNavigate('ai-chat')}
                       className="h-11"
                     >
-                      <MessageSquare className="h-5 w-5" />
+                      <Sparkles className="h-5 w-5" />
                       <span className="text-base font-medium">AI Chat</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

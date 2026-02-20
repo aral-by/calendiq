@@ -6,6 +6,7 @@ import { WelcomeScreen } from '@/components/Welcome/WelcomeScreen';
 import { PINScreen } from '@/components/PIN/PINScreen';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { Dashboard } from '@/components/Dashboard/Dashboard';
+import { CursorProvider, Cursor } from '@/components/animate-ui/components/animate/cursor';
 
 function AppContent() {
   const { isSetupComplete, isAuthenticated, loading, showWelcome } = useUser();
@@ -99,9 +100,12 @@ function AppContent() {
 
 function App() {
   return (
-    <UserProvider>
-      <AppContent />
-    </UserProvider>
+    <CursorProvider>
+      <Cursor />
+      <UserProvider>
+        <AppContent />
+      </UserProvider>
+    </CursorProvider>
   );
 }
 
