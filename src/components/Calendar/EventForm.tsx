@@ -237,7 +237,7 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
           id="allDay"
           type="checkbox"
           checked={allDay}
-          onChange={(e) => setAllDay(e.target.checked)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllDay(e.target.checked)}
           className="w-4 h-4 rounded border-gray-300"
           disabled={loading}
         />

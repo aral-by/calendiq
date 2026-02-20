@@ -2,7 +2,12 @@ import { useEvents } from '@/context/EventContext';
 import { isOverlapping } from '@/lib/dateUtils';
 import type { CalendarEvent } from '@/types/event';
 
-export function useConflictDetection() {
+interface ConflictDetection {
+  detectConflicts: (start: string, end: string, excludeId?: string) => CalendarEvent[];
+  hasConflict: (start: string, end: string, excludeId?: string) => boolean;
+}
+
+export function useConflictDetection(): ConflictDetection {
   const { events } = useEvents();
 
   function detectConflicts(

@@ -13,7 +13,7 @@ export interface CalendarEvent {
   color?: string;
   tags?: string[];
   priority?: 'low' | 'medium' | 'high';
-  status?: 'planned' | 'done' | 'cancelled';
+  status?: EventStatus;
   
   // Recurring Events (Phase 12)
   rrule?: string;              // RRULE string (RFC 5545 format)
@@ -34,6 +34,9 @@ export interface CalendarEvent {
   createdAt: string;
   updatedAt: string;
 }
+
+// Event Status
+export type EventStatus = 'confirmed' | 'tentative' | 'cancelled';
 
 // Event Categories
 export type EventCategory = 
@@ -66,7 +69,7 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
 
 // Reminder Options
 export const REMINDER_OPTIONS = [
-  { label: 'No reminder', value: undefined },
+  { label: 'No reminder', value: 0 },
   { label: 'At time of event', value: 0 },
   { label: '5 minutes before', value: 5 },
   { label: '10 minutes before', value: 10 },
@@ -80,7 +83,7 @@ export const REMINDER_OPTIONS = [
 export interface EventFilter {
   category?: EventCategory;
   priority?: 'low' | 'medium' | 'high';
-  status?: 'planned' | 'done' | 'cancelled';
+  status?: EventStatus;
   dateRange?: {
     start: string;
     end: string;

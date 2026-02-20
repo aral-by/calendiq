@@ -120,20 +120,7 @@ export function CalendarView() {
         dayMaxEvents={true}
         weekends={true}
         firstDay={1}
-        // Minimal styling
         themeSystem="standard"
-        buttonText={{
-          today: 'Today',
-          month: 'Month',
-          week: 'Week',
-          day: 'Day',
-          list: 'List'
-        }}
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-        }}
       />
       
       <EventModal
