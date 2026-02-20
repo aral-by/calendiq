@@ -33,17 +33,7 @@ function AppContent() {
 
   return (
     <EventProvider>
-      <MainLayout
-        calendar={<CalendarView />}
-        chat={
-          <div className="h-full flex items-center justify-center p-8">
-            <div className="text-center space-y-4">
-              <h2 className="text-2xl font-normal text-gray-900">Chat Interface</h2>
-              <p className="text-gray-500">Coming in Phase 5</p>
-            </div>
-          </div>
-        }
-      />
+      <Dashboard />
     </EventProvider>
   );
 }

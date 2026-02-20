@@ -82,6 +82,11 @@ export function SetupWizard() {
     try {
       const pinHash = await hashPIN(pin);
       
+      // Save theme preference
+      if (selectedTheme) {
+        localStorage.setItem('calendiqTheme', selectedTheme);
+      }
+      
       await createUser({
         firstName,
         lastName,
