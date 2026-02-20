@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useState, ReactNode, useEffect } from 'react';
 import { Calendar, Sun, Moon, TrendingUp, Home, MessageSquare, ChevronUp, User, Settings, LogOut, Bell, Search } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useUser } from '@/context/UserContext';
@@ -38,7 +38,16 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
     return saved || 'light';
   });
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
-  const { user } = useUser();
+  const { user, logout } = useUser();
+
+  // Apply theme on mount
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
 
   function toggleTheme() {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -156,7 +165,7 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
                     <span>Notifications</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>

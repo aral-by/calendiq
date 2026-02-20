@@ -19,12 +19,21 @@ const UserContext = createContext<UserContextValue | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Check localStorage for authentication status
+    const savedAuth = localStorage.getItem('calendiqAuth');
+    return savedAuth === 'true';
+  });
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
   
   const userRepo = new IndexedDBUserRepository();
+
+  // Persist authentication status to localStorage
+  useEffect(() => {
+    localStorage.setItem('calendiqAuth', isAuthenticated.toString());
+  }, [isAuthenticated]);
 
   useEffect(() => {
     checkSetupStatus();
@@ -91,6 +100,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   function logout() {
     setIsAuthenticated(false);
+    localStorage.removeItem('calendiqAuth');
     console.log('[Auth] User logged out');
   }
 

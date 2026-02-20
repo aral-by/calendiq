@@ -1,6 +1,5 @@
 import { Plus, Sparkles, CalendarCheck, Calendar, ArrowRight } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { useUser } from '@/context/UserContext';
 
 interface DashboardProps {
@@ -14,12 +13,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="w-full max-w-6xl space-y-8">
         {/* Greeting */}
-        <div>
+        <div className="text-center">
           <h1 className="text-4xl font-bold tracking-tight mb-2">
-            Merhaba, {user?.firstName}! 👋
+            Hello, {user?.firstName}! 👋
           </h1>
           <p className="text-muted-foreground text-lg">
-            Bugün ne yapmak istersiniz?
+            What would you like to do today?
           </p>
         </div>
         
@@ -37,9 +36,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 </div>
                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2">Takvim</h3>
+              <h3 className="text-2xl font-semibold mb-2">Calendar</h3>
               <p className="text-muted-foreground">
-                Takvim görünümünde tüm etkinliklerinizi görüntüleyin ve yönetin
+                View and manage all your events in calendar view
               </p>
             </CardContent>
           </Card>
@@ -56,9 +55,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 </div>
                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2">AI Asistan</h3>
+              <h3 className="text-2xl font-semibold mb-2">AI Assistant</h3>
               <p className="text-muted-foreground">
-                Yapay zeka destekli asistanınızla programınızı yönetin
+                Manage your schedule with AI-powered assistant
               </p>
             </CardContent>
           </Card>
@@ -75,9 +74,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 </div>
                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-green-600 group-hover:translate-x-1 transition-all" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2">Bugünün Programı</h3>
+              <h3 className="text-2xl font-semibold mb-2">Today's Schedule</h3>
               <p className="text-muted-foreground">
-                Bugün için planlanmış etkinlikleri görüntüleyin
+                View your scheduled events for today
               </p>
             </CardContent>
           </Card>
@@ -94,9 +93,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 </div>
                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-amber-600 group-hover:translate-x-1 transition-all" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2">Hızlı Ekle</h3>
+              <h3 className="text-2xl font-semibold mb-2">Quick Add</h3>
               <p className="text-muted-foreground">
-                Anında yeni bir etkinlik veya hatırlatıcı oluşturun
+                Create a new event or reminder instantly
               </p>
             </CardContent>
           </Card>

@@ -27,7 +27,7 @@ export function NotificationDialog({ open, onOpenChange }: NotificationDialogPro
 
   const requestPermission = async () => {
     if (!('Notification' in window)) {
-      alert('Bu tarayıcı bildirimleri desteklemiyor');
+      alert('This browser doesn\'t support notifications');
       return;
     }
 
@@ -44,8 +44,8 @@ export function NotificationDialog({ open, onOpenChange }: NotificationDialogPro
         }
         
         // Show a test notification
-        new Notification('Calendiq Bildirimleri Aktif! 🎉', {
-          body: 'Artık önemli etkinlikleriniz için bildirim alacaksınız.',
+        new Notification('Calendiq Notifications Enabled! 🎉', {
+          body: 'You\'ll now receive notifications for your important events.',
           icon: '/logo.png',
         });
         
@@ -54,7 +54,7 @@ export function NotificationDialog({ open, onOpenChange }: NotificationDialogPro
         }, 1500);
       }
     } catch (error) {
-      console.error('Bildirim izni hatası:', error);
+      console.error('Notification permission error:', error);
     } finally {
       setIsRequesting(false);
     }
@@ -64,22 +64,22 @@ export function NotificationDialog({ open, onOpenChange }: NotificationDialogPro
     switch (notificationPermission) {
       case 'granted':
         return {
-          title: 'Bildirimler Aktif',
-          description: 'Calendiq bildirimleri açık durumda.',
+          title: 'Notifications Enabled',
+          description: 'Calendiq notifications are enabled.',
           icon: <Check className="h-12 w-12 text-green-500" />,
           color: 'bg-green-50 dark:bg-green-950',
         };
       case 'denied':
         return {
-          title: 'Bildirimler Engellenmiş',
-          description: 'Bildirimleri etkinleştirmek için tarayıcı ayarlarından izin vermeniz gerekiyor.',
+          title: 'Notifications Blocked',
+          description: 'You need to grant permission from browser settings to enable notifications.',
           icon: <X className="h-12 w-12 text-red-500" />,
           color: 'bg-red-50 dark:bg-red-950',
         };
       default:
         return {
-          title: 'Bildirimlere İzin Ver',
-          description: 'Etkinlikleriniz için zamanında hatırlatma almak ister misiniz?',
+          title: 'Enable Notifications',
+          description: 'Would you like to receive timely reminders for your events?',
           icon: <Bell className="h-12 w-12 text-blue-500" />,
           color: 'bg-blue-50 dark:bg-blue-950',
         };
@@ -108,14 +108,14 @@ export function NotificationDialog({ open, onOpenChange }: NotificationDialogPro
               disabled={isRequesting}
               className="w-full"
             >
-              {isRequesting ? 'İzin İsteniyor...' : 'Bildirimlere İzin Ver'}
+              {isRequesting ? 'Requesting Permission...' : 'Enable Notifications'}
             </Button>
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
               className="w-full"
             >
-              Şimdi Değil
+              Not Now
             </Button>
           </DialogFooter>
         )}
@@ -127,7 +127,7 @@ export function NotificationDialog({ open, onOpenChange }: NotificationDialogPro
               onClick={() => onOpenChange(false)}
               className="w-full"
             >
-              Kapat
+              Close
             </Button>
           </DialogFooter>
         )}
@@ -139,7 +139,7 @@ export function NotificationDialog({ open, onOpenChange }: NotificationDialogPro
               onClick={() => onOpenChange(false)}
               className="w-full"
             >
-              Anladım
+              Got It
             </Button>
           </DialogFooter>
         )}
