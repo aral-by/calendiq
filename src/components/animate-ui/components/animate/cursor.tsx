@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 import {
   CursorProvider as CursorProviderPrimitive,
   Cursor as CursorPrimitive,

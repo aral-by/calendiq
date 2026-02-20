@@ -114,9 +114,9 @@ export function SetupWizard() {
       <CursorProvider>
         <Cursor />
         <div className="min-h-screen flex items-center justify-center bg-white">
-          <div className="text-center space-y-8 animate-in fade-in zoom-in duration-1000">
-            <Calendar className="w-32 h-32 text-gray-900 mx-auto" strokeWidth={0.75} />
-            <h1 className="text-7xl font-extralight text-gray-900 tracking-tight">Calendiq</h1>
+          <div className="text-center space-y-6 animate-in fade-in zoom-in duration-1000">
+            <Calendar className="w-20 h-20 text-gray-800 mx-auto" strokeWidth={1} />
+            <h1 className="text-5xl font-light text-gray-800 tracking-tight">Calendiq</h1>
           </div>
         </div>
       </CursorProvider>
@@ -127,17 +127,17 @@ export function SetupWizard() {
     switch (step) {
       case 1:
         return (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="space-y-3">
-              <h2 className="text-6xl md:text-7xl font-light text-gray-900 tracking-tight">
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="space-y-2">
+              <h2 className="text-4xl md:text-5xl font-light text-gray-800 tracking-tight">
                 Welcome
               </h2>
-              <p className="text-xl text-gray-400">
+              <p className="text-base text-gray-400">
                 Let's get to know you
               </p>
             </div>
-            <div className="space-y-4 mt-20">
-              <label className="text-xs text-gray-400 uppercase tracking-widest">
+            <div className="space-y-3 mt-16">
+              <label className="text-xs text-gray-400 uppercase tracking-wider">
                 First Name
               </label>
               <input
@@ -146,7 +146,7 @@ export function SetupWizard() {
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Enter your first name"
-                className="w-full text-4xl font-light border-0 border-b-2 border-gray-100 rounded-none px-0 py-3 bg-transparent focus:outline-none focus:border-gray-900 transition-colors duration-300 placeholder:text-gray-200"
+                className="w-full text-2xl font-light border-0 border-b border-gray-200 rounded-none px-0 py-2 bg-transparent focus:outline-none focus:border-gray-800 transition-colors duration-300 placeholder:text-gray-300"
                 autoFocus
                 disabled={loading}
               />
@@ -156,17 +156,17 @@ export function SetupWizard() {
 
       case 2:
         return (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="space-y-3">
-              <h2 className="text-6xl md:text-7xl font-light text-gray-900 tracking-tight">
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="space-y-2">
+              <h2 className="text-4xl md:text-5xl font-light text-gray-800 tracking-tight">
                 Hi, {firstName}
               </h2>
-              <p className="text-xl text-gray-400">
+              <p className="text-base text-gray-400">
                 Nice to meet you
               </p>
             </div>
-            <div className="space-y-4 mt-20">
-              <label className="text-xs text-gray-400 uppercase tracking-widest">
+            <div className="space-y-3 mt-16">
+              <label className="text-xs text-gray-400 uppercase tracking-wider">
                 Last Name
               </label>
               <input
@@ -175,7 +175,7 @@ export function SetupWizard() {
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Enter your last name"
-                className="w-full text-4xl font-light border-0 border-b-2 border-gray-100 rounded-none px-0 py-3 bg-transparent focus:outline-none focus:border-gray-900 transition-colors duration-300 placeholder:text-gray-200"
+                className="w-full text-2xl font-light border-0 border-b border-gray-200 rounded-none px-0 py-2 bg-transparent focus:outline-none focus:border-gray-800 transition-colors duration-300 placeholder:text-gray-300"
                 autoFocus
                 disabled={loading}
               />
@@ -185,24 +185,24 @@ export function SetupWizard() {
 
       case 3:
         return (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="space-y-3">
-              <h2 className="text-6xl md:text-7xl font-light text-gray-900 tracking-tight">
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="space-y-2">
+              <h2 className="text-4xl md:text-5xl font-light text-gray-800 tracking-tight">
                 Perfect
               </h2>
-              <p className="text-xl text-gray-400">
+              <p className="text-base text-gray-400">
                 One more thing
               </p>
             </div>
-            <div className="space-y-4 mt-20">
-              <label className="text-xs text-gray-400 uppercase tracking-widest">
+            <div className="space-y-3 mt-16">
+              <label className="text-xs text-gray-400 uppercase tracking-wider">
                 Birth Date
               </label>
               <input
                 type="date"
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
-                className="w-full text-4xl font-light border-0 border-b-2 border-gray-100 rounded-none px-0 py-3 bg-transparent focus:outline-none focus:border-gray-900 transition-colors duration-300"
+                className="w-full text-2xl font-light border-0 border-b border-gray-200 rounded-none px-0 py-2 bg-transparent focus:outline-none focus:border-gray-800 transition-colors duration-300"
                 autoFocus
                 disabled={loading}
               />
@@ -212,25 +212,25 @@ export function SetupWizard() {
 
       case 4:
         return (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="space-y-3">
-              <h2 className="text-6xl md:text-7xl font-light text-gray-900 tracking-tight">
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="space-y-2">
+              <h2 className="text-4xl md:text-5xl font-light text-gray-800 tracking-tight">
                 Security
               </h2>
-              <p className="text-xl text-gray-400">
+              <p className="text-base text-gray-400">
                 Create a 4-digit PIN
               </p>
             </div>
-            <div className="space-y-8 mt-20">
-              <div className="space-y-3">
+            <div className="space-y-6 mt-16">
+              <div className="space-y-2">
                 <p className="text-sm text-gray-500 leading-relaxed">
                   This PIN secures your calendar. If forgotten, all data will be lost.
                   <br />
                   Keep it safe and confidential.
                 </p>
               </div>
-              <div className="space-y-4">
-                <label className="text-xs text-gray-400 uppercase tracking-widest">
+              <div className="space-y-3">
+                <label className="text-xs text-gray-400 uppercase tracking-wider">
                   PIN Code
                 </label>
                 <input
@@ -241,7 +241,7 @@ export function SetupWizard() {
                   onChange={(e) => setCurrentInput(e.target.value.replace(/\D/g, ''))}
                   onKeyPress={handleKeyPress}
                   placeholder="••••"
-                  className="w-full text-6xl font-extralight border-0 border-b-2 border-gray-100 rounded-none px-0 py-3 text-center tracking-[0.75em] bg-transparent focus:outline-none focus:border-gray-900 transition-colors duration-300 placeholder:text-gray-200"
+                  className="w-full text-5xl font-light border-0 border-b border-gray-200 rounded-none px-0 py-2 text-center tracking-[0.5em] bg-transparent focus:outline-none focus:border-gray-800 transition-colors duration-300 placeholder:text-gray-300"
                   autoFocus
                   disabled={loading}
                 />
@@ -252,17 +252,17 @@ export function SetupWizard() {
 
       case 5:
         return (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="space-y-3">
-              <h2 className="text-6xl md:text-7xl font-light text-gray-900 tracking-tight">
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="space-y-2">
+              <h2 className="text-4xl md:text-5xl font-light text-gray-800 tracking-tight">
                 Confirm
               </h2>
-              <p className="text-xl text-gray-400">
+              <p className="text-base text-gray-400">
                 Re-enter your PIN
               </p>
             </div>
-            <div className="space-y-4 mt-20">
-              <label className="text-xs text-gray-400 uppercase tracking-widest">
+            <div className="space-y-3 mt-16">
+              <label className="text-xs text-gray-400 uppercase tracking-wider">
                 PIN Code
               </label>
               <input
@@ -273,7 +273,7 @@ export function SetupWizard() {
                 onChange={(e) => setCurrentInput(e.target.value.replace(/\D/g, ''))}
                 onKeyPress={handleKeyPress}
                 placeholder="••••"
-                className="w-full text-6xl font-extralight border-0 border-b-2 border-gray-100 rounded-none px-0 py-3 text-center tracking-[0.75em] bg-transparent focus:outline-none focus:border-gray-900 transition-colors duration-300 placeholder:text-gray-200"
+                className="w-full text-5xl font-light border-0 border-b border-gray-200 rounded-none px-0 py-2 text-center tracking-[0.5em] bg-transparent focus:outline-none focus:border-gray-800 transition-colors duration-300 placeholder:text-gray-300"
                 autoFocus
                 disabled={loading}
               />
@@ -291,30 +291,30 @@ export function SetupWizard() {
       <Cursor />
       <div className="min-h-screen flex flex-col bg-white">
         {/* Header */}
-        <div className="p-8 md:p-12">
-          <div className="flex items-center gap-3">
-            <Calendar className="w-7 h-7 text-gray-900" strokeWidth={1.5} />
-            <h1 className="text-2xl font-light text-gray-900 tracking-tight">
+        <div className="p-6 md:p-8">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
+            <h1 className="text-lg font-light text-gray-700 tracking-tight">
               Calendiq
             </h1>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex items-center justify-center px-8 md:px-12 pb-16">
-          <div className="w-full max-w-2xl">
+        <div className="flex-1 flex items-center justify-center px-6 md:px-12 pb-12">
+          <div className="w-full max-w-xl">
             {/* Progress */}
-            <div className="mb-16">
-              <div className="flex items-center justify-center gap-4">
+            <div className="mb-12">
+              <div className="flex items-center justify-center gap-3">
                 {[1, 2, 3, 4, 5].map((s) => (
                   <div
                     key={s}
-                    className={`h-1 rounded-full transition-all duration-700 ease-out ${
+                    className={`h-0.5 rounded-full transition-all duration-700 ease-out ${
                       s === step
-                        ? 'bg-gray-900 w-12'
+                        ? 'bg-gray-800 w-10'
                         : s < step
-                        ? 'bg-gray-400 w-8'
-                        : 'bg-gray-200 w-6'
+                        ? 'bg-gray-400 w-6'
+                        : 'bg-gray-200 w-4'
                     }`}
                   />
                 ))}
@@ -322,7 +322,7 @@ export function SetupWizard() {
             </div>
 
             {/* Form */}
-            <div className="space-y-16">
+            <div className="space-y-12">
               {renderStep()}
 
               {error && (
@@ -332,13 +332,14 @@ export function SetupWizard() {
               )}
 
               {/* Navigation */}
-              <div className="flex items-center justify-between pt-12">
+              <div className="flex items-center justify-between pt-8">
                 {step > 1 ? (
                   <Button
                     variant="ghost"
                     onClick={handleBack}
                     disabled={loading}
-                    className="text-gray-400 hover:text-gray-900"
+                    className="text-gray-400 hover:text-gray-800 text-sm"
+                    size="sm"
                   >
                     Back
                   </Button>
@@ -348,7 +349,8 @@ export function SetupWizard() {
                 <Button
                   onClick={handleNext}
                   disabled={loading || (step === 4 && currentInput.length !== 4) || (step === 5 && currentInput.length !== 4)}
-                  className="ml-auto bg-gray-900 text-white hover:bg-gray-800 px-8"
+                  className="ml-auto bg-gray-800 text-white hover:bg-gray-700 px-6 rounded-lg text-sm"
+                  size="sm"
                 >
                   {loading ? 'Processing...' : step === 5 ? 'Complete' : 'Continue'}
                 </Button>
@@ -356,8 +358,8 @@ export function SetupWizard() {
             </div>
 
             {/* Footer hint */}
-            <div className="mt-20 text-center">
-              <p className="text-xs text-gray-300 uppercase tracking-widest">
+            <div className="mt-12 text-center">
+              <p className="text-xs text-gray-300 uppercase tracking-wider">
                 Press Enter ↵
               </p>
             </div>

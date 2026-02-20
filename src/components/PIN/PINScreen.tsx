@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useUser } from '@/context/UserContext';
-import { Input } from '@/components/ui/input';
 import { Calendar } from 'lucide-react';
 import { clearUserProfile } from '@/lib/dbReset';
+import { CursorProvider, Cursor } from '@/components/animate-ui/components/animate/cursor';
+import { Button } from '@/components/animate-ui/components/buttons/button';
 
 export function PINScreen() {
   const [pin, setPin] = useState('');
@@ -46,72 +47,79 @@ export function PINScreen() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-8">
-      <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-3 duration-700">
-        <div className="space-y-16">
-          {/* Header */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-12 h-12 text-gray-900" strokeWidth={1.5} />
-              <h1 className="text-6xl font-normal text-gray-900 tracking-tight">
-                Calendiq
-              </h1>
-            </div>
-            {user && (
-              <p className="text-lg text-gray-500">
-                Welcome back, {user.firstName}
-              </p>
-            )}
-          </div>
-
-          {/* PIN Input */}
-          <div className="space-y-6">
-            <p className="text-sm text-gray-400 uppercase tracking-wider">
-              Enter your PIN
-            </p>
-            <Input
-              type="password"
-              inputMode="numeric"
-              maxLength={4}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              onKeyPress={handleKeyPress}
-              placeholder="••••"
-              className="text-6xl border-0 border-b border-gray-200 rounded-none px-0 text-center tracking-[0.5em] focus-visible:ring-0 focus-visible:border-gray-900 transition-colors"
-              autoFocus
-              disabled={loading}
-            />
-
-            {error && (
-              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                <p className="text-sm text-gray-600">{error}</p>
+    <CursorProvider>
+      <Cursor />
+      <div className="min-h-screen flex items-center justify-center bg-white px-6">
+        <div className="w-full max-w-lg animate-in fade-in zoom-in duration-700">
+          <div className="space-y-12">
+            {/* Header */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Calendar className="w-10 h-10 text-gray-700" strokeWidth={1.5} />
+                <h1 className="text-4xl md:text-5xl font-light text-gray-800 tracking-tight">
+                  Calendiq
+                </h1>
               </div>
-            )}
+              {user && (
+                <p className="text-base font-light text-gray-400 pl-13">
+                  Welcome back, {user.firstName}
+                </p>
+              )}
+            </div>
 
-            {/* Submit button */}
-            <button
-              onClick={() => handleSubmit()}
-              disabled={loading || pin.length !== 4}
-              className="w-full text-sm text-gray-900 hover:text-gray-600 transition-colors uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed pt-8"
-            >
-              {loading ? 'Please wait...' : 'Continue'}
-            </button>
-          </div>
+            {/* PIN Input */}
+            <div className="space-y-6">
+              <label className="text-xs text-gray-400 uppercase tracking-wider">
+                Enter PIN
+              </label>
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                onKeyPress={handleKeyPress}
+                placeholder="••••"
+                className="w-full text-5xl font-light border-0 border-b border-gray-200 rounded-none px-0 py-3 text-center tracking-[0.5em] bg-transparent focus:outline-none focus:border-gray-800 transition-colors duration-300 placeholder:text-gray-300"
+                autoFocus
+                disabled={loading}
+              />
 
-          {/* Footer hint */}
-          <div className="text-center pt-8 space-y-3">
-            <p className="text-xs text-gray-300 uppercase tracking-wider">
-              Press Enter to continue
-            </p>
-            <button
-              onClick={handleReset}
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              Forgot PIN? Reset app
-            </button>
+              {error && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <p className="text-sm text-red-500 text-center">{error}</p>
+                </div>
+              )}
+
+              {/* Submit button */}
+              <div className="pt-6">
+                <Button
+                  onClick={() => handleSubmit()}
+                  disabled={loading || pin.length !== 4}
+                  className="w-full bg-gray-800 text-white hover:bg-gray-700 h-10 text-sm rounded-lg"
+                >
+                  {loading ? 'Authenticating...' : 'Continue'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center pt-6 space-y-3">
+              <p className="text-xs text-gray-300 uppercase tracking-wider">
+                Press Enter ↵
+              </p>
+              <Button
+                variant="ghost"
+                onClick={handleReset}
+                className="text-xs text-gray-400 hover:text-gray-600"
+                size="sm"
+              >
+                Forgot PIN? Reset App
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </CursorProvider>
   );
 }

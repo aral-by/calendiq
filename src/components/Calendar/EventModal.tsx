@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/animate-ui/components/radix/dialog';
 import { EventForm } from './EventForm';
 
 interface EventModalProps {
@@ -11,9 +11,9 @@ interface EventModalProps {
 export function EventModal({ open, onClose, eventId, initialStart }: EventModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" from="bottom">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-normal">
+          <DialogTitle className="text-2xl font-light tracking-tight">
             {eventId ? 'Edit Event' : 'New Event'}
           </DialogTitle>
         </DialogHeader>
