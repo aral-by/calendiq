@@ -1,6 +1,7 @@
 import { useUser } from '@/context/UserContext';
 import { Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { CursorProvider, Cursor } from '@/components/animate-ui/components/animate/cursor';
 
 export function WelcomeScreen() {
   const { user } = useUser();
@@ -15,34 +16,28 @@ export function WelcomeScreen() {
   if (!show) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {/* Logo Header */}
-      <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-6 h-6 text-gray-900" strokeWidth={1.5} />
-          <h1 className="text-xl font-normal text-gray-900 tracking-tight">
-            Calendiq
-          </h1>
-        </div>
-      </div>
-
-      {/* Welcome Content */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="text-center space-y-6 animate-in fade-in zoom-in duration-700">
-          <Calendar className="w-20 h-20 text-gray-900 mx-auto" strokeWidth={1} />
-          <div className="space-y-2">
-            <h2 className="text-4xl md:text-5xl font-normal text-gray-900">
-              Welcome to Calendiq
-            </h2>
-            <p className="text-2xl text-gray-500">
+    <CursorProvider>
+      <Cursor />
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center space-y-12 animate-in fade-in zoom-in duration-1000">
+          <Calendar className="w-40 h-40 text-gray-900 mx-auto" strokeWidth={0.5} />
+          <div className="space-y-6">
+            <h1 className="text-8xl font-extralight text-gray-900 tracking-tight">
+              Welcome
+            </h1>
+            <p className="text-4xl font-light text-gray-400">
               {user?.firstName}
             </p>
           </div>
-          <p className="text-sm text-gray-400 uppercase tracking-wider">
-            Setting up your workspace...
-          </p>
+          <div className="pt-12">
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-gray-900 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 bg-gray-900 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 bg-gray-900 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </CursorProvider>
   );
 }
