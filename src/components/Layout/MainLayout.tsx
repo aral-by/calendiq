@@ -1,22 +1,200 @@
-import { ReactNode } from 'react';
+import { useState, ReactNode } from 'react';
+import { Calendar, Sun, Moon, TrendingUp, Home, MessageSquare, ChevronUp, User, Settings, LogOut, Bell, Search } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { useUser } from '@/context/UserContext';
+import { NotificationDialog } from '@/components/Notifications/NotificationDialog';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface MainLayoutProps {
-  calendar: ReactNode;
-  chat: ReactNode;
+  children: ReactNode;
+  currentPage: 'dashboard' | 'search' | 'calendar' | 'ai-chat' | 'statistics';
+  onNavigate: (page: 'dashboard' | 'search' | 'calendar' | 'ai-chat' | 'statistics') => void;
 }
 
-export function MainLayout({ calendar, chat }: MainLayoutProps) {
+export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProps) {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('calendiqTheme') as 'light' | 'dark' | null;
+    return saved || 'light';
+  });
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+  const { user } = useUser();
+
+  function toggleTheme() {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('calendiqTheme', newTheme);
+    
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+
   return (
-    <div className="h-screen flex bg-white">
-      {/* Calendar Section - 65% */}
-      <div className="w-[65%] border-r border-gray-200">
-        {calendar}
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        {/* Sidebar */}
+        <Sidebar>
+          <SidebarHeader>
+            <div className="flex items-center gap-2 px-2 py-2">
+              <Calendar className="h-6 w-6" />
+              <span className="font-semibold text-lg">Calendiq</span>
+            </div>
+          </SidebarHeader>
+          
+          <SidebarContent>
+            {/* Navigation Menu */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs">Menu</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu className="space-y-0.5">
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      isActive={currentPage === 'dashboard'}
+                      onClick={() => onNavigate('dashboard')}
+                      className="h-11"
+                    >
+                      <Home className="h-5 w-5" />
+                      <span className="text-base font-medium">Dashboard</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      isActive={currentPage === 'search'}
+                      onClick={() => onNavigate('search')}
+                      className="h-11"
+                    >
+                      <Search className="h-5 w-5" />
+                      <span className="text-base font-medium">Search</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      isActive={currentPage === 'calendar'}
+                      onClick={() => onNavigate('calendar')}
+                      className="h-11"
+                    >
+                      <Calendar className="h-5 w-5" />
+                      <span className="text-base font-medium">Calendar</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      isActive={currentPage === 'ai-chat'}
+                      onClick={() => onNavigate('ai-chat')}
+                      className="h-11"
+                    >
+                      <MessageSquare className="h-5 w-5" />
+                      <span className="text-base font-medium">AI Chat</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      isActive={currentPage === 'statistics'}
+                      onClick={() => onNavigate('statistics')}
+                      className="h-11"
+                    >
+                      <TrendingUp className="h-5 w-5" />
+                      <span className="text-base font-medium">Statistics</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          
+          <SidebarFooter>
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 px-2 py-1.5 w-full rounded-lg hover:bg-accent transition-colors">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium text-sm">
+                      {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                    </div>
+                    <div className="flex-1 text-left text-sm">
+                      <p className="font-medium">{user.firstName} {user.lastName}</p>
+                      <p className="text-xs text-muted-foreground">{user.firstName.toLowerCase()}@example.com</p>
+                    </div>
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Account</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setNotificationDialogOpen(true)}>
+                    <Bell className="mr-2 h-4 w-4" />
+                    <span>Notifications</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </SidebarFooter>
+        </Sidebar>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          {/* Top Navigation */}
+          <div className="border-b">
+            <div className="flex h-16 items-center px-8 gap-4">
+              <SidebarTrigger />
+              <div className="ml-auto flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Sun className="h-4 w-4" />
+                  <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+                  <Moon className="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1">
+            {children}
+          </div>
+        </div>
       </div>
       
-      {/* Chat Section - 35% */}
-      <div className="w-[35%]">
-        {chat}
-      </div>
-    </div>
+      {/* Notification Permission Dialog */}
+      <NotificationDialog 
+        open={notificationDialogOpen} 
+        onOpenChange={setNotificationDialogOpen}
+      />
+    </SidebarProvider>
   );
 }
+
