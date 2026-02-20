@@ -167,7 +167,7 @@ export function SetupWizard() {
                   onChange={(e) => setCurrentInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Enter your first name"
-                  className="w-full text-2xl sm:text-3xl font-normal border-0 border-b border-gray-200 rounded-t-xl bg-white/50 px-4 py-3 focus:outline-none focus:border-gray-600 focus:bg-white transition-all duration-300 placeholder:text-gray-300"
+                  className="w-full text-2xl sm:text-3xl font-normal bg-gray-50/50 border border-gray-200 px-4 py-3 focus:outline-none focus:border-gray-600 focus:bg-gray-50 transition-all duration-300 placeholder:text-gray-300"
                   autoFocus
                   disabled={loading}
                 />
@@ -198,7 +198,7 @@ export function SetupWizard() {
                   onChange={(e) => setCurrentInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Enter your last name"
-                  className="w-full text-2xl sm:text-3xl font-normal border-0 border-b border-gray-200 rounded-t-xl bg-white/50 px-4 py-3 focus:outline-none focus:border-gray-600 focus:bg-white transition-all duration-300 placeholder:text-gray-300"
+                  className="w-full text-2xl sm:text-3xl font-normal bg-gray-50/50 border border-gray-200 px-4 py-3 focus:outline-none focus:border-gray-600 focus:bg-gray-50 transition-all duration-300 placeholder:text-gray-300"
                   autoFocus
                   disabled={loading}
                 />
@@ -227,7 +227,7 @@ export function SetupWizard() {
                   type="date"
                   value={currentInput}
                   onChange={(e) => setCurrentInput(e.target.value)}
-                  className="w-full text-2xl sm:text-3xl font-normal border-0 border-b border-gray-200 rounded-t-xl bg-white/50 px-4 py-3 focus:outline-none focus:border-gray-600 focus:bg-white transition-all duration-300"
+                  className="w-full text-2xl sm:text-3xl font-normal bg-gray-50/50 border border-gray-200 px-4 py-3 focus:outline-none focus:border-gray-600 focus:bg-gray-50 transition-all duration-300"
                   autoFocus
                   disabled={loading}
                 />
@@ -302,7 +302,7 @@ export function SetupWizard() {
                   onChange={(e) => setCurrentInput(e.target.value.replace(/\D/g, ''))}
                   onKeyPress={handleKeyPress}
                   placeholder="••••"
-                  className="w-full text-5xl sm:text-6xl font-normal border-0 border-b border-gray-200 rounded-t-2xl bg-white/50 px-4 py-4 text-center tracking-[0.5em] focus:outline-none focus:border-gray-600 focus:bg-white transition-all duration-300 placeholder:text-gray-300"
+                  className="w-full text-5xl sm:text-6xl font-normal bg-gray-50/50 border border-gray-200 px-4 py-4 text-center tracking-[0.5em] focus:outline-none focus:border-gray-600 focus:bg-gray-50 transition-all duration-300 placeholder:text-gray-300"
                   autoFocus
                   disabled={loading}
                 />
@@ -323,7 +323,7 @@ export function SetupWizard() {
         {/* Header */}
         <div className="p-4 sm:p-6 md:p-8">
           <div className="flex items-center gap-2.5">
-            <div className="bg-white/80 backdrop-blur-sm p-2 rounded-2xl shadow-sm">
+            <div className="bg-gray-50 p-1.5 rounded-lg">
               <Calendar className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-gray-700" strokeWidth={1.5} />
             </div>
             <h1 className="text-lg sm:text-xl md:text-2xl font-medium text-gray-700 tracking-tight">
@@ -359,7 +359,7 @@ export function SetupWizard() {
 
               {error && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="bg-red-50 border border-red-200 rounded-2xl p-3">
+                  <div className="bg-red-50 border border-red-200 px-4 py-2.5">
                     <p className="text-sm text-red-600 text-center">{error}</p>
                   </div>
                 </div>
@@ -372,7 +372,7 @@ export function SetupWizard() {
                     variant="ghost"
                     onClick={handleBack}
                     disabled={loading}
-                    className="text-gray-400 hover:text-gray-700 text-sm rounded-2xl"
+                    className="text-gray-400 hover:text-gray-700 text-sm"
                     size="sm"
                   >
                     Back
@@ -383,7 +383,7 @@ export function SetupWizard() {
                 <Button
                   onClick={handleNext}
                   disabled={loading || (step === 4 && currentInput.length !== 4) || (step === 5 && currentInput.length !== 4)}
-                  className="ml-auto bg-gradient-to-r from-gray-700 to-gray-600 text-white hover:from-gray-600 hover:to-gray-500 px-6 sm:px-8 rounded-2xl text-sm shadow-sm hover:shadow-md transition-all duration-300"
+                  className="ml-auto bg-gray-700 text-white hover:bg-gray-600 px-6 sm:px-8 text-sm transition-colors duration-200"
                   size="sm"
                 >
                   {loading ? 'Processing...' : step === 5 ? 'Complete' : 'Continue'}
