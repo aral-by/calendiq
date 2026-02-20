@@ -8,9 +8,11 @@ interface UserContextValue {
   isAuthenticated: boolean;
   isSetupComplete: boolean;
   loading: boolean;
+  showWelcome: boolean;
   createUser: (profile: Omit<UserProfile, 'id'>) => Promise<void>;
   authenticate: (pin: string) => Promise<boolean>;
   logout: () => void;
+  hideWelcome: () => void;
 }
 
 const UserContext = createContext<UserContextValue | undefined>(undefined);
@@ -20,6 +22,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
   
   const userRepo = new IndexedDBUserRepository();
 
@@ -48,8 +51,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const newUser = await userRepo.create(profile);
       setUser(newUser);
       setIsSetupComplete(true);
-      setIsAuthenticated(true);
-      console.log('[Auth] User created and authenticated');
+      setShowWelcome(true);
+      console.log('[Auth] User created, showing welcome screen');
+      
+      // Auto-authenticate after 3 seconds
+      setTimeout(() => {
+        setIsAuthenticated(true);
+        setShowWelcome(false);
+        console.log('[Auth] Auto-authenticated');
+      }, 3000);
     } catch (error) {
       console.error('[Auth] Error creating user:', error);
       throw error;
@@ -84,6 +94,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     console.log('[Auth] User logged out');
   }
 
+  function hideWelcome() {
+    setShowWelcome(false);
+  }
+
   return (
     <UserContext.Provider
       value={{
@@ -91,9 +105,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         isSetupComplete,
         loading,
+        showWelcome,
         createUser,
         authenticate,
         logout,
+        hideWelcome,
       }}
     >
       {children}

@@ -110,13 +110,22 @@ export function SetupWizard() {
   // Splash Screen
   if (step === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="animate-in fade-in zoom-in duration-1000">
-          <div className="flex items-center gap-4">
-            <Calendar className="w-16 h-16 text-white" strokeWidth={1.5} />
-            <h1 className="text-7xl font-normal text-white tracking-tight">
+      <div className="min-h-screen flex flex-col bg-white">
+        {/* Logo Header */}
+        <div className="p-6">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-6 h-6 text-gray-900" strokeWidth={1.5} />
+            <h1 className="text-xl font-normal text-gray-900 tracking-tight">
               Calendiq
             </h1>
+          </div>
+        </div>
+
+        {/* Centered Content */}
+        <div className="flex-1 flex items-center justify-center animate-in fade-in zoom-in duration-1000">
+          <div className="text-center space-y-4">
+            <Calendar className="w-24 h-24 text-gray-900 mx-auto" strokeWidth={1} />
+            <h2 className="text-4xl font-normal text-gray-900">Welcome</h2>
           </div>
         </div>
       </div>
@@ -285,62 +294,75 @@ export function SetupWizard() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-8 py-16">
-      <div className="w-full max-w-2xl">
-        {/* Progress dots */}
-        <div className="mb-20">
-          <div className="flex items-center justify-center gap-3">
-            {[1, 2, 3, 4, 5].map((s) => (
-              <div
-                key={s}
-                className={`h-1.5 w-1.5 rounded-full transition-all duration-500 ${
-                  s === step
-                    ? 'bg-gray-900 scale-150'
-                    : s < step
-                    ? 'bg-gray-400'
-                    : 'bg-gray-200'
-                }`}
-              />
-            ))}
-          </div>
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Logo Header - Always visible */}
+      <div className="p-6 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-6 h-6 text-gray-900" strokeWidth={1.5} />
+          <h1 className="text-xl font-normal text-gray-900 tracking-tight">
+            Calendiq
+          </h1>
         </div>
+      </div>
 
-        {/* Main content */}
-        <div className="space-y-12">
-          {renderStep()}
-
-          {error && (
-            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-              <p className="text-sm text-gray-600">{error}</p>
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center p-6 md:p-12">
+        <div className="w-full max-w-xl">
+          {/* Progress dots */}
+          <div className="mb-12">
+            <div className="flex items-center justify-center gap-3">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <div
+                  key={s}
+                  className={`h-1.5 w-1.5 rounded-full transition-all duration-500 ${
+                    s === step
+                      ? 'bg-gray-900 scale-150'
+                      : s < step
+                      ? 'bg-gray-400'
+                      : 'bg-gray-200'
+                  }`}
+                />
+              ))}
             </div>
-          )}
-
-          {/* Navigation */}
-          <div className="flex gap-6 pt-8">
-            {step > 1 && (
-              <button
-                onClick={handleBack}
-                disabled={loading}
-                className="text-sm text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider disabled:opacity-50"
-              >
-                Back
-              </button>
-            )}
-            <button
-              onClick={handleNext}
-              disabled={loading || (step === 4 && currentInput.length !== 4) || (step === 5 && currentInput.length !== 4)}
-              className="ml-auto text-sm text-gray-900 hover:text-gray-600 transition-colors uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Please wait...' : step === 5 ? 'Finish' : 'Continue'}
-            </button>
           </div>
-        </div>
 
-        {/* Footer hint */}
-        <div className="mt-20 text-center">
-          <p className="text-xs text-gray-300 uppercase tracking-wider">
-            Press Enter to continue
-          </p>
+          {/* Form Content */}
+          <div className="space-y-12">
+            {renderStep()}
+
+            {error && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                <p className="text-sm text-gray-600">{error}</p>
+              </div>
+            )}
+
+            {/* Navigation */}
+            <div className="flex gap-6 pt-8 border-t">
+              {step > 1 && (
+                <button
+                  onClick={handleBack}
+                  disabled={loading}
+                  className="text-sm text-gray-400 hover:text-gray-900 transition-colors uppercase tracking-wider disabled:opacity-50"
+                >
+                  Back
+                </button>
+              )}
+              <button
+                onClick={handleNext}
+                disabled={loading || (step === 4 && currentInput.length !== 4) || (step === 5 && currentInput.length !== 4)}
+                className="ml-auto text-sm text-gray-900 hover:text-gray-600 transition-colors uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Please wait...' : step === 5 ? 'Finish' : 'Continue'}
+              </button>
+            </div>
+          </div>
+
+          {/* Footer hint */}
+          <div className="mt-12 text-center">
+            <p className="text-xs text-gray-300 uppercase tracking-wider">
+              Press Enter to continue
+            </p>
+          </div>
         </div>
       </div>
     </div>

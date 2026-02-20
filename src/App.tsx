@@ -1,12 +1,13 @@
 import { UserProvider, useUser } from '@/context/UserContext';
 import { EventProvider } from '@/context/EventContext';
 import { SetupWizard } from '@/components/Setup/SetupWizard';
+import { WelcomeScreen } from '@/components/Welcome/WelcomeScreen';
 import { PINScreen } from '@/components/PIN/PINScreen';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { CalendarView } from '@/components/Calendar/CalendarView';
 
 function AppContent() {
-  const { isSetupComplete, isAuthenticated, loading } = useUser();
+  const { isSetupComplete, isAuthenticated, loading, showWelcome } = useUser();
 
   if (loading) {
     return (

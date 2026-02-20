@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useUser } from '@/context/UserContext';
 import { Input } from '@/components/ui/input';
 import { Calendar } from 'lucide-react';
+import { clearUserProfile } from '@/lib/dbReset';
 
 export function PINScreen() {
   const [pin, setPin] = useState('');
@@ -35,6 +36,12 @@ export function PINScreen() {
   function handleKeyPress(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && pin.length === 4 && !loading) {
       handleSubmit();
+    }
+  }
+
+  async function handleReset() {
+    if (confirm('Reset app? This will delete all your data including events. This action cannot be undone.')) {
+      await clearUserProfile();
     }
   }
 
@@ -92,10 +99,16 @@ export function PINScreen() {
           </div>
 
           {/* Footer hint */}
-          <div className="text-center pt-8">
+          <div className="text-center pt-8 space-y-3">
             <p className="text-xs text-gray-300 uppercase tracking-wider">
               Press Enter to continue
             </p>
+            <button
+              onClick={handleReset}
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Forgot PIN? Reset app
+            </button>
           </div>
         </div>
       </div>
