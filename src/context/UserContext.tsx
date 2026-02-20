@@ -10,6 +10,7 @@ interface UserContextValue {
   loading: boolean;
   showWelcome: boolean;
   createUser: (profile: Omit<UserProfile, 'id'>) => Promise<void>;
+  updateUser: (updates: Partial<Omit<UserProfile, 'id' | 'pinHash'>>) => Promise<void>;
   authenticate: (pin: string) => Promise<boolean>;
   logout: () => void;
   hideWelcome: () => void;
@@ -75,6 +76,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function updateUser(updates: Partial<Omit<UserProfile, 'id' | 'pinHash'>>) {
+    try {
+      if (!user) {
+        throw new Error('No user to update');
+      }
+      
+      const updatedUser = { ...user, ...updates };
+      await userRepo.update(updatedUser);
+      setUser(updatedUser);
+      console.log('[Auth] User profile updated');
+    } catch (error) {
+      console.error('[Auth] Error updating user:', error);
+      throw error;
+    }
+  }
+
   async function authenticate(pin: string): Promise<boolean> {
     try {
       if (!user) {
@@ -101,7 +118,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   function logout() {
     setIsAuthenticated(false);
     localStorage.removeItem('calendiqAuth');
-    console.log('[Auth] User logged out');
+    consupdateUser,
+        ole.log('[Auth] User logged out');
   }
 
   function hideWelcome() {

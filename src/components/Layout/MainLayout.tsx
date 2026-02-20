@@ -3,6 +3,8 @@ import { Calendar, Sun, Moon, TrendingUp, Home, MessageSquare, ChevronUp, User, 
 import { Switch } from '@/components/ui/switch';
 import { useUser } from '@/context/UserContext';
 import { NotificationDialog } from '@/components/Notifications/NotificationDialog';
+import { AccountDialog } from '@/components/Account/AccountDialog';
+import { SettingsDialog } from '@/components/Settings/SettingsDialog';
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +40,8 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
     return saved || 'light';
   });
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const { user, logout } = useUser();
 
   // Apply theme on mount
@@ -150,11 +154,11 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuLabe onClick={() => setAccountDialogOpen(true)}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Account</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSettingsDialogOpen(true)}span>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
@@ -198,10 +202,18 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
         </div>
       </div>
       
-      {/* Notification Permission Dialog */}
+      {/* Dialogs */}
       <NotificationDialog 
         open={notificationDialogOpen} 
         onOpenChange={setNotificationDialogOpen}
+      />
+      <AccountDialog 
+        open={accountDialogOpen} 
+        onOpenChange={setAccountDialogOpen}
+      />
+      <SettingsDialog 
+        open={settingsDialogOpen} 
+        onOpenChange={setSettingsDialogOpen}
       />
     </SidebarProvider>
   );
