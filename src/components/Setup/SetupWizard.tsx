@@ -143,17 +143,15 @@ export function SetupWizard() {
   }
 
   return (
-    <CursorProvider>
-      <Cursor />
-      <div className="min-h-screen flex flex-col items-center justify-between py-12 px-6 bg-background">
-        {/* Logo - Centered at top */}
-        <div className="text-center space-y-2 animate-in fade-in slide-in-from-top duration-500">
-          <Calendar className="w-8 h-8 mx-auto text-foreground" strokeWidth={1.5} />
-          <h1 className="text-xl font-light tracking-tight">Calendiq</h1>
-        </div>
+    <div className="min-h-screen flex flex-col items-center justify-between py-12 px-6 bg-background">
+      {/* Logo - Centered at top */}
+      <div className="text-center space-y-2 animate-in fade-in slide-in-from-top duration-500">
+        <Calendar className="w-8 h-8 mx-auto text-foreground" strokeWidth={1.5} />
+        <h1 className="text-xl font-light tracking-tight">Calendiq</h1>
+      </div>
 
-        {/* Main Content - Centered */}
-        <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom duration-700">
+      {/* Main Content - Centered */}
+      <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom duration-700">
           
           {/* Step 1: First Name */}
           {step === 1 && (
@@ -432,6 +430,6 @@ export function SetupWizard() {
           </p>
         </div>
       </div>
-    </CursorProvider>
+    </div>
   );
 }
