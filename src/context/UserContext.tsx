@@ -118,8 +118,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   function logout() {
     setIsAuthenticated(false);
     localStorage.removeItem('calendiqAuth');
-    consupdateUser,
-        ole.log('[Auth] User logged out');
+    console.log('[Auth] User logged out');
   }
 
   function hideWelcome() {
@@ -135,6 +134,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         loading,
         showWelcome,
         createUser,
+        updateUser,
         authenticate,
         logout,
         hideWelcome,
