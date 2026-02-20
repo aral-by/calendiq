@@ -3,8 +3,7 @@ import { EventProvider } from '@/context/EventContext';
 import { SetupWizard } from '@/components/Setup/SetupWizard';
 import { WelcomeScreen } from '@/components/Welcome/WelcomeScreen';
 import { PINScreen } from '@/components/PIN/PINScreen';
-import { MainLayout } from '@/components/Layout/MainLayout';
-import { CalendarView } from '@/components/Calendar/CalendarView';
+import { Dashboard } from '@/components/Dashboard/Dashboard';
 
 function AppContent() {
   const { isSetupComplete, isAuthenticated, loading, showWelcome } = useUser();

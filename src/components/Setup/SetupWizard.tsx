@@ -256,47 +256,83 @@ export function SetupWizard() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => setPurpose('school')}
-                  className={`p-6 border transition-all duration-300 ${
+                  className={`p-6 border transition-all duration-500 group ${
                     purpose === 'school'
-                      ? 'border-foreground bg-accent'
-                      : 'border-border hover:border-foreground/50'
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/30'
+                      : 'border-border hover:border-purple-300 hover:bg-purple-50/50 dark:hover:bg-purple-950/20'
                   }`}
                 >
-                  <GraduationCap className="w-8 h-8 mx-auto mb-2" strokeWidth={1.5} />
-                  <p className="font-light text-sm">School</p>
+                  <GraduationCap 
+                    className={`w-8 h-8 mx-auto mb-2 transition-all duration-500 ${
+                      purpose === 'school' 
+                        ? 'text-purple-600 dark:text-purple-400 scale-110' 
+                        : 'text-muted-foreground group-hover:text-purple-500 group-hover:scale-105'
+                    }`} 
+                    strokeWidth={1.5} 
+                  />
+                  <p className={`font-light text-sm transition-colors duration-300 ${
+                    purpose === 'school' ? 'text-purple-700 dark:text-purple-300' : 'group-hover:text-purple-600'
+                  }`}>School</p>
                 </button>
                 <button
                   onClick={() => setPurpose('work')}
-                  className={`p-6 border transition-all duration-300 ${
+                  className={`p-6 border transition-all duration-500 group ${
                     purpose === 'work'
-                      ? 'border-foreground bg-accent'
-                      : 'border-border hover:border-foreground/50'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                      : 'border-border hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-950/20'
                   }`}
                 >
-                  <Briefcase className="w-8 h-8 mx-auto mb-2" strokeWidth={1.5} />
-                  <p className="font-light text-sm">Work</p>
+                  <Briefcase 
+                    className={`w-8 h-8 mx-auto mb-2 transition-all duration-500 ${
+                      purpose === 'work' 
+                        ? 'text-blue-600 dark:text-blue-400 scale-110' 
+                        : 'text-muted-foreground group-hover:text-blue-500 group-hover:scale-105'
+                    }`} 
+                    strokeWidth={1.5} 
+                  />
+                  <p className={`font-light text-sm transition-colors duration-300 ${
+                    purpose === 'work' ? 'text-blue-700 dark:text-blue-300' : 'group-hover:text-blue-600'
+                  }`}>Work</p>
                 </button>
                 <button
                   onClick={() => setPurpose('health')}
-                  className={`p-6 border transition-all duration-300 ${
+                  className={`p-6 border transition-all duration-500 group ${
                     purpose === 'health'
-                      ? 'border-foreground bg-accent'
-                      : 'border-border hover:border-foreground/50'
+                      ? 'border-pink-500 bg-pink-50 dark:bg-pink-950/30'
+                      : 'border-border hover:border-pink-300 hover:bg-pink-50/50 dark:hover:bg-pink-950/20'
                   }`}
                 >
-                  <Heart className="w-8 h-8 mx-auto mb-2" strokeWidth={1.5} />
-                  <p className="font-light text-sm">Health</p>
+                  <Heart 
+                    className={`w-8 h-8 mx-auto mb-2 transition-all duration-500 ${
+                      purpose === 'health' 
+                        ? 'text-pink-600 dark:text-pink-400 scale-110' 
+                        : 'text-muted-foreground group-hover:text-pink-500 group-hover:scale-105'
+                    }`} 
+                    strokeWidth={1.5} 
+                  />
+                  <p className={`font-light text-sm transition-colors duration-300 ${
+                    purpose === 'health' ? 'text-pink-700 dark:text-pink-300' : 'group-hover:text-pink-600'
+                  }`}>Health</p>
                 </button>
                 <button
                   onClick={() => setPurpose('general')}
-                  className={`p-6 border transition-all duration-300 ${
+                  className={`p-6 border transition-all duration-500 group ${
                     purpose === 'general'
-                      ? 'border-foreground bg-accent'
-                      : 'border-border hover:border-foreground/50'
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30'
+                      : 'border-border hover:border-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-950/20'
                   }`}
                 >
-                  <Sparkles className="w-8 h-8 mx-auto mb-2" strokeWidth={1.5} />
-                  <p className="font-light text-sm">General</p>
+                  <Sparkles 
+                    className={`w-8 h-8 mx-auto mb-2 transition-all duration-500 ${
+                      purpose === 'general' 
+                        ? 'text-amber-600 dark:text-amber-400 scale-110' 
+                        : 'text-muted-foreground group-hover:text-amber-500 group-hover:scale-105'
+                    }`} 
+                    strokeWidth={1.5} 
+                  />
+                  <p className={`font-light text-sm transition-colors duration-300 ${
+                    purpose === 'general' ? 'text-amber-700 dark:text-amber-300' : 'group-hover:text-amber-600'
+                  }`}>General</p>
                 </button>
               </div>
             </div>
