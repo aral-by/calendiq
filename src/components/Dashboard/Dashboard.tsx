@@ -131,38 +131,116 @@ export function Dashboard() {
         {/* Sidebar */}
         <Sidebar>
           <SidebarHeader>
-            <div className="flex items-center gap-2 px-2 py-1">
+            <div className="flex items-center gap-2 px-2 py-2">
               <Calendar className="h-6 w-6" />
               <span className="font-semibold text-lg">Calendiq</span>
             </div>
+            
+            {/* Search Bar */}
+            <div className="px-2 pt-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search events..." 
+                  className="pl-9 h-9"
+                />
+              </div>
+            </div>
           </SidebarHeader>
+          
           <SidebarContent>
+            {/* Navigation Menu */}
             <SidebarGroup>
-              <SidebarGroupLabel>Menu</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-xs">Menu</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="space-y-2">
                   <SidebarMenuItem>
-                    <SidebarMenuButton isActive>
-                      <Home className="h-4 w-4" />
-                      <span>Dashboard</span>
+                    <SidebarMenuButton isActive className="h-11">
+                      <Home className="h-5 w-5" />
+                      <span className="text-base font-medium">Dashboard</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton>
-                      <Calendar className="h-4 w-4" />
-                      <span>Calendar</span>
+                    <SidebarMenuButton className="h-11">
+                      <Calendar className="h-5 w-5" />
+                      <span className="text-base font-medium">Calendar</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton>
-                      <MessageSquare className="h-4 w-4" />
-                      <span>AI Chat</span>
+                    <SidebarMenuButton className="h-11">
+                      <MessageSquare className="h-5 w-5" />
+                      <span className="text-base font-medium">AI Chat</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+
+            {/* Stats Section */}
+            <SidebarGroup className="mt-6">
+              <SidebarGroupLabel className="text-xs">Statistics</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="space-y-3 px-2">
+                  <Card className="border-none bg-muted/50">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 dark:bg-blue-950 rounded-lg">
+                          <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">Today</p>
+                          <p className="text-lg font-bold">{todayEvents.length}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-none bg-muted/50">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-100 dark:bg-purple-950 rounded-lg">
+                          <CalendarDays className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">This Week</p>
+                          <p className="text-lg font-bold">{weekEvents.length}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-none bg-muted/50">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-100 dark:bg-green-950 rounded-lg">
+                          <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">This Month</p>
+                          <p className="text-lg font-bold">{monthEvents.length}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-none bg-muted/50">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-100 dark:bg-amber-950 rounded-lg">
+                          <Activity className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">Total</p>
+                          <p className="text-lg font-bold">{events.length}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
           </SidebarContent>
+          
           <SidebarFooter>
             {user && (
               <DropdownMenu>
@@ -221,74 +299,73 @@ export function Dashboard() {
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 space-y-4 p-8 pt-6">
-            <div className="flex items-center justify-between space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight">
-                Hi {user?.firstName}!
-              </h2>
-            </div>
-            
-            {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Today's Events
-                  </CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{todayEvents.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {todayEvents.length === 1 ? 'event scheduled' : 'events scheduled'}
-                  </p>
-                </CardContent>
-              </Card>
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="w-full max-w-4xl space-y-8">
+              {/* Greeting */}
+              <div className="text-center">
+                <h1 className="text-4xl font-bold tracking-tight">
+                  👋 Hi {user?.firstName}!
+                </h1>
+              </div>
               
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    This Week
-                  </CardTitle>
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{weekEvents.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    events this week
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    This Month
-                  </CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{monthEvents.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    events this month
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total Events
-                  </CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{events.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    all time events
-                  </p>
-                </CardContent>
-              </Card>
+              {/* Quick Action Cards - 2x2 Grid */}
+              <div className="grid grid-cols-2 gap-6">
+                <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2">
+                  <CardHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-3 bg-blue-100 dark:bg-blue-950 rounded-xl">
+                        <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-xl">Takvim</CardTitle>
+                    <CardDescription className="text-base">
+                      Takviminize göz atın
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+
+                <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2">
+                  <CardHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-3 bg-purple-100 dark:bg-purple-950 rounded-xl">
+                        <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-xl">Yapay Zeka</CardTitle>
+                    <CardDescription className="text-base">
+                      Yapay zeka ile takviminizi yönetin
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+
+                <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2">
+                  <CardHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-3 bg-green-100 dark:bg-green-950 rounded-xl">
+                        <CalendarCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-xl">Bugünün Programı</CardTitle>
+                    <CardDescription className="text-base">
+                      Bugün ne yapacaksınız?
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+
+                <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2">
+                  <CardHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-3 bg-amber-100 dark:bg-amber-950 rounded-xl">
+                        <Plus className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-xl">Hızlı Ekle</CardTitle>
+                    <CardDescription className="text-base">
+                      Yeni etkinlik oluşturun
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
