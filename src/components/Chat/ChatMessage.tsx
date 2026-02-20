@@ -46,13 +46,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
             <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
           </div>
           <div className="flex-1 max-w-[85%]">
-            <div className="bg-background/50 px-5 py-3 rounded-3xl rounded-tl-md border border-border/40 shadow-sm">
-              <p className="text-[15px] font-light leading-relaxed text-foreground/90">{aiDisplayMessage}</p>
-            </div>
+            <p className="text-[15px] font-light leading-relaxed text-foreground/90">{aiDisplayMessage}</p>
             
             {/* Show action type badge if available */}
             {message.actionType && message.actionType !== 'NO_ACTION' && message.actionType !== 'ERROR' && (
-              <div className="mt-2 ml-1 inline-flex items-center px-2.5 py-1 rounded-full bg-purple-100/80 dark:bg-purple-950/50 text-[11px] text-purple-700 dark:text-purple-300 font-medium border border-purple-200/50 dark:border-purple-800/50">
+              <div className="mt-2 inline-flex items-center px-2.5 py-1 rounded-full bg-purple-100/80 dark:bg-purple-950/50 text-[11px] text-purple-700 dark:text-purple-300 font-medium border border-purple-200/50 dark:border-purple-800/50">
                 {message.actionType.replace('_', ' ')}
               </div>
             )}

@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react';
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
 import { ChatMessage } from './ChatMessage';
+import { TypingIndicator } from './TypingIndicator';
 import { MessageSquare } from 'lucide-react';
 
 interface ChatHistoryProps {
   messages: ChatMessageType[];
+  loading?: boolean;
 }
 
-export function ChatHistory({ messages }: ChatHistoryProps) {
+export function ChatHistory({ messages, loading = false }: ChatHistoryProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
@@ -43,6 +45,7 @@ export function ChatHistory({ messages }: ChatHistoryProps) {
         {messages.map((message) => (
           <ChatMessage key={message.id} message={message} />
         ))}
+        {loading && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
     </div>

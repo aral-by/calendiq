@@ -8,12 +8,12 @@ import { isCreateEventAction, isUpdateEventAction, isDeleteEventAction } from '@
 import { Sparkles } from 'lucide-react';
 
 export function ChatPanel() {
-  const { messages, loading, sendMessage, loadHistory } = useChat();
+  const { messages, loading, sendMessage } = useChat();
   const { createEvent, updateEvent, deleteEvent } = useEvents();
   const hasMessages = messages.length > 0;
 
   useEffect(() => {
-    loadHistory();
+    // Don't load history - start fresh each time
   }, []);
 
   async function handleSendMessage(message: string) {
@@ -104,14 +104,7 @@ export function ChatPanel() {
 
         {/* Chat Messages */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          <ChatHistory messages={messages} />
-          
-          {/* Typing Indicator */}
-          {loading && (
-            <div className="px-6 pb-4">
-              <TypingIndicator />
-            </div>
-          )}
+          <ChatHistory messages={messages} loading={loading} />
         </div>
 
         {/* Chat Input */}
