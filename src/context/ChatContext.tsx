@@ -21,7 +21,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const chatRepo = new IndexedDBChatRepository();
 
   useEffect(() => {
-    loadHistory();
+    // Start fresh each session - clear old messages
+    clearHistory();
   }, []);
 
   async function loadHistory() {

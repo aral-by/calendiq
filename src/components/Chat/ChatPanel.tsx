@@ -49,40 +49,52 @@ export function ChatPanel() {
     <div className="h-full flex flex-col bg-background relative">
       {/* Centered Welcome State - Only shown when no messages */}
       <div 
-        className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ${
+        className={`absolute inset-0 flex flex-col items-center justify-center p-8 transition-all duration-700 ${
           hasMessages ? 'opacity-0 pointer-events-none scale-95' : 'opacity-100 scale-100'
         }`}
       >
-        <div className="text-center space-y-8 max-w-2xl px-8 animate-in fade-in zoom-in duration-700">
+        <div className="w-full max-w-3xl space-y-12 animate-in fade-in zoom-in duration-700">
           {/* Header */}
-          <div className="space-y-4">
+          <div className="text-center space-y-6">
             <div className="flex items-center justify-center">
-              <div className="p-4 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-950 dark:to-blue-950 rounded-3xl">
-                <Sparkles className="h-12 w-12 text-purple-600 dark:text-purple-400" />
+              <div className="p-4 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-950 dark:to-blue-950 rounded-full">
+                <Sparkles className="h-10 w-10 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
-            <h1 className="text-5xl font-light tracking-tight">
+            <h1 className="text-4xl font-medium tracking-tight">
               Nasıl yardımcı olabilirim?
             </h1>
           </div>
 
+          {/* Main Input */}
+          <div className="space-y-4">
+            <ChatInput onSend={handleSendMessage} loading={loading} />
+          </div>
+
           {/* Example Prompts */}
-          <div className="grid gap-3 mt-8">
-            {[
-              'Yarın saat 15\'te doktor randevum var',
-              'Pazartesi 10\'da toplantı ekle',
-              'Bu haftaki planlarımı göster'
-            ].map((prompt, i) => (
-              <button
-                key={i}
-                onClick={() => handleSendMessage(prompt)}
-                className="group px-6 py-4 bg-muted/30 hover:bg-muted/60 rounded-2xl transition-all duration-300 text-left border border-transparent hover:border-border"
-              >
-                <p className="text-sm font-light text-muted-foreground group-hover:text-foreground transition-colors">
-                  {prompt}
-                </p>
-              </button>
-            ))}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-muted-foreground px-2">Başlangıç önerileri</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { icon: '📅', text: 'Yarın saat 15\'te doktor randevum var' },
+                { icon: '💼', text: 'Pazartesi 10\'da toplantı ekle' },
+                { icon: '📊', text: 'Bu haftaki planlarımı göster' },
+                { icon: '🔔', text: 'Gelecek hafta bir hatırlatıcı koy' }
+              ].map((prompt, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSendMessage(prompt.text)}
+                  className="group px-4 py-3 bg-muted/40 hover:bg-muted/70 rounded-xl transition-all duration-200 text-left border border-border/50 hover:border-border"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-lg">{prompt.icon}</span>
+                    <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors leading-relaxed">
+                      {prompt.text}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
