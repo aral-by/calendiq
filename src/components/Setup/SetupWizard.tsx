@@ -430,6 +430,5 @@ export function SetupWizard() {
           </p>
         </div>
       </div>
-    </div>
   );
 }
