@@ -1,5 +1,5 @@
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
-import { User, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -31,29 +31,28 @@ export function ChatMessage({ message }: ChatMessageProps) {
   }
 
   return (
-    <div className="space-y-3 animate-in fade-in slide-in-from-bottom duration-300">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* User Message */}
       <div className="flex items-start gap-3 justify-end">
-        <div className="bg-primary text-primary-foreground px-4 py-3 rounded-2xl rounded-tr-sm max-w-[80%]">
-          <p className="text-sm font-light">{message.userMessage}</p>
-        </div>
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 shrink-0 mt-1">
-          <User className="h-4 w-4 text-primary" />
+        <div className="bg-muted/80 px-5 py-3 rounded-3xl rounded-tr-md max-w-[85%] shadow-sm">
+          <p className="text-[15px] font-light leading-relaxed">{message.userMessage}</p>
         </div>
       </div>
 
       {/* AI Response */}
       {message.aiResponse && (
         <div className="flex items-start gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-950 shrink-0 mt-1">
-            <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-950 dark:to-blue-950 shrink-0">
+            <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
           </div>
-          <div className="bg-muted/50 px-4 py-3 rounded-2xl rounded-tl-sm max-w-[80%]">
-            <p className="text-sm font-light text-foreground">{aiDisplayMessage}</p>
+          <div className="flex-1 max-w-[85%]">
+            <div className="bg-background/50 px-5 py-3 rounded-3xl rounded-tl-md border border-border/40 shadow-sm">
+              <p className="text-[15px] font-light leading-relaxed text-foreground/90">{aiDisplayMessage}</p>
+            </div>
             
             {/* Show action type badge if available */}
             {message.actionType && message.actionType !== 'NO_ACTION' && message.actionType !== 'ERROR' && (
-              <div className="mt-2 inline-flex items-center px-2 py-1 rounded-md bg-purple-100 dark:bg-purple-950/50 text-xs text-purple-700 dark:text-purple-300 font-medium">
+              <div className="mt-2 ml-1 inline-flex items-center px-2.5 py-1 rounded-full bg-purple-100/80 dark:bg-purple-950/50 text-[11px] text-purple-700 dark:text-purple-300 font-medium border border-purple-200/50 dark:border-purple-800/50">
                 {message.actionType.replace('_', ' ')}
               </div>
             )}

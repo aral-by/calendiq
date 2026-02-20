@@ -27,44 +27,45 @@ export function ChatInput({ onSend, loading = false }: ChatInputProps) {
   }
 
   return (
-    <div className="border-t bg-background p-4">
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
+    <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center gap-2 p-2 pr-3 rounded-full border bg-background shadow-sm focus-within:shadow-md transition-shadow">
+          {/* Voice button - Phase 6 */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full shrink-0"
+            disabled
+            title="Voice input coming soon"
+          >
+            <Mic className="h-4 w-4" />
+          </Button>
+
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask AI to manage your calendar..."
+            placeholder="Herhangi bir şey sor"
             disabled={loading}
-            className="h-11 text-base"
+            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-10 text-base font-light px-2"
           />
-          {!navigator.onLine && (
-            <p className="text-xs text-destructive mt-1 animate-in fade-in">
-              You're offline. AI features require internet connection.
-            </p>
-          )}
+
+          {/* Send button */}
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || !message.trim() || !navigator.onLine}
+            size="icon"
+            className="h-10 w-10 rounded-full shrink-0"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
         </div>
         
-        {/* Voice button - Phase 6 */}
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-11 w-11 shrink-0"
-          disabled
-          title="Voice input coming soon"
-        >
-          <Mic className="h-4 w-4" />
-        </Button>
-
-        {/* Send button */}
-        <Button
-          onClick={handleSubmit}
-          disabled={loading || !message.trim() || !navigator.onLine}
-          size="icon"
-          className="h-11 w-11 shrink-0"
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+        {!navigator.onLine && (
+          <p className="text-xs text-destructive mt-2 text-center animate-in fade-in">
+            You're offline. AI features require internet connection.
+          </p>
+        )}
       </div>
     </div>
   );

@@ -38,11 +38,13 @@ export function ChatHistory({ messages }: ChatHistoryProps) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-      {messages.map((message) => (
-        <ChatMessage key={message.id} message={message} />
-      ))}
-      <div ref={bottomRef} />
+    <div className="flex-1 overflow-y-auto px-6 py-6">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {messages.map((message) => (
+          <ChatMessage key={message.id} message={message} />
+        ))}
+        <div ref={bottomRef} />
+      </div>
     </div>
   );
 }
