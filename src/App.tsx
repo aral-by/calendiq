@@ -28,6 +28,10 @@ function AppContent() {
     return <PINScreen />;
   }
 
+  if (showWelcome) {
+    return <WelcomeScreen />;
+  }
+
   return (
     <EventProvider>
       <MainLayout
