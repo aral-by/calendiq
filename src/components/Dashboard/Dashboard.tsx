@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Sun, Moon, CalendarDays, Clock, TrendingUp, Activity, Home, MessageSquare, ChevronUp, User, Settings, LogOut, Bell, Search, Plus, Sparkles, CalendarCheck } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Calendar, Sun, Moon, TrendingUp, Home, MessageSquare, ChevronUp, User, Settings, LogOut, Bell, Search, Plus, Sparkles, CalendarCheck } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
-import { useEvents } from '@/context/EventContext';
 import { useUser } from '@/context/UserContext';
 import {
   Sidebar,
@@ -30,7 +28,6 @@ import {
 
 export function Dashboard() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const { events } = useEvents();
   const { user } = useUser();
 
   // Load theme from setup or localStorage
@@ -94,37 +91,6 @@ export function Dashboard() {
     }
   }
 
-  // Get today's events
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  const todayEvents = events.filter(event => {
-    const eventDate = new Date(event.start);
-    return eventDate >= today && eventDate < tomorrow;
-  });
-
-  // Get this week's events
-  const weekStart = new Date();
-  weekStart.setHours(0, 0, 0, 0);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 7);
-  
-  const weekEvents = events.filter(e => {
-    const eventDate = new Date(e.start);
-    return eventDate >= weekStart && eventDate < weekEnd;
-  });
-
-  // Get this month's events
-  const monthEvents = events.filter(e => {
-    const eventDate = new Date(e.start);
-    const now = new Date();
-    return eventDate.getMonth() === now.getMonth() && 
-           eventDate.getFullYear() === now.getFullYear();
-  });
-
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -135,17 +101,6 @@ export function Dashboard() {
               <Calendar className="h-6 w-6" />
               <span className="font-semibold text-lg">Calendiq</span>
             </div>
-            
-            {/* Search Bar */}
-            <div className="px-2 pt-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search events..." 
-                  className="pl-9 h-9"
-                />
-              </div>
-            </div>
           </SidebarHeader>
           
           <SidebarContent>
@@ -153,11 +108,17 @@ export function Dashboard() {
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs">Menu</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu className="space-y-2">
+                <SidebarMenu className="space-y-1">
                   <SidebarMenuItem>
                     <SidebarMenuButton isActive className="h-11">
                       <Home className="h-5 w-5" />
                       <span className="text-base font-medium">Dashboard</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton className="h-11">
+                      <Search className="h-5 w-5" />
+                      <span className="text-base font-medium">Search</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
@@ -172,71 +133,13 @@ export function Dashboard() {
                       <span className="text-base font-medium">AI Chat</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton className="h-11">
+                      <TrendingUp className="h-5 w-5" />
+                      <span className="text-base font-medium">Statistics</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Stats Section */}
-            <SidebarGroup className="mt-6">
-              <SidebarGroupLabel className="text-xs">Statistics</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <div className="space-y-3 px-2">
-                  <Card className="border-none bg-muted/50">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-950 rounded-lg">
-                          <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-muted-foreground">Today</p>
-                          <p className="text-lg font-bold">{todayEvents.length}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-none bg-muted/50">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-100 dark:bg-purple-950 rounded-lg">
-                          <CalendarDays className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-muted-foreground">This Week</p>
-                          <p className="text-lg font-bold">{weekEvents.length}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-none bg-muted/50">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 dark:bg-green-950 rounded-lg">
-                          <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-muted-foreground">This Month</p>
-                          <p className="text-lg font-bold">{monthEvents.length}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-none bg-muted/50">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-100 dark:bg-amber-950 rounded-lg">
-                          <Activity className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-muted-foreground">Total</p>
-                          <p className="text-lg font-bold">{events.length}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
@@ -317,9 +220,9 @@ export function Dashboard() {
                         <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                       </div>
                     </div>
-                    <CardTitle className="text-xl">Takvim</CardTitle>
+                    <CardTitle className="text-xl">Calendar</CardTitle>
                     <CardDescription className="text-base">
-                      Takviminize göz atın
+                      View your calendar
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -331,9 +234,9 @@ export function Dashboard() {
                         <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                       </div>
                     </div>
-                    <CardTitle className="text-xl">Yapay Zeka</CardTitle>
+                    <CardTitle className="text-xl">AI Assistant</CardTitle>
                     <CardDescription className="text-base">
-                      Yapay zeka ile takviminizi yönetin
+                      Manage your schedule with AI
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -345,9 +248,9 @@ export function Dashboard() {
                         <CalendarCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
                       </div>
                     </div>
-                    <CardTitle className="text-xl">Bugünün Programı</CardTitle>
+                    <CardTitle className="text-xl">Today's Schedule</CardTitle>
                     <CardDescription className="text-base">
-                      Bugün ne yapacaksınız?
+                      What's on today?
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -359,9 +262,9 @@ export function Dashboard() {
                         <Plus className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                       </div>
                     </div>
-                    <CardTitle className="text-xl">Hızlı Ekle</CardTitle>
+                    <CardTitle className="text-xl">Quick Add</CardTitle>
                     <CardDescription className="text-base">
-                      Yeni etkinlik oluşturun
+                      Create a new event
                     </CardDescription>
                   </CardHeader>
                 </Card>
