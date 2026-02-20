@@ -3,7 +3,6 @@ import { useChat } from '@/context/ChatContext';
 import { useEvents } from '@/context/EventContext';
 import { ChatHistory } from './ChatHistory';
 import { ChatInput } from './ChatInput';
-import { TypingIndicator } from './TypingIndicator';
 import { isCreateEventAction, isUpdateEventAction, isDeleteEventAction } from '@/types/ai';
 import { Sparkles } from 'lucide-react';
 
