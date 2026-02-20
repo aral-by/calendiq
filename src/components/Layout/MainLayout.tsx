@@ -154,13 +154,13 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabe onClick={() => setAccountDialogOpen(true)}>
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setAccountDialogOpen(true)}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Account</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSettingsDialogOpen(true)}span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSettingsDialogOpen(true)}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>

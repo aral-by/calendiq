@@ -10,7 +10,7 @@ export function SetupWizard() {
   const [step, setStep] = useState(0);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [birthDate, setBirthDate] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | ''>('');
   const [purpose, setPurpose] = useState<'school' | 'work' | 'health' | 'general' | ''>('');
   const [pin, setPin] = useState('');
@@ -46,7 +46,7 @@ export function SetupWizard() {
       setError('Please enter your last name');
       return;
     }
-    if (step === 3 && !birthDate) {
+    if (step === 3 && !dateOfBirth) {
       setError('Please select your birth date');
       return;
     }
@@ -90,7 +90,7 @@ export function SetupWizard() {
       await createUser({
         firstName,
         lastName,
-        birthDate,
+        dateOfBirth,
         pinHash,
         createdAt: new Date().toISOString(),
       });
@@ -209,8 +209,8 @@ export function SetupWizard() {
               </div>
               <Input
                 type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
                 autoFocus
                 className="text-center text-xl h-14 border-0 border-b rounded-none focus-visible:ring-0 focus-visible:border-foreground"
               />
