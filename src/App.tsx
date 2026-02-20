@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { UserProvider, useUser } from '@/context/UserContext';
 import { EventProvider } from '@/context/EventContext';
+import { ChatProvider } from '@/context/ChatContext';
 import { SetupWizard } from '@/components/Setup/SetupWizard';
 import { WelcomeScreen } from '@/components/Welcome/WelcomeScreen';
 import { PINScreen } from '@/components/PIN/PINScreen';
 import { MainLayout } from '@/components/Layout/MainLayout';
 import { Dashboard } from '@/components/Dashboard/Dashboard';
+import { ChatPanel } from '@/components/Chat';
 import { CursorProvider, Cursor } from '@/components/animate-ui/components/animate/cursor';
 
 function AppContent() {
@@ -87,13 +89,15 @@ function AppContent() {
 
   return (
     <EventProvider>
-      <MainLayout currentPage={currentPage} onNavigate={handleNavigate}>
-        {currentPage === 'dashboard' && <Dashboard onNavigate={handleDashboardCardClick} />}
-        {currentPage === 'search' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Search Page</h1></div>}
-        {currentPage === 'calendar' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Calendar Page</h1></div>}
-        {currentPage === 'ai-chat' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">AI Chat Page</h1></div>}
-        {currentPage === 'statistics' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Statistics Page</h1></div>}
-      </MainLayout>
+      <ChatProvider>
+        <MainLayout currentPage={currentPage} onNavigate={handleNavigate}>
+          {currentPage === 'dashboard' && <Dashboard onNavigate={handleDashboardCardClick} />}
+          {currentPage === 'search' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Search Page</h1></div>}
+          {currentPage === 'calendar' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Calendar Page</h1></div>}
+          {currentPage === 'ai-chat' && <ChatPanel />}
+          {currentPage === 'statistics' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Statistics Page</h1></div>}
+        </MainLayout>
+      </ChatProvider>
     </EventProvider>
   );
 }
