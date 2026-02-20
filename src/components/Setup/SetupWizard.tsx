@@ -3,6 +3,8 @@ import { useUser } from '@/context/UserContext';
 import { hashPIN } from '@/lib/hashUtils';
 import { Input } from '@/components/ui/input';
 import { Calendar } from 'lucide-react';
+import { CursorProvider, Cursor } from '@/components/animate-ui/components/animate/cursor';
+import { Button } from '@/components/animate-ui/components/buttons/button';
 
 export function SetupWizard() {
   const [step, setStep] = useState(0); // 0 = splash
@@ -110,25 +112,28 @@ export function SetupWizard() {
   // Splash Screen
   if (step === 0) {
     return (
-      <div className="min-h-screen flex flex-col bg-white">
-        {/* Logo Header */}
-        <div className="p-6">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-gray-900" strokeWidth={1.5} />
-            <h1 className="text-xl font-normal text-gray-900 tracking-tight">
-              Calendiq
-            </h1>
+      <CursorProvider>
+        <Cursor />
+        <div className="min-h-screen flex flex-col bg-white">
+          {/* Logo Header */}
+          <div className="p-6">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-6 h-6 text-gray-900" strokeWidth={1.5} />
+              <h1 className="text-xl font-normal text-gray-900 tracking-tight">
+                Calendiq
+              </h1>
+            </div>
           </div>
-        </div>
 
-        {/* Centered Content */}
-        <div className="flex-1 flex items-center justify-center animate-in fade-in zoom-in duration-1000">
-          <div className="text-center space-y-4">
-            <Calendar className="w-24 h-24 text-gray-900 mx-auto" strokeWidth={1} />
-            <h2 className="text-4xl font-normal text-gray-900">Welcome</h2>
+          {/* Centered Content */}
+          <div className="flex-1 flex items-center justify-center animate-in fade-in zoom-in duration-1000">
+            <div className="text-center space-y-4">
+              <Calendar className="w-24 h-24 text-gray-900 mx-auto" strokeWidth={1} />
+              <h2 className="text-4xl font-normal text-gray-900">Welcome</h2>
+            </div>
           </div>
         </div>
-      </div>
+      </CursorProvider>
     );
   }
 
