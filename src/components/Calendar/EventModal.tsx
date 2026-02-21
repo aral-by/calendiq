@@ -11,10 +11,10 @@ interface EventModalProps {
 export function EventModal({ open, onClose, eventId, initialStart }: EventModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" from="bottom">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-light tracking-tight">
-            {eventId ? 'Edit Event' : 'New Event'}
+          <DialogTitle className="text-2xl font-semibold">
+            {eventId ? 'Edit Event' : 'Create New Event'}
           </DialogTitle>
         </DialogHeader>
         <EventForm 

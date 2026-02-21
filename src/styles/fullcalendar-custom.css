@@ -1,0 +1,197 @@
+/* FullCalendar Custom Styles */
+
+/* General Calendar Styling */
+.fc {
+  font-family: inherit;
+}
+
+.fc .fc-toolbar-chunk {
+  display: none;
+}
+
+/* View-specific improvements */
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-color: hsl(var(--border));
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border-color: hsl(var(--border));
+}
+
+/* Day headers */
+.fc-col-header-cell {
+  background-color: hsl(var(--muted));
+  font-weight: 600;
+  padding: 0.75rem 0.5rem;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Today highlighting */
+.fc .fc-daygrid-day.fc-day-today,
+.fc .fc-timegrid-col.fc-day-today {
+  background-color: hsl(var(--accent) / 0.3);
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 9999px;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+/* Events */
+.fc-event {
+  border-radius: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fc-event:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.fc-event-title {
+  font-weight: 500;
+}
+
+/* Time grid */
+.fc-timegrid-slot {
+  height: 3rem;
+}
+
+.fc-timegrid-slot-label {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Now indicator */
+.fc .fc-timegrid-now-indicator-line {
+  border-color: hsl(var(--destructive));
+  border-width: 2px;
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  border-color: hsl(var(--destructive));
+}
+
+/* List view */
+.fc-list-event:hover td {
+  background-color: hsl(var(--accent));
+  cursor: pointer;
+}
+
+.fc-list-event-dot {
+  border-radius: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.fc-list-day-cushion {
+  background-color: hsl(var(--muted));
+  font-weight: 600;
+  padding: 0.75rem;
+}
+
+/* Month view day numbers */
+.fc-daygrid-day-number {
+  padding: 0.5rem;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+/* Weekend styling */
+.fc .fc-day-sat,
+.fc .fc-day-sun {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+/* Event time */
+.fc-event-time {
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Scrollbar styling for calendar */
+.fc-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+.fc-scroller::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.fc-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fc-scroller::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+  border-radius: 4px;
+}
+
+.fc-scroller::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground));
+}
+
+/* Remove button styling from FullCalendar (we use custom toolbar) */
+.fc .fc-button-primary {
+  display: none;
+}
+
+/* More events link */
+.fc-daygrid-more-link {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+.fc-daygrid-more-link:hover {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+/* Popover for more events */
+.fc-popover {
+  background-color: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.fc-popover-header {
+  background-color: hsl(var(--muted));
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+}
+
+.fc-popover-close {
+  color: hsl(var(--foreground));
+  opacity: 0.7;
+}
+
+.fc-popover-close:hover {
+  opacity: 1;
+}
+
+/* Dark mode specific adjustments */
+@media (prefers-color-scheme: dark) {
+  .fc-event {
+    border-width: 1px;
+  }
+}

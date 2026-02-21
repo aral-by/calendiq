@@ -61,7 +61,7 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const { user, logout } = useUser();
-  const { sessions, currentSessionId, createNewSession, switchSession, deleteSession } = useChatHistory();
+  const { sessions, currentSessionId, switchSession, deleteSession } = useChatHistory();
 
   // Apply theme on mount
   useEffect(() => {
@@ -288,7 +288,7 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
           </div>
 
           {/* Content Area */}
-          <div className="flex-1">
+          <div className="flex-1 h-full overflow-auto">
             {children}
           </div>
         </div>
