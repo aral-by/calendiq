@@ -5,7 +5,6 @@ import { Plus, ArrowUp } from 'lucide-react';
 
 export function AssistantChat() {
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
 
   const examplePrompts = [
     "Yarın saat 15'te doktor randevum var",
