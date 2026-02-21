@@ -127,14 +127,6 @@ export function AssistantChat() {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const { currentSession, currentSessionId, createNewSession, switchSession, addMessage } = useChatHistory();
-
-  // Create a new session if none exists
-  useEffect(() => {
-    if (!currentSessionId) {
-      const newId = createNewSession();
-      switchSession(newId);
-    }
-  }, [currentSessionId, createNewSession, switchSession]);
   
   const userName = user?.firstName;
   const greeting = useMemo(() => getTimeBasedGreeting(userName), [userName]);
@@ -148,6 +140,13 @@ export function AssistantChat() {
 
   const handleSend = async () => {
     if (!message.trim() || isLoading) return;
+    
+    // Create a new session if none exists
+    let sessionId = currentSessionId;
+    if (!sessionId) {
+      sessionId = createNewSession();
+      switchSession(sessionId);
+    }
     
     const userMessage = message.trim();
     addMessage({ role: 'user', content: userMessage, timestamp: Date.now() });
