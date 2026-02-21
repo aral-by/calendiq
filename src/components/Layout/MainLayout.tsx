@@ -1,7 +1,8 @@
 import { useState, ReactNode, useEffect } from 'react';
-import { Calendar, Sun, Moon, TrendingUp, Home, Sparkles, ChevronUp, User, Settings, LogOut, Bell, Search } from 'lucide-react';
+import { Calendar, Sun, Moon, TrendingUp, Home, Sparkles, ChevronUp, ChevronDown, User, Settings, LogOut, Bell, Search, Plus, MessageSquare, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useUser } from '@/context/UserContext';
+import { useChatHistory } from '@/context/ChatHistoryContext';
 import { NotificationDialog } from '@/components/Notifications/NotificationDialog';
 import { AccountDialog } from '@/components/Account/AccountDialog';
 import { SettingsDialog } from '@/components/Settings/SettingsDialog';
@@ -19,6 +20,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +48,9 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [accountDialogOpen, setAccountDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(true);
   const { user, logout } = useUser();
+  const { sessions, currentSessionId, createNewSession, switchSession, deleteSession } = useChatHistory();
 
   // Apply theme on mount
   useEffect(() => {
@@ -115,16 +123,6 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton 
-                      isActive={currentPage === 'ai-chat'}
-                      onClick={() => onNavigate('ai-chat')}
-                      className="h-11"
-                    >
-                      <Sparkles className="h-5 w-5" />
-                      <span className="text-base font-medium">AI Chat</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton 
                       isActive={currentPage === 'statistics'}
                       onClick={() => onNavigate('statistics')}
                       className="h-11"
@@ -135,6 +133,86 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* AI Chat History */}
+            <SidebarGroup>
+              <Collapsible open={aiChatOpen} onOpenChange={setAiChatOpen}>
+                <SidebarGroupLabel asChild>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full group/collapsible">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      <span className="text-xs">AI Chat</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newId = createNewSession();
+                          switchSession(newId);
+                          onNavigate('ai-chat');
+                        }}
+                        className="p-1 hover:bg-accent rounded opacity-0 group-hover/collapsible:opacity-100 transition-opacity"
+                        title="New chat"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                      <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                    </div>
+                  </CollapsibleTrigger>
+                </SidebarGroupLabel>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu className="space-y-0.5">
+                      {sessions.length === 0 ? (
+                        <SidebarMenuItem>
+                          <button
+                            onClick={() => {
+                              const newId = createNewSession();
+                              switchSession(newId);
+                              onNavigate('ai-chat');
+                            }}
+                            className="flex items-center gap-2 w-full px-2 py-2 text-sm text-muted-foreground hover:bg-accent rounded-md transition-colors"
+                          >
+                            <Plus className="h-4 w-4" />
+                            <span>Start a new chat</span>
+                          </button>
+                        </SidebarMenuItem>
+                      ) : (
+                        sessions.map((session) => (
+                          <SidebarMenuItem key={session.id}>
+                            <div className="group/item flex items-center gap-1 hover:bg-accent rounded-md transition-colors">
+                              <SidebarMenuButton
+                                isActive={currentPage === 'ai-chat' && currentSessionId === session.id}
+                                onClick={() => {
+                                  switchSession(session.id);
+                                  onNavigate('ai-chat');
+                                }}
+                                className="flex-1 h-9 justify-start"
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                                <span className="text-sm truncate">{session.title}</span>
+                              </SidebarMenuButton>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm('Delete this chat?')) {
+                                    deleteSession(session.id);
+                                  }
+                                }}
+                                className="p-1 opacity-0 group-hover/item:opacity-100 hover:bg-destructive/10 hover:text-destructive rounded transition-all mr-1"
+                                title="Delete chat"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </SidebarMenuItem>
+                        ))
+                      )}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </Collapsible>
             </SidebarGroup>
           </SidebarContent>
           
