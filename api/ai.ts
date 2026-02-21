@@ -1,15 +1,26 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { openai } from '@ai-sdk/openai';
+import { streamText, convertToModelMessages } from 'ai';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export const config = {
+  runtime: 'edge',
+};
+
+export default async function handler(req: Request) {
   // Only allow POST requests
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
-  const { message } = req.body;
+  const { messages } = await req.json();
 
-  if (!message || typeof message !== 'string') {
-    return res.status(400).json({ error: 'Message is required and must be a string' });
+  if (!messages || !Array.isArray(messages)) {
+    return new Response(JSON.stringify({ error: 'Messages array is required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
