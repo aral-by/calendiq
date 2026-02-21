@@ -153,15 +153,14 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Title */}
       <div className="space-y-2">
-        <Label htmlFor="title" className="text-sm uppercase tracking-wider text-gray-600">
-          Title
+        <Label htmlFor="title" className="text-sm font-medium">
+          Title *
         </Label>
         <Input
           id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Event title"
-          className="text-lg border-0 border-b border-gray-200 rounded-none px-0 focus-visible:ring-0 focus-visible:border-gray-900"
           required
           disabled={loading}
           autoFocus
@@ -170,7 +169,7 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
 
       {/* Description */}
       <div className="space-y-2">
-        <Label htmlFor="description" className="text-sm uppercase tracking-wider text-gray-600">
+        <Label htmlFor="description" className="text-sm font-medium">
           Description
         </Label>
         <Textarea
@@ -178,14 +177,14 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Add details"
-          className="border-gray-200 rounded-lg min-h-[80px] resize-none"
+          className="min-h-[80px] resize-none"
           disabled={loading}
         />
       </div>
 
       {/* Location */}
       <div className="space-y-2">
-        <Label htmlFor="location" className="text-sm uppercase tracking-wider text-gray-600">
+        <Label htmlFor="location" className="text-sm font-medium">
           Location
         </Label>
         <Input
@@ -193,38 +192,35 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           placeholder="Add location"
-          className="border-gray-200 rounded-lg"
           disabled={loading}
         />
       </div>
 
       {/* Date and Time */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="start" className="text-sm uppercase tracking-wider text-gray-600">
-            Start
+          <Label htmlFor="start" className="text-sm font-medium">
+            Start Time *
           </Label>
           <Input
             id="start"
             type="datetime-local"
             value={start}
             onChange={(e) => setStart(e.target.value)}
-            className="border-gray-200 rounded-lg"
             required
             disabled={loading}
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="end" className="text-sm uppercase tracking-wider text-gray-600">
-            End
+          <Label htmlFor="end" className="text-sm font-medium">
+            End Time *
           </Label>
           <Input
             id="end"
             type="datetime-local"
             value={end}
             onChange={(e) => setEnd(e.target.value)}
-            className="border-gray-200 rounded-lg"
             required
             disabled={loading}
           />
@@ -238,21 +234,21 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
           type="checkbox"
           checked={allDay}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllDay(e.target.checked)}
-          className="w-4 h-4 rounded border-gray-300"
+          className="w-4 h-4 rounded border-input"
           disabled={loading}
         />
-        <Label htmlFor="allDay" className="text-sm text-gray-600">
+        <Label htmlFor="allDay" className="text-sm font-normal">
           All day event
         </Label>
       </div>
 
       {/* Category */}
       <div className="space-y-2">
-        <Label htmlFor="category" className="text-sm uppercase tracking-wider text-gray-600">
+        <Label htmlFor="category" className="text-sm font-medium">
           Category
         </Label>
         <Select value={category} onValueChange={(val) => setCategory(val as EventCategory)} disabled={loading}>
-          <SelectTrigger className="border-gray-200 rounded-lg">
+          <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -273,11 +269,11 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
 
       {/* Reminder */}
       <div className="space-y-2">
-        <Label htmlFor="reminder" className="text-sm uppercase tracking-wider text-gray-600">
+        <Label htmlFor="reminder" className="text-sm font-medium">
           Reminder
         </Label>
         <Select value={reminder.toString()} onValueChange={(val) => setReminder(Number(val))} disabled={loading}>
-          <SelectTrigger className="border-gray-200 rounded-lg">
+          <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -292,11 +288,11 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
 
       {/* Status */}
       <div className="space-y-2">
-        <Label htmlFor="status" className="text-sm uppercase tracking-wider text-gray-600">
+        <Label htmlFor="status" className="text-sm font-medium">
           Status
         </Label>
         <Select value={status} onValueChange={(val) => setStatus(val as EventStatus)} disabled={loading}>
-          <SelectTrigger className="border-gray-200 rounded-lg">
+          <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -309,9 +305,9 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
 
       {/* Conflict Warning */}
       {conflicts.length > 0 && (
-        <Alert className="border-amber-200 bg-amber-50">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800">
+        <Alert variant="default" className="border-amber-500/50 bg-amber-500/10">
+          <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+          <AlertDescription>
             This event conflicts with {conflicts.length} other event{conflicts.length > 1 ? 's' : ''}:
             <ul className="mt-2 ml-4 list-disc text-sm">
               {conflicts.map(c => (
@@ -324,34 +320,35 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
 
       {/* Error Message */}
       {error && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertDescription className="text-red-800">
+        <Alert variant="destructive">
+          <AlertDescription>
             {error}
           </AlertDescription>
         </Alert>
       )}
 
       {/* Actions */}
-      <div className="flex gap-4 pt-4 border-t">
+      <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
         {eventId && (
           <Button
             type="button"
-            variant="outline"
+            variant="destructive"
             onClick={handleDelete}
             disabled={loading}
-            className="gap-2 text-red-600 border-red-200 hover:bg-red-50"
+            className="gap-2 sm:mr-auto"
           >
             <Trash2 className="w-4 h-4" />
-            Delete
+            Delete Event
           </Button>
         )}
         
-        <div className="ml-auto flex gap-3">
+        <div className="flex gap-3 sm:ml-auto">
           <Button
             type="button"
             variant="outline"
             onClick={onSuccess}
             disabled={loading}
+            className="flex-1 sm:flex-none"
           >
             Cancel
           </Button>
@@ -359,9 +356,9 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
           <Button
             type="submit"
             disabled={loading}
-            className="bg-gray-900 hover:bg-gray-800"
+            className="flex-1 sm:flex-none"
           >
-            {loading ? 'Saving...' : eventId ? 'Update' : 'Create'}
+            {loading ? 'Saving...' : eventId ? 'Update Event' : 'Create Event'}
           </Button>
         </div>
       </div>
