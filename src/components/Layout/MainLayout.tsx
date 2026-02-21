@@ -149,11 +149,7 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
                   <SidebarMenuItem>
                     <SidebarMenuButton 
                       isActive={currentPage === 'ai-chat' && !currentSessionId}
-                      onClick={() => {
-                        const newId = createNewSession();
-                        switchSession(newId);
-                        onNavigate('ai-chat');
-                      }}
+                      onClick={() => onNavigate('ai-chat')}
                       className="h-11"
                     >
                       <Sparkles className="h-5 w-5" />
