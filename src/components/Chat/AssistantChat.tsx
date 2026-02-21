@@ -165,18 +165,18 @@ export function AssistantChat() {
             ))}
           </div>
         </div>
-onClick={handleVoiceInput}
+
+        {/* Input Area */}
+        <div className="w-full pb-4">
+          <div className="relative flex items-center gap-3 rounded-3xl border border-border bg-background p-4 shadow-lg">
+            <Button
+              onClick={handleVoiceInput}
               variant="ghost"
               size="icon"
               className="shrink-0 rounded-full"
               title="Voice input (coming soon)"
             >
-              <Mic
-              variant="ghost"
-              size="icon"
-              className="shrink-0 rounded-full"
-            >
-              <Plus className="h-5 w-5" />
+              <Mic className="h-5 w-5" />
             </Button>
 
             <Input
