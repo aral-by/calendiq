@@ -5,7 +5,6 @@ import {
   isSameDay
 } from 'date-fns';
 import type { CalendarEvent } from '@/types/event';
-import { cn } from '@/lib/utils';
 
 interface DayViewProps {
   currentDate: Date;

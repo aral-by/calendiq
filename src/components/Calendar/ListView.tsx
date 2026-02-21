@@ -4,12 +4,11 @@ import { cn } from '@/lib/utils';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 
 interface ListViewProps {
-  currentDate: Date;
   events: CalendarEvent[];
   onEventClick: (eventId: string) => void;
 }
 
-export function ListView({ currentDate, events, onEventClick }: ListViewProps) {
+export function ListView({ events, onEventClick }: ListViewProps) {
   // Group events by date
   const groupedEvents = events.reduce((acc, event) => {
     const eventDate = format(new Date(event.start), 'yyyy-MM-dd');
@@ -41,7 +40,7 @@ export function ListView({ currentDate, events, onEventClick }: ListViewProps) {
         {sortedDates.map(dateStr => {
           const date = new Date(dateStr);
           const dayEvents = groupedEvents[dateStr];
-          const isToDoDay = isToday(date);
+          const isCurrentDay = isToday(date);
           const isFutureDay = isFuture(date);
           const isPastDay = isPast(date) && !isToday(date);
           
@@ -50,7 +49,7 @@ export function ListView({ currentDate, events, onEventClick }: ListViewProps) {
               {/* Date header */}
               <div className={cn(
                 "sticky top-0 bg-background py-2 border-b-2",
-                isToDoday && "border-primary",
+                isCurrentDay && "border-primary",
                 isFutureDay && "border-blue-500/30",
                 isPastDay && "border-muted"
               )}>
