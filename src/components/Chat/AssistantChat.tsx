@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Mic, ArrowUp } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
+import { useChatHistory } from '@/context/ChatHistoryContext';
 
 function getTimeBasedGreeting(userName?: string): { title: string; subtitle: string } {
   const hour = new Date().getHours();
@@ -123,12 +124,22 @@ function getTimeBasedGreeting(userName?: string): { title: string; subtitle: str
 
 export function AssistantChat() {
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
+  const { currentSession, currentSessionId, createNewSession, switchSession, addMessage } = useChatHistory();
+
+  // Create a new session if none exists
+  useEffect(() => {
+    if (!currentSessionId) {
+      const newId = createNewSession();
+      switchSession(newId);
+    }
+  }, [currentSessionId, createNewSession, switchSession]);
   
   const userName = user?.firstName;
   const greeting = useMemo(() => getTimeBasedGreeting(userName), [userName]);
+
+  const messages = currentSession?.messages || [];
 
   const examplePrompts = [
     "Yarın saat 15'te doktor randevum var",
@@ -139,16 +150,17 @@ export function AssistantChat() {
     if (!message.trim() || isLoading) return;
     
     const userMessage = message.trim();
-    setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
+    addMessage({ role: 'user', content: userMessage, timestamp: Date.now() });
     setMessage('');
     setIsLoading(true);
     
     // Simulate AI response (TODO: Real API call)
     setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: 'Anladım! Etkinliği takvime ekliyorum.' },
-      ]);
+      addMessage({ 
+        role: 'assistant', 
+        content: 'Anladım! Etkinliği takvime ekliyorum.',
+        timestamp: Date.now()
+      });
       setIsLoading(false);
     }, 2000);
   };
