@@ -124,6 +124,7 @@ function getTimeBasedGreeting(userName?: string): { title: string; subtitle: str
 export function AssistantChat() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   
   const userName = user?.firstName;
@@ -135,11 +136,12 @@ export function AssistantChat() {
   ];
 
   const handleSend = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || isLoading) return;
     
     const userMessage = message.trim();
     setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
     setMessage('');
+    setIsLoading(true);
     
     // Simulate AI response (TODO: Real API call)
     setTimeout(() => {
@@ -147,7 +149,8 @@ export function AssistantChat() {
         ...prev,
         { role: 'assistant', content: 'Anladım! Etkinliği takvime ekliyorum.' },
       ]);
-    }, 1000);
+      setIsLoading(false);
+    }, 2000);
   };
 
   const handlePromptClick = (prompt: string) => {
@@ -204,6 +207,19 @@ export function AssistantChat() {
                 )}
               </div>
             ))}
+            
+            {/* Typing Indicator */}
+            {isLoading && (
+              <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="max-w-[80%] rounded-2xl px-5 py-3 bg-muted">
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -235,9 +251,9 @@ export function AssistantChat() {
 
             <Button
               onClick={handleSend}
-              disabled={!message.trim()}
+              disabled={!message.trim() || isLoading}
               size="icon"
-              className="shrink-0 rounded-full"
+              className="shrink-0 rounded-full disabled:opacity-50"
             >
               <ArrowUp className="h-5 w-5" />
             </Button>
