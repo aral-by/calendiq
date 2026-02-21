@@ -12,7 +12,7 @@ import { CursorProvider, Cursor } from '@/components/animate-ui/components/anima
 
 function AppContent() {
   const { isSetupComplete, isAuthenticated, loading, showWelcome } = useUser();
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'search' | 'calendar' | 'ai-chat' | 'statistics'>('dashboard');
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'search' | 'calendar' | 'ai-chat' | 'notes' | 'statistics'>('dashboard');
 
   // Request notification permission on first load
   useEffect(() => {
@@ -69,7 +69,7 @@ function AppContent() {
     return <WelcomeScreen />;
   }
 
-  const handleNavigate = (page: 'dashboard' | 'search' | 'calendar' | 'ai-chat' | 'statistics') => {
+  const handleNavigate = (page: 'dashboard' | 'search' | 'calendar' | 'ai-chat' | 'notes' | 'statistics') => {
     setCurrentPage(page);
   };
 
@@ -94,8 +94,7 @@ function AppContent() {
           {currentPage === 'dashboard' && <Dashboard onNavigate={handleDashboardCardClick} />}
           {currentPage === 'search' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Search Page</h1></div>}
           {currentPage === 'calendar' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Calendar Page</h1></div>}
-          {currentPage === 'ai-chat' && <AssistantChat />}
-          {currentPage === 'statistics' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Statistics Page</h1></div>}
+          {currentPage === 'ai-chat' && <AssistantChat />}        {currentPage === 'notes' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Notes Page</h1></div>}          {currentPage === 'statistics' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Statistics Page</h1></div>}
         </MainLayout>
       </ChatHistoryProvider>
     </EventProvider>
