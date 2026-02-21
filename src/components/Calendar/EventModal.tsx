@@ -16,8 +16,8 @@ interface EventModalProps {
 export function EventModal({ open, onClose, eventId, initialStart }: EventModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col gap-0">
-        <DialogHeader className="px-6 pt-6 pb-4">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col gap-0 rounded-3xl bg-muted/40 backdrop-blur-xl border-muted shadow-2xl data-[state=open]:slide-in-from-right-full data-[state=closed]:slide-out-to-right-full">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
           <DialogTitle className="text-2xl font-semibold">
             {eventId ? 'Edit Event' : 'Create New Event'}
           </DialogTitle>

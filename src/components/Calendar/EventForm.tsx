@@ -6,10 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DEFAULT_CATEGORIES, REMINDER_OPTIONS } from '@/types/event';
 import type { CalendarEvent, EventCategory, EventStatus } from '@/types/event';
 import { useConflictDetection } from '@/hooks/useConflictDetection';
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import { AlertTriangle, Trash2, CalendarIcon, Clock } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface EventFormProps {
   eventId?: string;
@@ -29,13 +33,31 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
-  const [start, setStart] = useState('');
-  const [end, setEnd] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [startTime, setStartTime] = useState('09:00');
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [endTime, setEndTime] = useState('10:00');
   const [allDay, setAllDay] = useState(false);
   const [category, setCategory] = useState<EventCategory>('personal');
   const [status, setStatus] = useState<EventStatus>('confirmed');
   const [reminder, setReminder] = useState<number>(15);
   const [color, setColor] = useState('');
+
+  // Helper to combine date and time into ISO string
+  const combineDateTime = (date: Date | undefined, time: string): string => {
+    if (!date) return '';
+    const [hours, minutes] = time.split(':');
+    const combined = new Date(date);
+    combined.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    return combined.toISOString().slice(0, 16);
+  };
+
+  // Helper to extract date and time from ISO string
+  const extractDateTime = (isoString: string): { date: Date; time: string } => {
+    const date = new Date(isoString);
+    const time = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    return { date, time };
+  };
 
   // Load event data if editing
   useEffect(() => {
@@ -45,8 +67,15 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
         setTitle(event.title);
         setDescription(event.description || '');
         setLocation(event.location || '');
-        setStart(event.start);
-        setEnd(event.end || event.start);
+        
+        const { date: sDate, time: sTime } = extractDateTime(event.start);
+        setStartDate(sDate);
+        setStartTime(sTime);
+        
+        const { date: eDate, time: eTime } = extractDateTime(event.end || event.start);
+        setEndDate(eDate);
+        setEndTime(eTime);
+        
         setAllDay(event.allDay || false);
         setCategory(event.category || 'personal');
         setStatus(event.status || 'confirmed');
@@ -55,22 +84,29 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
       }
     } else if (initialStart) {
       // Set initial times for new event
-      const startDate = new Date(initialStart);
-      const endDate = new Date(startDate);
-      endDate.setHours(startDate.getHours() + 1);
+      const startDateTime = new Date(initialStart);
+      const endDateTime = new Date(startDateTime);
+      endDateTime.setHours(startDateTime.getHours() + 1);
       
-      setStart(startDate.toISOString().slice(0, 16));
-      setEnd(endDate.toISOString().slice(0, 16));
+      const { date: sDate, time: sTime } = extractDateTime(startDateTime.toISOString());
+      setStartDate(sDate);
+      setStartTime(sTime);
+      
+      const { date: eDate, time: eTime } = extractDateTime(endDateTime.toISOString());
+      setEndDate(eDate);
+      setEndTime(eTime);
     }
   }, [eventId, initialStart, getEventById]);
 
   // Check for conflicts when times change
   useEffect(() => {
+    const start = combineDateTime(startDate, startTime);
+    const end = combineDateTime(endDate, endTime);
     if (start && end) {
       const foundConflicts = detectConflicts(start, end, eventId);
       setConflicts(foundConflicts);
     }
-  }, [start, end, eventId, detectConflicts]);
+  }, [startDate, startTime, endDate, endTime, eventId, detectConflicts]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,15 +118,18 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
       return;
     }
 
-    if (!start) {
-      setError('Start time is required');
+    if (!startDate) {
+      setError('Start date is required');
       return;
     }
 
-    if (!end) {
-      setError('End time is required');
+    if (!endDate) {
+      setError('End date is required');
       return;
     }
+
+    const start = combineDateTime(startDate, startTime);
+    const end = combineDateTime(endDate, endTime);
 
     if (new Date(end) <= new Date(start)) {
       setError('End time must be after start time');
@@ -198,32 +237,88 @@ export function EventForm({ eventId, initialStart, onSuccess }: EventFormProps) 
 
       {/* Date and Time */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Start Date & Time */}
         <div className="space-y-2">
-          <Label htmlFor="start" className="text-sm font-medium">
-            Start Time *
+          <Label className="text-sm font-medium">
+            Start Date & Time *
           </Label>
-          <Input
-            id="start"
-            type="datetime-local"
-            value={start}
-            onChange={(e) => setStart(e.target.value)}
-            required
-            disabled={loading}
-          />
+          <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "flex-1 justify-start text-left font-normal",
+                    !startDate && "text-muted-foreground"
+                  )}
+                  disabled={loading}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, 'PPP') : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            <div className="relative w-28">
+              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="pl-10"
+                disabled={loading}
+              />
+            </div>
+          </div>
         </div>
         
+        {/* End Date & Time */}
         <div className="space-y-2">
-          <Label htmlFor="end" className="text-sm font-medium">
-            End Time *
+          <Label className="text-sm font-medium">
+            End Date & Time *
           </Label>
-          <Input
-            id="end"
-            type="datetime-local"
-            value={end}
-            onChange={(e) => setEnd(e.target.value)}
-            required
-            disabled={loading}
-          />
+          <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "flex-1 justify-start text-left font-normal",
+                    !endDate && "text-muted-foreground"
+                  )}
+                  disabled={loading}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, 'PPP') : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={setEndDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            <div className="relative w-28">
+              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="pl-10"
+                disabled={loading}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
