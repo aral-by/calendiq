@@ -164,7 +164,7 @@ export function AssistantChat() {
       <div className="w-full max-w-3xl flex flex-col items-center justify-center flex-1">
         {messages.length === 0 ? (
           // Welcome Screen
-          <div className="flex-1 flex flex-col items-center justify-center space-y-12 w-full">
+          <div className="flex-1 flex flex-col items-center justify-center space-y-12 w-full animate-in fade-in duration-500">
             {/* Header */}
             <div className="text-center space-y-3">
               <h1 className="text-3xl font-semibold tracking-tight">{greeting.title}</h1>
@@ -186,21 +186,22 @@ export function AssistantChat() {
           </div>
         ) : (
           // Chat Messages
-          <div className="flex-1 w-full overflow-y-auto space-y-4 pb-4">
+          <div className="flex-1 w-full overflow-y-auto space-y-6 pb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  <p className="text-sm">{msg.content}</p>
-                </div>
+                {msg.role === 'user' ? (
+                  // User message - no bubble, just text
+                  <p className="text-lg max-w-[80%]">{msg.content}</p>
+                ) : (
+                  // AI message - with bubble
+                  <div className="max-w-[80%] rounded-2xl px-5 py-3 bg-muted">
+                    <p className="text-lg text-muted-foreground">{msg.content}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
