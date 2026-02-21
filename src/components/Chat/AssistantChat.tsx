@@ -1,10 +1,63 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, ArrowUp } from 'lucide-react';
+import { useUser } from '@/context/UserContext';
+
+function getTimeBasedGreeting(userName?: string): { title: string; subtitle: string } {
+  const hour = new Date().getHours();
+  const greetings = {
+    earlyMorning: [
+      { title: 'Hello Early Bird', subtitle: 'The world is yours to conquer' },
+      { title: 'Rise and Shine', subtitle: 'A new day awaits you' },
+      { title: 'Morning Warrior', subtitle: 'Ready to seize the day?' },
+    ],
+    morning: [
+      { title: 'Good Morning', subtitle: "Let's make today productive" },
+      { title: 'Morning Sunshine', subtitle: 'How can I brighten your day?' },
+      { title: 'Fresh Start', subtitle: 'What shall we accomplish today?' },
+    ],
+    afternoon: [
+      { title: 'Good Afternoon', subtitle: "How's your day going?" },
+      { title: 'Midday Maestro', subtitle: 'Keep up the great momentum' },
+      { title: 'Afternoon Achiever', subtitle: 'Ready to tackle more tasks?' },
+    ],
+    evening: [
+      { title: 'Good Evening', subtitle: 'Winding down or gearing up?' },
+      { title: 'Evening Star', subtitle: 'How can I help you tonight?' },
+      { title: 'Sunset Scheduler', subtitle: "Let's plan ahead together" },
+    ],
+    night: [
+      { title: 'Hello Night Owl', subtitle: 'Burning the midnight oil?' },
+      { title: 'Late Night Planner', subtitle: 'What brings you here at this hour?' },
+      { title: 'Midnight Maestro', subtitle: "Night time, bright ideas" },
+    ],
+  };
+
+  let timeGreetings;
+  if (hour >= 5 && hour < 8) timeGreetings = greetings.earlyMorning;
+  else if (hour >= 8 && hour < 12) timeGreetings = greetings.morning;
+  else if (hour >= 12 && hour < 17) timeGreetings = greetings.afternoon;
+  else if (hour >= 17 && hour < 21) timeGreetings = greetings.evening;
+  else timeGreetings = greetings.night;
+
+  const randomGreeting = timeGreetings[Math.floor(Math.random() * timeGreetings.length)];
+  
+  if (userName) {
+    return {
+      title: `${randomGreeting.title}, ${userName}`,
+      subtitle: randomGreeting.subtitle,
+    };
+  }
+  
+  return randomGreeting;
+}
 
 export function AssistantChat() {
   const [message, setMessage] = useState('');
+  const { profile } = useUser();
+  
+  const greeting = useMemo(() => getTimeBasedGreeting(profile?.fullName), [profile?.fullName]);
 
   const examplePrompts = [
     "Yarın saat 15'te doktor randevum var",
@@ -30,8 +83,8 @@ export function AssistantChat() {
         <div className="flex-1 flex flex-col items-center justify-center space-y-12 w-full">
           {/* Header */}
           <div className="text-center space-y-3">
-            <h1 className="text-3xl font-semibold tracking-tight">Merhaba!</h1>
-            <p className="text-xl text-muted-foreground">Bugün size nasıl yardımcı olabilirim?</p>
+            <h1 className="text-3xl font-semibold tracking-tight">{greeting.title}</h1>
+            <p className="text-xl text-muted-foreground">{greeting.subtitle}</p>
           </div>
 
           {/* Example Prompts */}
