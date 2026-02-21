@@ -7,28 +7,28 @@ import { useUser } from '@/context/UserContext';
 function getTimeBasedGreeting(userName?: string): { title: string; subtitle: string } {
   const hour = new Date().getHours();
   
-  // Casual greetings (not time-specific) - expanded variety
+  // Casual greetings (not time-specific) - expanded variety with better name integration
   const casualGreetings = [
-    { title: "What's up", subtitle: 'Ready to organize your day?' },
-    { title: 'Hey there', subtitle: 'How can I assist you today?' },
-    { title: 'Welcome back', subtitle: "Let's get things done" },
-    { title: 'Hello', subtitle: 'What can I help you with?' },
-    { title: 'Hi', subtitle: 'Ready to schedule something?' },
-    { title: 'Greetings', subtitle: 'Your personal assistant is here' },
-    { title: 'Howdy', subtitle: "Let's make magic happen" },
-    { title: 'Yo', subtitle: 'Time to plan something awesome' },
-    { title: 'Sup', subtitle: "What's on your agenda today?" },
-    { title: 'Hey', subtitle: 'Ready to tackle your schedule?' },
-    { title: 'Hiya', subtitle: "Let's organize your world" },
-    { title: 'Well hello', subtitle: 'Nice to see you here' },
-    { title: 'Look who it is', subtitle: 'Ready to get productive?' },
-    { title: 'There you are', subtitle: "Let's plan something great" },
-    { title: 'Welcome', subtitle: 'Your calendar awaits' },
-    { title: 'Hey friend', subtitle: 'How can I help you today?' },
-    { title: "What's happening", subtitle: 'Time to organize things?' },
-    { title: 'Good to see you', subtitle: "Let's make today count" },
-    { title: 'Ahoy', subtitle: 'Ready to navigate your schedule?' },
-    { title: 'Cheers', subtitle: "What's the plan today?" },
+    { title: "What's cooking", subtitle: 'Ready to organize your day?', withName: true },
+    { title: 'Hey there', subtitle: 'How can I assist you today?', withName: true },
+    { title: 'Welcome back', subtitle: "Let's get things done", withName: true },
+    { title: 'Look who it is', subtitle: 'Ready to get productive?', withName: false },
+    { title: 'Ready to roll', subtitle: 'Ready to schedule something?', withName: true },
+    { title: 'Howdy partner', subtitle: "Let's make magic happen", withName: false },
+    { title: "What's the plan", subtitle: 'Time to plan something awesome', withName: true },
+    { title: 'Well well well', subtitle: "What's on your agenda today?", withName: false },
+    { title: 'Back for more', subtitle: 'Ready to tackle your schedule?', withName: true },
+    { title: 'Good to see you', subtitle: "Let's organize your world", withName: true },
+    { title: 'There you are', subtitle: 'Nice to see you here', withName: true },
+    { title: 'Welcome', subtitle: "Let's plan something great", withName: true },
+    { title: 'Hey friend', subtitle: 'Your calendar awaits', withName: false },
+    { title: "What's happening", subtitle: 'How can I help you today?', withName: true },
+    { title: 'Ahoy', subtitle: 'Time to organize things?', withName: true },
+    { title: 'Cheers', subtitle: 'Ready to navigate your schedule?', withName: true },
+    { title: "What's new", subtitle: "What's the plan today?", withName: true },
+    { title: 'Long time no see', subtitle: "Let's get productive", withName: true },
+    { title: 'Nice to see you', subtitle: 'Ready for action?', withName: true },
+    { title: "How's it going", subtitle: 'Time to organize?', withName: true },
   ];
   
   const timeBasedGreetings = {
@@ -90,7 +90,16 @@ function getTimeBasedGreeting(userName?: string): { title: string; subtitle: str
   
   let greeting;
   if (useCasual) {
-    greeting = casualGreetings[Math.floor(Math.random() * casualGreetings.length)];
+    const randomCasual = casualGreetings[Math.floor(Math.random() * casualGreetings.length)];
+    greeting = randomCasual;
+    
+    // Add name if it should be included
+    if (userName && randomCasual.withName) {
+      greeting = {
+        ...randomCasual,
+        title: `${randomCasual.title}, ${userName}`,
+      };
+    }
   } else {
     let timeGreetings;
     if (hour >= 5 && hour < 8) timeGreetings = timeBasedGreetings.earlyMorning;
@@ -100,13 +109,13 @@ function getTimeBasedGreeting(userName?: string): { title: string; subtitle: str
     else timeGreetings = timeBasedGreetings.night;
     
     greeting = timeGreetings[Math.floor(Math.random() * timeGreetings.length)];
-  }
-  
-  if (userName) {
-    return {
-      title: `${greeting.title}, ${userName}`,
-      subtitle: greeting.subtitle,
-    };
+    
+    if (userName) {
+      greeting = {
+        ...greeting,
+        title: `${greeting.title}, ${userName}`,
+      };
+    }
   }
   
   return greeting;
@@ -114,6 +123,7 @@ function getTimeBasedGreeting(userName?: string): { title: string; subtitle: str
 
 export function AssistantChat() {
   const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const { user } = useUser();
   
   const userName = user?.firstName;
@@ -127,9 +137,17 @@ export function AssistantChat() {
   const handleSend = async () => {
     if (!message.trim()) return;
     
-    // TODO: API call
-    console.log('Send:', message);
+    const userMessage = message.trim();
+    setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
     setMessage('');
+    
+    // Simulate AI response (TODO: Real API call)
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: 'Anladım! Etkinliği takvime ekliyorum.' },
+      ]);
+    }, 1000);
   };
 
   const handlePromptClick = (prompt: string) => {
@@ -144,27 +162,49 @@ export function AssistantChat() {
   return (
     <div className="h-full w-full flex flex-col items-center justify-center bg-background p-8">
       <div className="w-full max-w-3xl flex flex-col items-center justify-center flex-1">
-        {/* Welcome Screen */}
-        <div className="flex-1 flex flex-col items-center justify-center space-y-12 w-full">
-          {/* Header */}
-          <div className="text-center space-y-3">
-            <h1 className="text-3xl font-semibold tracking-tight">{greeting.title}</h1>
-            <p className="text-xl text-muted-foreground">{greeting.subtitle}</p>
-          </div>
+        {messages.length === 0 ? (
+          // Welcome Screen
+          <div className="flex-1 flex flex-col items-center justify-center space-y-12 w-full">
+            {/* Header */}
+            <div className="text-center space-y-3">
+              <h1 className="text-3xl font-semibold tracking-tight">{greeting.title}</h1>
+              <p className="text-xl text-muted-foreground">{greeting.subtitle}</p>
+            </div>
 
-          {/* Example Prompts */}
-          <div className="w-full grid grid-cols-2 gap-3">
-            {examplePrompts.map((prompt, index) => (
-              <button
+            {/* Example Prompts */}
+            <div className="w-full grid grid-cols-2 gap-3">
+              {examplePrompts.map((prompt, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePromptClick(prompt)}
+                  className="p-4 rounded-2xl border border-border bg-card hover:bg-accent transition-colors text-left"
+                >
+                  <p className="text-sm text-card-foreground">{prompt}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          // Chat Messages
+          <div className="flex-1 w-full overflow-y-auto space-y-4 pb-4">
+            {messages.map((msg, index) => (
+              <div
                 key={index}
-                onClick={() => handlePromptClick(prompt)}
-                className="p-4 rounded-2xl border border-border bg-card hover:bg-accent transition-colors text-left"
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <p className="text-sm text-card-foreground">{prompt}</p>
-              </button>
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                    msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  <p className="text-sm">{msg.content}</p>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
+        )}
 
         {/* Input Area */}
         <div className="w-full pb-4">
