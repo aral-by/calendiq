@@ -181,27 +181,197 @@ export function AssistantChat() {
         }));
 
       // Send to AI endpoint with current events context
-      const USE_MOCK = false; // false = Gerçek API kullan (vercel dev gerekli), true = Mock response
+      // Development: Direct call to OpenRouter (API key in code)
+      // Production: Will use /api/ai serverless function
+      const isDevelopment = import.meta.env.DEV;
+      const USE_MOCK_FOR_DEV = false; // true = Mock mode (API key geçersizse), false = OpenRouter
       
       let data;
-      if (USE_MOCK) {
-        // Mock response - production'da bu kaldırılacak
-        console.log('[AssistantChat] Using MOCK response (no API)');
+      
+      if (isDevelopment && USE_MOCK_FOR_DEV) {
+        // Mock mode for development (когда API key invalid)
+        console.log('[AssistantChat] Dev mode: Using MOCK (API key not configured)');
         data = {
-          message: 'Anladım! Etkinliği ekliyorum.',
+          message: 'Anladım! (Mock mode - gerçek AI yok)',
           action: {
             type: 'CREATE_EVENT',
             payload: {
-              title: userMessage.split('saat')[0].trim() || 'Yeni Etkinlik',
-              start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Yarın
-              end: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // 1 saat sonra
+              title: userMessage,
+              start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+              end: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(),
               allDay: false,
               category: 'personal',
               reminder: 15,
             }
           }
         };
+      } else if (isDevelopment) {
+        // Direct OpenRouter call for development
+        console.log('[AssistantChat] Dev mode: Calling OpenRouter directly');
+        
+        const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+        
+        if (!apiKey) {
+          throw new Error('VITE_OPENROUTER_API_KEY not found in .env file');
+        }
+        
+        const systemMessage = {
+          role: 'system',
+          content: `You are Oscar, a helpful calendar assistant for Calendiq. You help users manage their calendar in Turkish.
+
+Current date/time: ${new Date().toISOString()}
+
+You can:
+- Create new events (use create_event function)
+- Update existing events (use update_event function with event ID)
+- Delete events (use delete_event function with event ID)
+- Query/search events (use query_events function)
+- Have friendly conversations
+
+${events.length > 0 ? `Current user events:\n${events.map((e) => `- ${e.title} (${e.start}) [ID: ${e.id}]`).join('\n')}` : 'User has no events yet.'}
+
+IMPORTANT: 
+- ALWAYS respond in Turkish
+- When user asks about their events, use query_events to search
+- When updating/deleting, first query to find the event ID if needed
+- Be friendly and helpful
+- Auto-categorize events: work, personal, health, social, finance, education
+- Default reminder: 15 minutes before`,
+        };
+
+        const tools = [
+          {
+            type: 'function',
+            function: {
+              name: 'create_event',
+              description: 'Create a new calendar event',
+              parameters: {
+                type: 'object',
+                properties: {
+                  title: { type: 'string' },
+                  start: { type: 'string', description: 'ISO 8601 format' },
+                  end: { type: 'string', description: 'ISO 8601 format' },
+                  description: { type: 'string' },
+                  location: { type: 'string' },
+                  allDay: { type: 'boolean' },
+                  category: { type: 'string', enum: ['work', 'personal', 'health', 'social', 'finance', 'education'] },
+                  reminder: { type: 'number' },
+                  priority: { type: 'string', enum: ['low', 'medium', 'high'] },
+                },
+                required: ['title', 'start', 'end'],
+              },
+            },
+          },
+          {
+            type: 'function',
+            function: {
+              name: 'query_events',
+              description: 'Query/search calendar events',
+              parameters: {
+                type: 'object',
+                properties: {
+                  startDate: { type: 'string' },
+                  endDate: { type: 'string' },
+                  category: { type: 'string' },
+                  searchTerm: { type: 'string' },
+                },
+              },
+            },
+          },
+          {
+            type: 'function',
+            function: {
+              name: 'update_event',
+              description: 'Update an existing event',
+              parameters: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  updates: { type: 'object' },
+                },
+                required: ['id', 'updates'],
+              },
+            },
+          },
+          {
+            type: 'function',
+            function: {
+              name: 'delete_event',
+              description: 'Delete a calendar event',
+              parameters: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                },
+                required: ['id'],
+              },
+            },
+          },
+        ];
+
+        const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'http://localhost:5173',
+            'X-Title': 'Calendiq',
+          },
+          body: JSON.stringify({
+            model: 'meta-llama/llama-3.1-8b-instruct:free', // Alternative: google/gemini-2.0-flash-exp:free
+            messages: [systemMessage, ...apiMessages],
+            tools,
+            tool_choice: 'auto',
+          }),
+        });
+
+        if (!openrouterResponse.ok) {
+          const errorText = await openrouterResponse.text();
+          console.error('[AssistantChat] OpenRouter error:', openrouterResponse.status, errorText);
+          throw new Error(`OpenRouter error: ${openrouterResponse.status} - ${errorText}`);
+        }
+
+        const openrouterData = await openrouterResponse.json();
+        const assistantMessage = openrouterData.choices[0]?.message;
+        
+        if (!assistantMessage) {
+          throw new Error('No assistant message in response');
+        }
+
+        const toolCalls = assistantMessage.tool_calls;
+        let action;
+
+        if (toolCalls && toolCalls.length > 0) {
+          const toolCall = toolCalls[0];
+          const functionName = toolCall.function.name;
+          const functionArgs = JSON.parse(toolCall.function.arguments);
+
+          switch (functionName) {
+            case 'create_event':
+              action = { type: 'CREATE_EVENT', payload: functionArgs };
+              break;
+            case 'update_event':
+              action = { type: 'UPDATE_EVENT', id: functionArgs.id, payload: functionArgs.updates };
+              break;
+            case 'delete_event':
+              action = { type: 'DELETE_EVENT', id: functionArgs.id };
+              break;
+            case 'query_events':
+              action = { type: 'QUERY_EVENTS', filter: functionArgs };
+              break;
+            default:
+              action = { type: 'NO_ACTION', message: assistantMessage.content || 'Anladım!' };
+          }
+        } else {
+          action = { type: 'NO_ACTION', message: assistantMessage.content || 'Anladım!' };
+        }
+
+        data = {
+          message: assistantMessage.content || 'İşlem yapılıyor...',
+          action,
+        };
       } else {
+        // Production: Use serverless function
         const response = await fetch('/api/ai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
