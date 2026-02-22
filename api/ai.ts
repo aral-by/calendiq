@@ -206,12 +206,13 @@ When user wants to create an event, ask in THIS ORDER:
 - DON'T use any function until you have: title + date + time
 - When you have all required info, THEN use create_event function
 - For queries, ALWAYS use query_events function - NEVER list events manually in text
-- When user asks "bugünün programı", "etkinliklerim", etc., CALL query_events function
+- When user asks "bugünün programı", "yarın ne var", "etkinliklerim", etc., CALL query_events function
 - For updates/deletes, use update_event or delete_event
 - ALWAYS respond in Turkish
 - Use Turkey timezone (UTC+3) for all calculations
 - If user asks about results just shown (e.g., "detayları var mı?"), DON'T call functions - just answer from context
 - Events already displayed have all details - user can see them on screen
+- When calling functions, use proper JSON format (not XML tags)
 
 🏷️ AUTO-CATEGORIZATION:
 Automatically detect category from context:
@@ -260,6 +261,8 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
         messages: [systemMessage, ...messages],
         tools,
         tool_choice: 'auto',
+        temperature: 0.7,
+        parallel_tool_calls: false, // Prevent multiple simultaneous function calls
       }),
     });
 
