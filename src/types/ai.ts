@@ -32,6 +32,19 @@ export const AIActionSchema = z.discriminatedUnion('type', [
     id: z.string(),
   }),
   
+  // Bulk Update Events Action
+  z.object({
+    type: z.literal('BULK_UPDATE_EVENTS'),
+    eventIds: z.array(z.string()),
+    payload: z.record(z.any()),
+  }),
+  
+  // Bulk Delete Events Action
+  z.object({
+    type: z.literal('BULK_DELETE_EVENTS'),
+    eventIds: z.array(z.string()),
+  }),
+  
   // Query Events Action
   z.object({
     type: z.literal('QUERY_EVENTS'),
@@ -59,6 +72,14 @@ export function isUpdateEventAction(action: AIAction): action is Extract<AIActio
 
 export function isDeleteEventAction(action: AIAction): action is Extract<AIAction, { type: 'DELETE_EVENT' }> {
   return action.type === 'DELETE_EVENT';
+}
+
+export function isBulkUpdateEventsAction(action: AIAction): action is Extract<AIAction, { type: 'BULK_UPDATE_EVENTS' }> {
+  return action.type === 'BULK_UPDATE_EVENTS';
+}
+
+export function isBulkDeleteEventsAction(action: AIAction): action is Extract<AIAction, { type: 'BULK_DELETE_EVENTS' }> {
+  return action.type === 'BULK_DELETE_EVENTS';
 }
 
 export function isQueryEventsAction(action: AIAction): action is Extract<AIAction, { type: 'QUERY_EVENTS' }> {

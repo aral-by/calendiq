@@ -81,6 +81,15 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+  }
+  html {
+    overflow-x: hidden;
+  }
+  /* Extra scrollbar hiding for all elements */
+  *::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
   }
 }
 

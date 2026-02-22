@@ -6,12 +6,13 @@ import { Mic, ArrowUp, Calendar, Clock, MapPin } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { useChatHistory, ChatMessage } from '@/context/ChatHistoryContext';
 import { useEvents } from '@/context/EventContext';
-import { AIActionSchema, isCreateEventAction, isUpdateEventAction, isDeleteEventAction, isQueryEventsAction } from '@/types/ai';
+import { AIActionSchema, isCreateEventAction, isUpdateEventAction, isDeleteEventAction, isBulkUpdateEventsAction, isBulkDeleteEventsAction, isQueryEventsAction } from '@/types/ai';
 import { ActionCard } from '@/components/Chat/ActionCard';
 import { CalendarEvent } from '@/types/event';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { ModelSelector, AIModel } from '@/components/Chat/ModelSelector';
+import { useSidebar } from '@/components/ui/sidebar';
 
 function getTimeBasedGreeting(userName?: string): { title: string; subtitle: string } {
   const hour = new Date().getHours();
@@ -142,6 +143,7 @@ export function AssistantChat() {
   const { user } = useUser();
   const { currentSession, currentSessionId, createNewSession, switchSession, addMessage } = useChatHistory();
   const { events, createEvent, updateEvent, deleteEvent } = useEvents();
+  const { state: sidebarState } = useSidebar();
   
   const userName = user?.firstName;
   const greeting = useMemo(() => getTimeBasedGreeting(userName), [userName]);
@@ -174,10 +176,13 @@ export function AssistantChat() {
   };
 
   const examplePrompts = [
-    "Doctor appointment tomorrow at 3pm",
-    "Add meeting on Monday at 10am",
-    "Show me this week's events",
-  ];
+  "I have a doctor appointment tomorrow at 3pm",
+  "This week looks intense, can you balance it?",
+  "Schedule a 2-hour deep work block",
+  "Keep my mornings distraction-free",
+  "Do I have space for a quick meeting on Thursday?",
+  "Show me everything I planned for this week",
+];
 
   const handleSend = async () => {
     if (!message.trim() || isLoading) return;
@@ -295,9 +300,24 @@ When user wants to create an event, ask in THIS ORDER:
 - Wait for user response before asking next question
 - DON'T use any function until you have: title + date + time
 - When you have all required info, THEN use create_event function
+
+🚫 WHEN NOT TO USE FUNCTIONS (CRITICAL):
+- Greetings: "merhaba", "selam", "günaydın", "iyi geceler" → Just respond warmly, NO function
+- Thank you: "teşekkürler", "sağol", "eyvallah" → Just say you're welcome, NO function
+- Casual chat: "nasılsın", "ne var ne yok", "naber" → Just chat, NO function
+- Acknowledgments: "tamam", "anladım", "olur" → Just acknowledge, NO function
+- Farewells: "görüşürüz", "hoşça kal", "bay bay" → Just say goodbye, NO function
+- ONLY use functions when user explicitly asks to: create, add, schedule, update, delete, or query events
+- If unsure, just respond conversationally - it's better than calling wrong function!
+
 - For queries, ALWAYS use query_events function - NEVER list events manually in text
 - When user asks "bugünün programı", "yarın ne var", "etkinliklerim", etc., CALL query_events function
 - For updates/deletes, use update_event or delete_event
+- For BULK operations (multiple events):
+  * First, call query_events to get matching events
+  * Then use bulk_update_events or bulk_delete_events with the event IDs
+  * Examples: "sabah etkinliklerini öğleden sonraya al" → query morning events, then bulk_update
+  * "cuma gününü iptal et" → query Friday events, then bulk_delete
 - ALWAYS respond in Turkish
 - Use Turkey timezone (UTC+3) for all calculations
 - NEVER send empty strings in function parameters - omit optional parameters instead
@@ -325,6 +345,16 @@ Default to 'personal' if unsure.
 
 Example conversation flows:
 
+NO ACTION (Just chat):
+User: "iyi geceler"
+Oscar: "İyi geceler! Yarın görüşürüz." [NO function call]
+
+User: "teşekkürler"
+Oscar: "Rica ederim! Yardımcı olabildiysem ne mutlu." [NO function call]
+
+User: "nasılsın"
+Oscar: "İyiyim, teşekkürler! Sana nasıl yardımcı olabilirim?" [NO function call]
+
 CREATE:
 User: "yarına etkinlik ekle"
 Oscar: "Tamamdır! Ne eklememi istersin?"
@@ -338,7 +368,15 @@ User: "bugünün programını göster"
 Oscar: [calls query_events with startDate=today, endDate=today]
 
 User: "bu haftaki toplantılar"
-Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, endDate=week-end]`,
+Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, endDate=week-end]
+
+BULK UPDATE:
+User: "bugünün sabah etkinliklerini öğleden sonraya al"
+Oscar: [First calls query_events to find morning events, then calls bulk_update_events to move them]
+
+BULK DELETE:
+User: "cuma gününün hepsini iptal et"
+Oscar: [First calls query_events for Friday, then calls bulk_delete_events]`,
         };
 
         const tools = [
@@ -413,6 +451,46 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
               },
             },
           },
+          {
+            type: 'function',
+            function: {
+              name: 'bulk_update_events',
+              description: 'Update multiple events at once. Use when user wants to modify multiple events (e.g., "move morning events to afternoon", "change all Monday meetings")',
+              parameters: {
+                type: 'object',
+                properties: {
+                  eventIds: { 
+                    type: 'array', 
+                    items: { type: 'string' },
+                    description: 'Array of event IDs to update'
+                  },
+                  updates: { 
+                    type: 'object',
+                    description: 'Object containing fields to update (e.g., {start, end, location})'
+                  },
+                },
+                required: ['eventIds', 'updates'],
+              },
+            },
+          },
+          {
+            type: 'function',
+            function: {
+              name: 'bulk_delete_events',
+              description: 'Delete multiple events at once. Use when user wants to remove multiple events (e.g., "cancel all Friday events", "delete this week\'s meetings")',
+              parameters: {
+                type: 'object',
+                properties: {
+                  eventIds: { 
+                    type: 'array', 
+                    items: { type: 'string' },
+                    description: 'Array of event IDs to delete'
+                  },
+                },
+                required: ['eventIds'],
+              },
+            },
+          },
         ];
 
         const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -468,6 +546,14 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
               break;
             case 'delete_event':
               action = { type: 'DELETE_EVENT', id: functionArgs.id };
+              messageContent = '';
+              break;
+            case 'bulk_update_events':
+              action = { type: 'BULK_UPDATE_EVENTS', eventIds: functionArgs.eventIds, payload: functionArgs.updates };
+              messageContent = '';
+              break;
+            case 'bulk_delete_events':
+              action = { type: 'BULK_DELETE_EVENTS', eventIds: functionArgs.eventIds };
               messageContent = '';
               break;
             case 'query_events':
@@ -567,6 +653,36 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
               type: 'deleted',
               event: deletedEvent,
             };
+          } else if (isBulkUpdateEventsAction(validatedAction)) {
+            console.log('[AssistantChat] Bulk updating events:', validatedAction.eventIds.length, 'events');
+            const updatedEvents = [];
+            for (const eventId of validatedAction.eventIds) {
+              await updateEvent(eventId, validatedAction.payload);
+              const event = events.find(e => e.id === eventId);
+              if (event) {
+                updatedEvents.push({ ...event, ...validatedAction.payload });
+              }
+            }
+            actionMetadata = {
+              type: 'bulk_updated',
+              events: updatedEvents,
+              count: updatedEvents.length,
+            };
+          } else if (isBulkDeleteEventsAction(validatedAction)) {
+            console.log('[AssistantChat] Bulk deleting events:', validatedAction.eventIds.length, 'events');
+            const deletedEvents = [];
+            for (const eventId of validatedAction.eventIds) {
+              const event = events.find(e => e.id === eventId);
+              if (event) {
+                deletedEvents.push(event);
+                await deleteEvent(eventId);
+              }
+            }
+            actionMetadata = {
+              type: 'bulk_deleted',
+              events: deletedEvents,
+              count: deletedEvents.length,
+            };
           } else if (isQueryEventsAction(validatedAction)) {
             console.log('[AssistantChat] Querying events:', validatedAction.filter);
             
@@ -639,11 +755,15 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
   };
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center bg-background p-8">
-      <div className="w-full max-w-3xl flex flex-col items-center justify-center flex-1">
+    <div className="h-full w-full flex flex-col items-center bg-background overflow-hidden">
+      <div 
+        className="w-full max-w-2xl flex flex-col flex-1 relative overflow-hidden"
+      >
         {messages.length === 0 ? (
           // Welcome Screen
-          <div className="flex-1 flex flex-col items-center justify-center space-y-12 w-full animate-in fade-in duration-500">
+          <div 
+            className="flex-1 flex flex-col items-center justify-center space-y-12 w-full pb-32 p-8 animate-in fade-in duration-500"
+          >
             {/* Header */}
             <div className="text-center space-y-3">
               <h1 className="text-3xl font-semibold tracking-tight">{greeting.title}</h1>
@@ -665,7 +785,9 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
           </div>
         ) : (
           // Chat Messages
-          <div className="flex-1 w-full overflow-y-auto space-y-6 pb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div 
+            className="flex-1 w-full overflow-y-auto space-y-6 pb-32 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 scrollbar-hide"
+          >
             {messages.map((msg, index) => (
               <div
                 key={index}
@@ -771,9 +893,15 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
           </div>
         )}
 
-        {/* Input Area */}
-        <div className="w-full pb-4">
-          <div className="relative flex items-center gap-3 rounded-3xl border border-border bg-background p-4 shadow-lg">
+        {/* Input Area - Fixed at Bottom */}
+        <div 
+          className="fixed bottom-0 left-0 right-0 flex justify-center p-6 bg-gradient-to-t from-background via-background to-transparent pointer-events-none transition-all duration-300"
+          style={{
+            paddingLeft: sidebarState === 'expanded' ? 'calc(var(--sidebar-width, 16rem) + 1.5rem)' : '1.5rem'
+          }}
+        >
+          <div className="w-full max-w-2xl pointer-events-auto">
+            <div className="relative flex items-center gap-2.5 rounded-2xl border-2 bg-background px-3 py-2.5 shadow-md">
             {/* Model Selector */}
             <ModelSelector 
               selectedModel={selectedModel}
@@ -790,7 +918,7 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
                 }
               }}
               placeholder="Send a message..."
-              className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
+              className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base h-9"
             />
 
             <Button
@@ -811,6 +939,7 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
             >
               <ArrowUp className="h-5 w-5" />
             </Button>
+            </div>
           </div>
         </div>
       </div>

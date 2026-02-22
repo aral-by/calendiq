@@ -96,6 +96,46 @@ const tools = [
   {
     type: 'function',
     function: {
+      name: 'bulk_update_events',
+      description: 'Update multiple events at once. Use when user wants to modify multiple events (e.g., "move morning events to afternoon", "change all Monday meetings").',
+      parameters: {
+        type: 'object',
+        properties: {
+          eventIds: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Array of event IDs to update',
+          },
+          updates: {
+            type: 'object',
+            description: 'Object containing fields to update (e.g., {start, end, location})',
+          },
+        },
+        required: ['eventIds', 'updates'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'bulk_delete_events',
+      description: 'Delete multiple events at once. Use when user wants to remove multiple events (e.g., "cancel all Friday events", "delete this week\'s meetings").',
+      parameters: {
+        type: 'object',
+        properties: {
+          eventIds: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Array of event IDs to delete',
+          },
+        },
+        required: ['eventIds'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'query_events',
       description: 'Query/search calendar events. Use this to find events, check schedule, or answer questions about existing events.',
       parameters: {
@@ -205,9 +245,24 @@ When user wants to create an event, ask in THIS ORDER:
 - Wait for user response before asking next question
 - DON'T use any function until you have: title + date + time
 - When you have all required info, THEN use create_event function
+
+🚫 WHEN NOT TO USE FUNCTIONS (CRITICAL):
+- Greetings: "merhaba", "selam", "günaydın", "iyi geceler" → Just respond warmly, NO function
+- Thank you: "teşekkürler", "sağol", "eyvallah" → Just say you're welcome, NO function
+- Casual chat: "nasılsın", "ne var ne yok", "naber" → Just chat, NO function
+- Acknowledgments: "tamam", "anladım", "olur" → Just acknowledge, NO function
+- Farewells: "görüşürüz", "hoşça kal", "bay bay" → Just say goodbye, NO function
+- ONLY use functions when user explicitly asks to: create, add, schedule, update, delete, or query events
+- If unsure, just respond conversationally - it's better than calling wrong function!
+
 - For queries, ALWAYS use query_events function - NEVER list events manually in text
 - When user asks "bugünün programı", "yarın ne var", "etkinliklerim", etc., CALL query_events function
 - For updates/deletes, use update_event or delete_event
+- For BULK operations (multiple events):
+  * First, call query_events to get matching events
+  * Then use bulk_update_events or bulk_delete_events with the event IDs
+  * Examples: "sabah etkinliklerini öğleden sonraya al" → query morning events, then bulk_update
+  * "cuma gününü iptal et" → query Friday events, then bulk_delete
 - ALWAYS respond in Turkish
 - Use Turkey timezone (UTC+3) for all calculations
 - If user asks about results just shown (e.g., "detayları var mı?"), DON'T call functions - just answer from context
@@ -233,6 +288,13 @@ Default to 'personal' if unsure.
 - Default reminder: 15 minutes before
 
 Example conversation flows:
+
+NO ACTION (Just chat):
+User: "iyi geceler"
+Oscar: "İyi geceler! Yarın görüşürüz." [NO function call]
+
+User: "teşekkürler"
+Oscar: "Rica ederim! Yardımcı olabildiysem ne mutlu." [NO function call]
 
 CREATE:
 User: "yarına etkinlik ekle"
@@ -329,6 +391,21 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
           action = {
             type: 'DELETE_EVENT',
             id: functionArgs.id,
+          };
+          messageContent = '';
+          break;
+        case 'bulk_update_events':
+          action = {
+            type: 'BULK_UPDATE_EVENTS',
+            eventIds: functionArgs.eventIds,
+            payload: functionArgs.updates,
+          };
+          messageContent = '';
+          break;
+        case 'bulk_delete_events':
+          action = {
+            type: 'BULK_DELETE_EVENTS',
+            eventIds: functionArgs.eventIds,
           };
           messageContent = '';
           break;

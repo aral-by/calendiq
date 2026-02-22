@@ -4,11 +4,13 @@ import { tr } from 'date-fns/locale';
 import { CalendarEvent } from '@/types/event';
 import { cn } from '@/lib/utils';
 
-type ActionCardType = 'creating' | 'created' | 'updating' | 'updated' | 'deleting' | 'deleted' | 'conflict' | 'querying';
+type ActionCardType = 'creating' | 'created' | 'updating' | 'updated' | 'deleting' | 'deleted' | 'bulk_updating' | 'bulk_updated' | 'bulk_deleting' | 'bulk_deleted' | 'conflict' | 'querying';
 
 interface ActionCardProps {
   type: ActionCardType;
   event?: Partial<CalendarEvent>;
+  events?: Partial<CalendarEvent>[]; // For bulk operations
+  count?: number; // For bulk operations
   conflictingEvents?: CalendarEvent[];
 }
 
@@ -50,14 +52,16 @@ const getCategoryLabel = (category?: string) => {
   }
 };
 
-export function ActionCard({ type, event, conflictingEvents }: ActionCardProps) {
+export function ActionCard({ type, event, events, count, conflictingEvents }: ActionCardProps) {
   // Loading states
-  if (type === 'creating' || type === 'updating' || type === 'deleting' || type === 'querying') {
+  if (type === 'creating' || type === 'updating' || type === 'deleting' || type === 'querying' || type === 'bulk_updating' || type === 'bulk_deleting') {
     const loadingMessages = {
       creating: 'Takvime ekleniyor',
       updating: 'Güncelleniyor',
       deleting: 'Siliniyor',
       querying: 'Aranıyor',
+      bulk_updating: 'Etkinlikler güncelleniyor',
+      bulk_deleting: 'Etkinlikler siliniyor',
     };
 
     return (
@@ -67,6 +71,41 @@ export function ActionCard({ type, event, conflictingEvents }: ActionCardProps) 
         </div>
         <div className="flex-1">
           <p className="text-sm font-medium">{loadingMessages[type]}...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Bulk success states
+  if (type === 'bulk_updated' || type === 'bulk_deleted') {
+    const successMessages = {
+      bulk_updated: `${count} etkinlik güncellendi!`,
+      bulk_deleted: `${count} etkinlik silindi!`,
+    };
+
+    return (
+      <div className="flex items-start gap-3 p-4 rounded-xl border border-green-500/20 bg-green-500/5 animate-in fade-in slide-in-from-left-2 duration-300">
+        <div className="shrink-0 mt-0.5">
+          <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+        </div>
+        <div className="flex-1 space-y-3">
+          <p className="text-sm font-medium text-green-600 dark:text-green-400">
+            {successMessages[type]}
+          </p>
+          
+          {events && events.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-green-500/10">
+              <p className="text-xs text-muted-foreground">Etkilenen etkinlikler:</p>
+              <ul className="space-y-1">
+                {events.slice(0, 5).map((evt, idx) => (
+                  <li key={idx} className="text-sm text-muted-foreground">• {evt.title}</li>
+                ))}
+                {events.length > 5 && (
+                  <li className="text-sm text-muted-foreground italic">... ve {events.length - 5} etkinlik daha</li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     );
