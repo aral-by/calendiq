@@ -174,9 +174,9 @@ export function AssistantChat() {
   };
 
   const examplePrompts = [
-    "Yarın saat 15'te doktor randevum var",
-    "Pazartesi 10'da toplantı ekle",
-    "Bu haftaki etkinliklerimi göster",
+    "Doctor appointment tomorrow at 3pm",
+    "Add meeting on Monday at 10am",
+    "Show me this week's events",
   ];
 
   const handleSend = async () => {
@@ -639,23 +639,15 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
   };
 
   return (
-    <div className="h-full w-full flex flex-col bg-background">
-      {/* Model Selector - Fixed at top */}
-      <ModelSelector 
-        selectedModel={selectedModel}
-        onModelChange={setSelectedModel}
-      />
-      
-      {/* Chat Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto flex items-center justify-center p-8">
-        <div className="w-full max-w-3xl flex flex-col items-center justify-center">
-          {messages.length === 0 ? (
-            // Welcome Screen
-            <div className="flex-1 flex flex-col items-center justify-center space-y-12 w-full animate-in fade-in duration-500">
-              {/* Header */}
-              <div className="text-center space-y-3">
-                <h1 className="text-3xl font-semibold tracking-tight">{greeting.title}</h1>
-                <p className="text-xl text-muted-foreground">{greeting.subtitle}</p>
+    <div className="h-full w-full flex flex-col items-center justify-center bg-background p-8">
+      <div className="w-full max-w-3xl flex flex-col items-center justify-center flex-1">
+        {messages.length === 0 ? (
+          // Welcome Screen
+          <div className="flex-1 flex flex-col items-center justify-center space-y-12 w-full animate-in fade-in duration-500">
+            {/* Header */}
+            <div className="text-center space-y-3">
+              <h1 className="text-3xl font-semibold tracking-tight">{greeting.title}</h1>
+              <p className="text-xl text-muted-foreground">{greeting.subtitle}</p>
             </div>
 
             {/* Example Prompts */}
@@ -778,22 +770,15 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
             )}
           </div>
         )}
-        </div>
-      </div>
 
-      {/* Input Area - Fixed at bottom */}
-      <div className="border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="max-w-3xl mx-auto p-6">
+        {/* Input Area */}
+        <div className="w-full pb-4">
           <div className="relative flex items-center gap-3 rounded-3xl border border-border bg-background p-4 shadow-lg">
-            <Button
-              onClick={handleVoiceInput}
-              variant="ghost"
-              size="icon"
-              className="shrink-0 rounded-full"
-              title="Voice input (coming soon)"
-            >
-              <Mic className="h-5 w-5" />
-            </Button>
+            {/* Model Selector */}
+            <ModelSelector 
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+            />
 
             <Input
               value={message}
@@ -807,6 +792,16 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
               placeholder="Send a message..."
               className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
             />
+
+            <Button
+              onClick={handleVoiceInput}
+              variant="ghost"
+              size="icon"
+              className="shrink-0 rounded-full"
+              title="Voice input (coming soon)"
+            >
+              <Mic className="h-5 w-5" />
+            </Button>
 
             <Button
               onClick={handleSend}
