@@ -181,10 +181,10 @@ export function AssistantChat() {
         }));
 
       // Send to AI endpoint with current events context
-      // Development: Direct call to OpenRouter (API key in code)
+      // Development: Direct call to Groq (API key from .env)
       // Production: Will use /api/ai serverless function
       const isDevelopment = import.meta.env.DEV;
-      const USE_MOCK_FOR_DEV = true; // YARINCA GROQ'A GEÇECEĞİZ
+      const USE_MOCK_FOR_DEV = false; // Groq API aktif!
       
       let data;
       
@@ -206,13 +206,13 @@ export function AssistantChat() {
           }
         };
       } else if (isDevelopment) {
-        // Direct OpenRouter call for development
-        console.log('[AssistantChat] Dev mode: Calling OpenRouter directly');
+        // Direct Groq call for development
+        console.log('[AssistantChat] Dev mode: Calling Groq directly');
         
-        const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+        const apiKey = import.meta.env.VITE_GROQ_API_KEY;
         
         if (!apiKey) {
-          throw new Error('VITE_OPENROUTER_API_KEY not found in .env file');
+          throw new Error('VITE_GROQ_API_KEY not found in .env file');
         }
         
         const systemMessage = {
@@ -309,29 +309,27 @@ IMPORTANT:
           },
         ];
 
-        const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'http://localhost:5173',
-            'X-Title': 'Calendiq',
           },
           body: JSON.stringify({
-            model: 'meta-llama/llama-3.1-70b-instruct:free', // Proven to work with tool calling
+            model: 'llama-3.3-70b-versatile', // Groq's latest model with tool calling support
             messages: [systemMessage, ...apiMessages],
             tools,
             tool_choice: 'auto',
           }),
         });
 
-        if (!openrouterResponse.ok) {
-          const errorText = await openrouterResponse.text();
-          console.error('[AssistantChat] OpenRouter error:', openrouterResponse.status, errorText);
-          throw new Error(`OpenRouter error: ${openrouterResponse.status} - ${errorText}`);
+        if (!groqResponse.ok) {
+          const errorText = await groqResponse.text();
+          console.error('[AssistantChat] Groq error:', groqResponse.status, errorText);
+          throw new Error(`Groq error: ${groqResponse.status} - ${errorText}`);
         }
 
-        const openrouterData = await openrouterResponse.json();
+        const openrouterData = await groqResponse.json();
         const assistantMessage = openrouterData.choices[0]?.message;
         
         if (!assistantMessage) {

@@ -141,7 +141,7 @@ export default async function handler(req: Request) {
     });
   }
 
-  const API_KEY = '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';
+  const API_KEY = 'REDACTED_FOR_SECURITY';
 
   try {
     // Add system context with current events
@@ -175,16 +175,14 @@ When creating events:
 - Auto-detect category from context`,
     };
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://calendiq.app',
-        'X-Title': 'Calendiq',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.1-70b-instruct:free',
+        model: 'llama-3.3-70b-versatile',
         messages: [systemMessage, ...messages],
         tools,
         tool_choice: 'auto',
