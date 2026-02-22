@@ -153,6 +153,8 @@ export function AssistantChat() {
       switchSession(sessionId);
     }
     
+    const userMessage = message.trim();
+    
     // Add user message to chat
     addMessage({ role: 'user', content: userMessage, timestamp: Date.now() }, sessionId);
     setMessage('');
@@ -213,7 +215,11 @@ export function AssistantChat() {
           // Execute action
           if (isCreateEventAction(validatedAction)) {
             console.log('[AssistantChat] Creating event:', validatedAction.payload);
-            await createEvent(validatedAction.payload);
+            const eventData = {
+              ...validatedAction.payload,
+              allDay: validatedAction.payload.allDay ?? false,
+            };
+            await createEvent(eventData);
             actionResult = '\n\n✅ Etkinlik oluşturuldu!';
           } else if (isUpdateEventAction(validatedAction)) {
             console.log('[AssistantChat] Updating event:', validatedAction.id, validatedAction.payload);
@@ -284,9 +290,7 @@ export function AssistantChat() {
       }, sessionId);
     } finally {
       setIsLoading(false);
-    }ionId);
-      setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const handlePromptClick = (prompt: string) => {
