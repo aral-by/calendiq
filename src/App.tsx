@@ -9,6 +9,7 @@ import { MainLayout } from '@/components/Layout/MainLayout';
 import { Dashboard } from '@/components/Dashboard/Dashboard';
 import { AssistantChat } from '@/components/Chat/AssistantChat';
 import { Calendar } from '@/components/Calendar';
+import { Search } from '@/pages/Search';
 import { CursorProvider, Cursor } from '@/components/animate-ui/components/animate/cursor';
 
 function AppContent() {
@@ -93,9 +94,11 @@ function AppContent() {
       <ChatHistoryProvider>
         <MainLayout currentPage={currentPage} onNavigate={handleNavigate}>
           {currentPage === 'dashboard' && <Dashboard onNavigate={handleDashboardCardClick} />}
-          {currentPage === 'search' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Search Page</h1></div>}
+          {currentPage === 'search' && <Search />}
           {currentPage === 'calendar' && <Calendar />}
-          {currentPage === 'ai-chat' && <AssistantChat />}        {currentPage === 'notes' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Notes Page</h1></div>}          {currentPage === 'statistics' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Statistics Page</h1></div>}
+          {currentPage === 'ai-chat' && <AssistantChat />}
+          {currentPage === 'notes' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Notes Page</h1></div>}
+          {currentPage === 'statistics' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Statistics Page</h1></div>}
         </MainLayout>
       </ChatHistoryProvider>
     </EventProvider>
