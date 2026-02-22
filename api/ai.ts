@@ -141,7 +141,7 @@ export default async function handler(req: Request) {
     });
   }
 
-  const API_KEY = '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';
+  const API_KEY = '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';
 
   try {
     // Add system context with current events
