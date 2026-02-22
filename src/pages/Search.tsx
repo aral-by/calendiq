@@ -7,9 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ShimmeringText } from '@/components/ui/shimmering-text';
-import { Search as SearchIcon, Calendar as CalendarIcon, Clock, MapPin, X, Sparkles } from 'lucide-react';
+import { Search as SearchIcon, Calendar as CalendarIcon, Clock, MapPin, X, Sparkles, Layers } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { AnimatePresence, motion } from 'motion/react';
 
 const SEARCH_PLACEHOLDERS = [
   "What's looking for?",
@@ -19,6 +20,16 @@ const SEARCH_PLACEHOLDERS = [
   "Search by title, location...",
   "Looking for something?",
   "Find your schedule...",
+];
+
+const AI_SEARCH_PLACEHOLDERS = [
+  "Ask me anything about your schedule...",
+  "Find my meetings with John...",
+  "What's on my calendar next week?",
+  "Show me canceled events...",
+  "Find all work meetings...",
+  "When is my next appointment?",
+  "Search smarter with AI...",
 ];
 
 export function Search() {
@@ -31,12 +42,18 @@ export function Search() {
 
   // Rotate placeholder every 30 seconds
   useEffect(() => {
+    const placeholders = aiSearch ? AI_SEARCH_PLACEHOLDERS : SEARCH_PLACEHOLDERS;
     const interval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % SEARCH_PLACEHOLDERS.length);
+      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [aiSearch]);
+
+  // Reset placeholder index when AI mode changes
+  useEffect(() => {
+    setPlaceholderIndex(0);
+  }, [aiSearch]);
 
   // Search logic
   const searchResults = useMemo(() => {
@@ -67,32 +84,43 @@ export function Search() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-start pt-20 sm:pt-32 px-4">
-      <div className="w-full max-w-3xl space-y-6">
-        {/* Header with AI toggle */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold">Search</h1>
-          <Button
-            variant={aiSearch ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setAiSearch(!aiSearch)}
-            className="gap-2"
-          >
-            <Sparkles className={cn("h-4 w-4", aiSearch && "animate-pulse")} />
-            AI Search {aiSearch ? "ON" : "OFF"}
-          </Button>
+    <div className="h-full w-full flex flex-col items-center justify-start pt-12 sm:pt-20 px-4">
+      <div className="w-full max-w-2xl space-y-16">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center gap-3">
+            <Layers className="h-8 w-8 text-primary" />
+            <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Search Anything
+            </h1>
+          </div>
         </div>
 
         {/* Search Input */}
         <div className="relative">
           <div className="relative">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            {/* Search Icon with shimmer effect when AI mode is active */}
+            <div className="absolute left-4 top-1/2 -translate-y-1/2">
+              {aiSearch ? (
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary via-purple-500 to-primary animate-shimmer rounded-full blur-sm opacity-60" 
+                       style={{ backgroundSize: '200% 100%' }} />
+                  <SearchIcon className="h-5 w-5 relative text-primary" />
+                </div>
+              ) : (
+                <SearchIcon className="h-5 w-5 text-muted-foreground" />
+              )}
+            </div>
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-              className="pl-12 pr-32 h-14 text-lg bg-muted/30 border-2 focus-visible:ring-2 focus-visible:ring-primary"
+              className={cn(
+                "pl-12 pr-32 h-14 text-lg bg-muted/30 backdrop-blur-sm border-2 rounded-2xl transition-all duration-300",
+                "focus-visible:ring-2 focus-visible:ring-primary focus-visible:bg-muted/40",
+                aiSearch && "border-primary/50 shadow-lg shadow-primary/20"
+              )}
               placeholder=""
             />
             
@@ -100,14 +128,42 @@ export function Search() {
             {!searchQuery && !isFocused && (
               <div className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none">
                 <ShimmeringText 
-                  text={SEARCH_PLACEHOLDERS[placeholderIndex]}
-                  className="text-lg text-muted-foreground/70"
+                  text={(aiSearch ? AI_SEARCH_PLACEHOLDERS : SEARCH_PLACEHOLDERS)[placeholderIndex]}
+                  className={cn(
+                    "text-lg",
+                    aiSearch ? "text-primary/70" : "text-muted-foreground/70"
+                  )}
                 />
               </div>
             )}
 
             {/* Action Buttons */}
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              {/* AI Mode Toggle */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setAiSearch(!aiSearch)}
+                    className={cn(
+                      "h-9 w-9 p-0 relative",
+                      aiSearch && "bg-primary/10 hover:bg-primary/20"
+                    )}
+                  >
+                    <Sparkles className={cn(
+                      "h-4 w-4 transition-all",
+                      aiSearch ? "text-primary animate-pulse" : "text-muted-foreground"
+                    )} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2" side="bottom">
+                  <Badge variant={aiSearch ? "default" : "secondary"} className="text-xs">
+                    AI Mode {aiSearch ? "ON" : "OFF"}
+                  </Badge>
+                </PopoverContent>
+              </Popover>
+
               {/* Date Filter */}
               <Popover>
                 <PopoverTrigger asChild>
@@ -173,8 +229,15 @@ export function Search() {
         </div>
 
         {/* Results Panel - Glassmorphism */}
-        {(isFocused || searchQuery) && (
-          <Card className="bg-muted/40 backdrop-blur-xl border-muted shadow-2xl rounded-3xl overflow-hidden">
+        <AnimatePresence mode="wait">
+          {searchQuery && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <Card className="bg-muted/40 backdrop-blur-xl border-muted shadow-2xl rounded-3xl overflow-hidden">
             <CardContent className="p-0">
               {searchResults.length > 0 ? (
                 <div className="divide-y">
@@ -284,24 +347,35 @@ export function Search() {
               )}
             </CardContent>
           </Card>
-        )}
+        </motion.div>
+      )}
+    </AnimatePresence>
 
         {/* AI Search Info (when enabled) */}
-        {aiSearch && !searchQuery && (
-          <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <Sparkles className="h-5 w-5 text-primary mt-0.5" />
-                <div className="space-y-1">
-                  <h4 className="font-semibold text-sm">AI Search Active</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Try natural language queries like "meetings next week" or "events with John"
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <AnimatePresence mode="wait">
+          {aiSearch && !searchQuery && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Sparkles className="h-5 w-5 text-primary mt-0.5" />
+                    <div className="space-y-1">
+                      <h4 className="font-semibold text-sm">AI Search Active</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Try natural language queries like "meetings next week" or "events with John"
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
