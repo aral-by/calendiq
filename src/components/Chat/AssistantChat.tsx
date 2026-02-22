@@ -184,7 +184,7 @@ export function AssistantChat() {
       // Development: Direct call to OpenRouter (API key in code)
       // Production: Will use /api/ai serverless function
       const isDevelopment = import.meta.env.DEV;
-      const USE_MOCK_FOR_DEV = false; // false = Real AI (OpenRouter/DeepSeek), true = Mock
+      const USE_MOCK_FOR_DEV = true; // YARINCA GROQ'A GEÇECEĞİZ
       
       let data;
       
