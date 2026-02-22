@@ -22,6 +22,7 @@ import {
 } from 'date-fns';
 
 type ViewType = 'month' | 'week' | 'day' | 'list';
+type AnimationDirection = 'left' | 'right' | 'fade';
 
 export function CalendarView() {
   const { events } = useEvents();
@@ -32,8 +33,10 @@ export function CalendarView() {
     (localStorage.getItem('calendiqPreferredView') as ViewType) || 'month'
   );
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [animationDirection, setAnimationDirection] = useState<AnimationDirection>('fade');
 
   function handleViewChange(viewType: ViewType) {
+    setAnimationDirection('fade');
     setCurrentView(viewType);
     localStorage.setItem('calendiqPreferredView', viewType);
     
@@ -52,6 +55,7 @@ export function CalendarView() {
   }
 
   function handlePrev() {
+    setAnimationDirection('left');
     switch(currentView) {
       case 'month':
         setCurrentDate(subMonths(currentDate, 1));
@@ -66,6 +70,7 @@ export function CalendarView() {
   }
 
   function handleNext() {
+    setAnimationDirection('right');
     switch(currentView) {
       case 'month':
         setCurrentDate(addMonths(currentDate, 1));
@@ -80,6 +85,7 @@ export function CalendarView() {
   }
 
   function handleToday() {
+    setAnimationDirection('fade');
     setCurrentDate(new Date());
   }
 
@@ -264,12 +270,24 @@ export function CalendarView() {
       <div className="flex-1 overflow-hidden relative">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key={currentView}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            key={`${currentView}-${currentDate.toISOString()}`}
+            initial={{ 
+              opacity: 0, 
+              x: animationDirection === 'left' ? -100 : animationDirection === 'right' ? 100 : 0,
+              scale: animationDirection === 'fade' ? 0.95 : 1
+            }}
+            animate={{ 
+              opacity: 1, 
+              x: 0,
+              scale: 1
+            }}
+            exit={{ 
+              opacity: 0, 
+              x: animationDirection === 'left' ? 100 : animationDirection === 'right' ? -100 : 0,
+              scale: animationDirection === 'fade' ? 0.95 : 1
+            }}
             transition={{ 
-              duration: 0.3,
+              duration: 0.4,
               ease: [0.4, 0, 0.2, 1]
             }}
             className="h-full w-full"
