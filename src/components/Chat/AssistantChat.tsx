@@ -184,7 +184,7 @@ export function AssistantChat() {
       // Development: Direct call to OpenRouter (API key in code)
       // Production: Will use /api/ai serverless function
       const isDevelopment = import.meta.env.DEV;
-      const USE_MOCK_FOR_DEV = false; // true = Mock mode (API key geçersizse), false = OpenRouter
+      const USE_MOCK_FOR_DEV = false; // false = Real AI (OpenRouter/DeepSeek), true = Mock
       
       let data;
       
@@ -318,7 +318,7 @@ IMPORTANT:
             'X-Title': 'Calendiq',
           },
           body: JSON.stringify({
-            model: 'meta-llama/llama-3.1-8b-instruct:free', // Alternative: google/gemini-2.0-flash-exp:free
+            model: 'meta-llama/llama-3.1-70b-instruct:free', // Proven to work with tool calling
             messages: [systemMessage, ...apiMessages],
             tools,
             tool_choice: 'auto',

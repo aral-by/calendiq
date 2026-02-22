@@ -141,7 +141,7 @@ export default async function handler(req: Request) {
     });
   }
 
-  const API_KEY = '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';
+  const API_KEY = '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';
 
   try {
     // Add system context with current events
@@ -184,7 +184,7 @@ When creating events:
         'X-Title': 'Calendiq',
       },
       body: JSON.stringify({
-        model: 'arcee-ai/trinity-large-preview:free',
+        model: 'meta-llama/llama-3.1-70b-instruct:free',
         messages: [systemMessage, ...messages],
         tools,
         tool_choice: 'auto',
