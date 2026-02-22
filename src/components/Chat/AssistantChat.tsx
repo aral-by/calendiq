@@ -811,6 +811,8 @@ Oscar: [First calls query_events for Friday, then calls bulk_delete_events]`,
                         <ActionCard 
                           type={msg.action.type} 
                           event={msg.action.event}
+                          events={msg.action.events}
+                          count={msg.action.count}
                           conflictingEvents={msg.action.conflictingEvents}
                         />
                       </div>

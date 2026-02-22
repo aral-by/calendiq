@@ -6,8 +6,10 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
   action?: {
-    type: 'creating' | 'created' | 'updating' | 'updated' | 'deleting' | 'deleted' | 'conflict' | 'querying';
+    type: 'creating' | 'created' | 'updating' | 'updated' | 'deleting' | 'deleted' | 'bulk_updating' | 'bulk_updated' | 'bulk_deleting' | 'bulk_deleted' | 'conflict' | 'querying';
     event?: Partial<CalendarEvent>;
+    events?: Partial<CalendarEvent>[]; // For bulk operations
+    count?: number; // For bulk operations
     conflictingEvents?: CalendarEvent[];
   };
   queryResults?: CalendarEvent[]; // For displaying query results as cards
