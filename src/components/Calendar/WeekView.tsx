@@ -23,7 +23,7 @@ export function WeekView({ currentDate, events, onTimeSlotClick, onEventClick }:
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
   
-  const hours = Array.from({ length: 17 }, (_, i) => i + 6); // 6 AM to 10 PM
+  const hours = Array.from({ length: 24 }, (_, i) => i); // 0 AM to 11 PM
 
   function getEventsForDayAndHour(date: Date, hour: number) {
     return events.filter(event => {
@@ -31,6 +31,14 @@ export function WeekView({ currentDate, events, onTimeSlotClick, onEventClick }:
       const eventStart = new Date(event.start);
       const eventHour = eventStart.getHours();
       return isSameDay(eventStart, date) && eventHour === hour;
+    });
+  }
+
+  function getAllDayEventsForDay(date: Date) {
+    return events.filter(event => {
+      if (!event.allDay) return false;
+      const eventStart = new Date(event.start);
+      return isSameDay(eventStart, date);
     });
   }
 
@@ -56,6 +64,36 @@ export function WeekView({ currentDate, events, onTimeSlotClick, onEventClick }:
               )}>
                 {format(day, 'd')}
               </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* All-day events row */}
+      <div className="grid grid-cols-8 border-b bg-muted/20 min-h-[40px]">
+        <div className="p-2 border-r bg-muted/30 text-xs text-muted-foreground flex items-center justify-end pr-3">
+          ALL DAY
+        </div>
+        {days.map(day => {
+          const allDayEvents = getAllDayEventsForDay(day);
+          return (
+            <div
+              key={`allday-${day.toISOString()}`}
+              className="border-r p-1 space-y-1"
+            >
+              {allDayEvents.map(event => (
+                <div
+                  key={event.id}
+                  onClick={() => onEventClick(event.id)}
+                  className="text-xs px-2 py-1 rounded cursor-pointer hover:opacity-80 transition-opacity truncate"
+                  style={{ 
+                    backgroundColor: event.categoryColor || event.color || '#6366f1',
+                    color: 'white'
+                  }}
+                >
+                  {event.title}
+                </div>
+              ))}
             </div>
           );
         })}
