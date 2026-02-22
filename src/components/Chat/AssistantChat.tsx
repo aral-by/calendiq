@@ -4,6 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Mic, ArrowUp } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { useChatHistory } from '@/context/ChatHistoryContext';
+import { useEvents } from '@/context/EventContext';
+import { AIActionSchema, isCreateEventAction, isUpdateEventAction, isDeleteEventAction, isQueryEventsAction } from '@/types/ai';
+import { format } from 'date-fns';
 
 function getTimeBasedGreeting(userName?: string): { title: string; subtitle: string } {
   const hour = new Date().getHours();
@@ -127,6 +130,7 @@ export function AssistantChat() {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const { currentSession, currentSessionId, createNewSession, switchSession, addMessage } = useChatHistory();
+  const { events, createEvent, updateEvent, deleteEvent, getEventById } = useEvents();
   
   const userName = user?.firstName;
   const greeting = useMemo(() => getTimeBasedGreeting(userName), [userName]);
@@ -136,6 +140,7 @@ export function AssistantChat() {
   const examplePrompts = [
     "Yarın saat 15'te doktor randevum var",
     "Pazartesi 10'da toplantı ekle",
+    "Bu haftaki etkinliklerimi göster",
   ];
 
   const handleSend = async () => {
@@ -148,18 +153,138 @@ export function AssistantChat() {
       switchSession(sessionId);
     }
     
-    const userMessage = message.trim();
+    // Add user message to chat
     addMessage({ role: 'user', content: userMessage, timestamp: Date.now() }, sessionId);
     setMessage('');
     setIsLoading(true);
     
-    // Simulate AI response (TODO: Real API call)
-    setTimeout(() => {
+    try {
+      // Check if online
+      if (!navigator.onLine) {
+        addMessage({ 
+          role: 'assistant', 
+          content: 'Çevrimdışısın. AI özellikleri için internet bağlantısı gerekiyor. Manuel olarak etkinlik ekleyebilirsin.',
+          timestamp: Date.now()
+        }, sessionId);
+        setIsLoading(false);
+        return;
+      }
+
+      // Prepare messages for API
+      const apiMessages = messages
+        .concat([{ role: 'user', content: userMessage, timestamp: Date.now() }])
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        }));
+
+      // Send to AI endpoint with current events context
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages: apiMessages,
+          events: events.map(e => ({
+            id: e.id,
+            title: e.title,
+            start: e.start,
+            end: e.end,
+            category: e.category,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('[AssistantChat] API response:', data);
+
+      // Validate AI action
+      let aiResponseText = data.message || 'Anladım!';
+      let actionResult = '';
+
+      if (data.action) {
+        try {
+          const validatedAction = AIActionSchema.parse(data.action);
+          console.log('[AssistantChat] Validated action:', validatedAction);
+
+          // Execute action
+          if (isCreateEventAction(validatedAction)) {
+            console.log('[AssistantChat] Creating event:', validatedAction.payload);
+            await createEvent(validatedAction.payload);
+            actionResult = '\n\n✅ Etkinlik oluşturuldu!';
+          } else if (isUpdateEventAction(validatedAction)) {
+            console.log('[AssistantChat] Updating event:', validatedAction.id, validatedAction.payload);
+            await updateEvent(validatedAction.id, validatedAction.payload);
+            actionResult = '\n\n✅ Etkinlik güncellendi!';
+          } else if (isDeleteEventAction(validatedAction)) {
+            console.log('[AssistantChat] Deleting event:', validatedAction.id);
+            await deleteEvent(validatedAction.id);
+            actionResult = '\n\n✅ Etkinlik silindi!';
+          } else if (isQueryEventsAction(validatedAction)) {
+            console.log('[AssistantChat] Querying events:', validatedAction.filter);
+            
+            // Filter events based on query
+            let filteredEvents = [...events];
+            const filter = validatedAction.filter || {};
+            
+            if (filter.startDate) {
+              const startDate = new Date(filter.startDate);
+              filteredEvents = filteredEvents.filter(e => new Date(e.start) >= startDate);
+            }
+            
+            if (filter.endDate) {
+              const endDate = new Date(filter.endDate);
+              filteredEvents = filteredEvents.filter(e => new Date(e.start) <= endDate);
+            }
+            
+            if (filter.category) {
+              filteredEvents = filteredEvents.filter(e => e.category === filter.category);
+            }
+            
+            if (filter.searchTerm) {
+              const term = filter.searchTerm.toLowerCase();
+              filteredEvents = filteredEvents.filter(e => 
+                e.title.toLowerCase().includes(term) || 
+                e.description?.toLowerCase().includes(term)
+              );
+            }
+
+            // Format results
+            if (filteredEvents.length > 0) {
+              actionResult = '\n\n📅 Bulunan etkinlikler:\n\n' + 
+                filteredEvents.map(e => 
+                  `• ${e.title}\n  📍 ${format(new Date(e.start), 'dd MMMM yyyy, HH:mm')} - ${format(new Date(e.end), 'HH:mm')}`
+                ).join('\n\n');
+            } else {
+              actionResult = '\n\nℹ️ Bu kriterlere uygun etkinlik bulunamadı.';
+            }
+          }
+        } catch (validationError) {
+          console.error('[AssistantChat] Action validation error:', validationError);
+          actionResult = '\n\n⚠️ AI yanıtı doğrulanamadı.';
+        }
+      }
+
+      // Add AI response to chat
       addMessage({ 
         role: 'assistant', 
-        content: 'Anladım! Etkinliği takvime ekliyorum.',
+        content: aiResponseText + actionResult,
         timestamp: Date.now()
       }, sessionId);
+      
+    } catch (error) {
+      console.error('[AssistantChat] Error:', error);
+      addMessage({ 
+        role: 'assistant', 
+        content: 'Üzgünüm, bir hata oluştu. Lütfen tekrar dene veya manuel olarak etkinlik ekle.',
+        timestamp: Date.now()
+      }, sessionId);
+    } finally {
+      setIsLoading(false);
+    }ionId);
       setIsLoading(false);
     }, 2000);
   };
