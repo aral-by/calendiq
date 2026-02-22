@@ -61,7 +61,7 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const { user, logout } = useUser();
-  const { sessions, currentSessionId, switchSession, deleteSession } = useChatHistory();
+  const { sessions, currentSessionId, switchSession, clearCurrentSession, deleteSession } = useChatHistory();
 
   // Apply theme on mount
   useEffect(() => {
@@ -149,7 +149,10 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
                   <SidebarMenuItem>
                     <SidebarMenuButton 
                       isActive={currentPage === 'ai-chat' && !currentSessionId}
-                      onClick={() => onNavigate('ai-chat')}
+                      onClick={() => {
+                        clearCurrentSession();
+                        onNavigate('ai-chat');
+                      }}
                       className="h-11"
                     >
                       <Sparkles className="h-5 w-5" />
