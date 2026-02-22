@@ -31,7 +31,7 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 
 ### Backend
 - **Vercel Serverless Functions** for API proxies
-- **OpenAI GPT-4o** for AI event parsing
+- **OpenRouter API** (Arcee AI Trinity) for AI event management
 - **Deepgram** for speech-to-text
 
 ### Infrastructure
@@ -62,13 +62,16 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
    ```
 
 3. **Set up environment variables**
+   
+   > **Note:** This project uses OpenRouter API (https://openrouter.ai) instead of OpenAI for AI capabilities. The API key is already configured in the serverless function.
+   
+   If you need speech-to-text (Deepgram), create a `.env` file:
    ```bash
    cp .env.example .env
    ```
    
-   Edit `.env` and add your API keys:
+   Edit `.env` and add your Deepgram API key:
    ```
-   OPENAI_API_KEY=sk-proj-...
    DEEPGRAM_API_KEY=...
    ```
 
@@ -95,8 +98,9 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
    ```bash
    vercel
    ```
-
-4. **Add environment variables on Vercel**
+DEEPGRAM_API_KEY` (if using voice features)
+   
+   > **Note:** OpenRouter API key is embedded in the code for this MVP. For production, move it to environment variables.les on Vercel**
    - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
    - Add `OPENAI_API_KEY`
    - Add `DEEPGRAM_API_KEY`
@@ -211,21 +215,21 @@ Each phase has detailed documentation in `docs/phases/`. Complete phases sequent
 ## API Keys
 
 ### Getting Your Keys
+Router:**
+- This project uses OpenRouter (https://openrouter.ai) for AI capabilities
+- Current model: arcee-ai/trinity-large-preview:free
+- API key is already configured for MVP
+- For production, get your own key at https://openrouter.ai/keys
 
-**OpenAI:**
-1. Go to https://platform.openai.com/api-keys
-2. Create a new API key
-3. Copy and save securely
-
-**Deepgram:**
+**Deepgram (Optional):**
 1. Go to https://console.deepgram.com/
 2. Create an API key
 3. Copy and save securely
 
 ### Security
 
-- API keys are **never** committed to the repository
-- Keys are stored in Vercel environment variables
+- API keys should be stored in Vercel environment variables for production
+- Frontend bundle contains **no** API keys in production setupriables
 - Frontend bundle contains **no** API keys
 - All API calls go through serverless proxy functions
 

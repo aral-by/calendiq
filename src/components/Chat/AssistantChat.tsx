@@ -130,7 +130,7 @@ export function AssistantChat() {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const { currentSession, currentSessionId, createNewSession, switchSession, addMessage } = useChatHistory();
-  const { events, createEvent, updateEvent, deleteEvent, getEventById } = useEvents();
+  const { events, createEvent, updateEvent, deleteEvent } = useEvents();
   
   const userName = user?.firstName;
   const greeting = useMemo(() => getTimeBasedGreeting(userName), [userName]);
