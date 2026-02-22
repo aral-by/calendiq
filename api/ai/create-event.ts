@@ -52,10 +52,10 @@ function parseEventFromPrompt(prompt: string): Omit<CalendarEvent, 'id' | 'creat
   // Extract date
   for (const pattern of datePatterns) {
     if (lowerPrompt.includes(pattern.keyword)) {
-      if ('offset' in pattern) {
+      if ('offset' in pattern && pattern.offset !== undefined) {
         startDate = new Date(now);
         startDate.setDate(now.getDate() + pattern.offset);
-      } else if ('dayOfWeek' in pattern) {
+      } else if ('dayOfWeek' in pattern && pattern.dayOfWeek !== undefined) {
         startDate = new Date(now);
         const currentDay = now.getDay();
         let daysToAdd = pattern.dayOfWeek - currentDay;
