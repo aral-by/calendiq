@@ -85,12 +85,12 @@ export function Search() {
 
   return (
     <div className="h-full w-full flex flex-col items-center justify-start pt-12 sm:pt-20 px-4">
-      <div className="w-full max-w-2xl flex flex-col gap-16">
+      <div className="w-full max-w-2xl flex flex-col gap-24">
         {/* Header */}
-        <div className="text-center pb-4">
-          <div className="flex items-center justify-center gap-3">
-            <Layers className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+        <div className="text-center pb-2">
+          <div className="flex items-center justify-center gap-2.5">
+            <Layers className="h-6 w-6 text-primary" />
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Search Anything
             </h1>
           </div>
