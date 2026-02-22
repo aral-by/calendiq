@@ -85,9 +85,9 @@ export function Search() {
 
   return (
     <div className="h-full w-full flex flex-col items-center justify-start pt-12 sm:pt-20 px-4">
-      <div className="w-full max-w-2xl flex flex-col gap-24">
+      <div className="w-full max-w-2xl flex flex-col gap-32">
         {/* Header */}
-        <div className="text-center pb-2">
+        <div className="text-center pb-2 relative z-20 min-h-[3rem]">
           <div className="flex items-center justify-center gap-2.5">
             <Layers className="h-6 w-6 text-primary" />
             <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -97,10 +97,9 @@ export function Search() {
         </div>
 
         {/* Search Input */}
-        <div className="relative z-10">
-          <div className="relative">
-            {/* Search Icon with shimmer effect when AI mode is active */}
-            <div className="absolute left-4 top-1/2 -translate-y-1/2">
+        <div className="relative">
+          {/* Search Icon with shimmer effect when AI mode is active */}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
               {aiSearch ? (
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-primary via-purple-500 to-primary animate-shimmer rounded-full blur-sm opacity-60" 
@@ -110,8 +109,8 @@ export function Search() {
               ) : (
                 <SearchIcon className="h-5 w-5 text-muted-foreground" />
               )}
-            </div>
-            <Input
+          </div>
+          <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsFocused(true)}
@@ -122,11 +121,11 @@ export function Search() {
                 aiSearch && "border-primary/50 shadow-lg shadow-primary/20"
               )}
               placeholder=""
-            />
-            
-            {/* Shimmering Placeholder */}
-            {!searchQuery && !isFocused && (
-              <div className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none">
+          />
+          
+          {/* Shimmering Placeholder */}
+          {!searchQuery && !isFocused && (
+            <div className="absolute left-12 top-1/2 -translate-y-1/2 pointer-events-none z-10">
                 <ShimmeringText 
                   text={(aiSearch ? AI_SEARCH_PLACEHOLDERS : SEARCH_PLACEHOLDERS)[placeholderIndex]}
                   className={cn(
@@ -134,11 +133,11 @@ export function Search() {
                     aiSearch ? "text-primary/70" : "text-muted-foreground/70"
                   )}
                 />
-              </div>
-            )}
+            </div>
+          )}
 
-            {/* Action Buttons */}
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          {/* Action Buttons */}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 z-10">
               {/* AI Mode Toggle */}
               <Popover>
                 <PopoverTrigger asChild>
@@ -208,7 +207,6 @@ export function Search() {
                   <X className="h-4 w-4" />
                 </Button>
               )}
-            </div>
           </div>
 
           {/* Active Filters */}
