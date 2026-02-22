@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Mic, ArrowUp } from 'lucide-react';
@@ -133,15 +133,6 @@ export function AssistantChat() {
 
   const messages = currentSession?.messages || [];
 
-  // Start a new chat session only if no session is active
-  // This allows opening existing sessions from Recent Chats
-  useEffect(() => {
-    if (!currentSessionId) {
-      const newSessionId = createNewSession();
-      switchSession(newSessionId);
-    }
-  }, []); // Empty dependency - only run on mount
-
   const examplePrompts = [
     "Yarın saat 15'te doktor randevum var",
     "Pazartesi 10'da toplantı ekle",
@@ -150,14 +141,15 @@ export function AssistantChat() {
   const handleSend = async () => {
     if (!message.trim() || isLoading) return;
     
-    // Use the current session (already created in useEffect)
-    if (!currentSessionId) {
-      console.error('No active session');
-      return;
+    // Create a new session if none exists (first message)
+    let sessionId = currentSessionId;
+    if (!sessionId) {
+      sessionId = createNewSession();
+      switchSession(sessionId);
     }
     
     const userMessage = message.trim();
-    addMessage({ role: 'user', content: userMessage, timestamp: Date.now() });
+    addMessage({ role: 'user', content: userMessage, timestamp: Date.now() }, sessionId);
     setMessage('');
     setIsLoading(true);
     
@@ -167,7 +159,7 @@ export function AssistantChat() {
         role: 'assistant', 
         content: 'Anladım! Etkinliği takvime ekliyorum.',
         timestamp: Date.now()
-      });
+      }, sessionId);
       setIsLoading(false);
     }, 2000);
   };

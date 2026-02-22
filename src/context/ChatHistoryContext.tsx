@@ -21,7 +21,7 @@ interface ChatHistoryContextType {
   createNewSession: () => string;
   switchSession: (sessionId: string) => void;
   clearCurrentSession: () => void;
-  addMessage: (message: ChatMessage) => void;
+  addMessage: (message: ChatMessage, sessionId?: string) => void;
   updateSessionTitle: (sessionId: string, title: string) => void;
   deleteSession: (sessionId: string) => void;
 }
@@ -63,11 +63,12 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
     setCurrentSessionId(null);
   };
 
-  const addMessage = (message: ChatMessage) => {
-    if (!currentSessionId) return;
+  const addMessage = (message: ChatMessage, sessionId?: string) => {
+    const targetSessionId = sessionId || currentSessionId;
+    if (!targetSessionId) return;
 
     setSessions(prev => prev.map(session => {
-      if (session.id !== currentSessionId) return session;
+      if (session.id !== targetSessionId) return session;
 
       const updatedMessages = [...session.messages, message];
       
