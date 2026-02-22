@@ -103,19 +103,20 @@ const tools = [
         properties: {
           startDate: {
             type: 'string',
-            description: 'Filter events starting from this date (ISO 8601)',
+            description: 'Filter events starting from this date (ISO 8601). Optional.',
           },
           endDate: {
             type: 'string',
-            description: 'Filter events until this date (ISO 8601)',
+            description: 'Filter events until this date (ISO 8601). Optional.',
           },
           category: {
             type: 'string',
-            description: 'Filter by category',
+            enum: ['work', 'personal', 'health', 'social', 'finance', 'education'],
+            description: 'Filter by category. Optional. Only use if user specifies category, otherwise omit this parameter.',
           },
           searchTerm: {
             type: 'string',
-            description: 'Search in title/description',
+            description: 'Search in title/description. Optional.',
           },
         },
       },
@@ -141,49 +142,111 @@ export default async function handler(req: Request) {
     });
   }
 
-  const API_KEY = 'REDACTED_FOR_SECURITY';
+  // Get API key from environment variable
+  const API_KEY = process.env.GROQ_API_KEY;
+  
+  if (!API_KEY) {
+    console.error('[API] GROQ_API_KEY not configured');
+    return new Response(
+      JSON.stringify({ 
+        error: 'API key not configured',
+        details: 'GROQ_API_KEY environment variable is missing'
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
 
   try {
     // Add system context with current events
-    // Türkiye timezone (UTC+3)
-    const turkeyNow = new Date();
-    const turkeyTime = new Date(turkeyNow.getTime() + (3 * 60 * 60 * 1000));
+    // Get current Turkey time
+    const now = new Date();
+    const turkeyTime = now.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long' });
+    const isoTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' })).toISOString();
     
     const systemMessage = {
       role: 'system',
-      content: `You are Oscar, a helpful calendar assistant for Calendiq. You help users manage their calendar in Turkish.
+      content: `You are Oscar, the friendly and witty calendar assistant for Calendiq. You help Turkish users manage their schedules with personality and humor.
 
-Current date/time (Turkey UTC+3): ${turkeyTime.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long' })}
-ISO: ${turkeyTime.toISOString()}
+🗓️ Current date/time (Turkey UTC+3): ${turkeyTime}
+ISO: ${isoTime}
 
-You can:
-- Create new events (use create_event function)
-- Update existing events (use update_event function with event ID)
-- Delete events (use delete_event function with event ID)
-- Query/search events (use query_events function)
-- Have friendly conversations
-- Ask follow-up questions if information is missing (DON'T use any function, just respond normally)
+${events && events.length > 0 ? `📅 User's current events:\n${events.map((e: any) => `  • ${e.title} - ${e.start} [ID: ${e.id}]`).join('\n')}` : '📭 User has no events yet.'}
 
-${events && events.length > 0 ? `Current user events:\n${events.map((e: any) => `- ${e.title} (${e.start}) [ID: ${e.id}]`).join('\n')}` : 'User has no events yet.'}
+🎯 PERSONALITY & TONE:
+- Speak naturally in Turkish, like a helpful friend
+- Be warm, professional, and clear
+- NO emojis - keep responses clean and text-only
+- Show personality through words, not symbols! Examples:
+  ✓ "Tamam, hadi ekleyelim!"
+  ✓ "Harika! İşte bu kadar!"
+  ✓ "Anladım! Hemen halledelim."
+  ✗ "Etkinlik başarıyla oluşturuldu." (too robotic)
+  ✗ "Harika! 🎉" (NO emojis)
 
-IMPORTANT: 
+📝 GATHERING INFORMATION (CRITICAL - Follow this order):
+When user wants to create an event, ask in THIS ORDER:
+1️⃣ FIRST: What is the event? (title/description)
+   Example: "Ne eklememi istersin? Toplantı mı, randevu mu, başka bir şey mi?"
+   
+2️⃣ SECOND: When is it? (date if not specified)
+   Example: "Tamamdır! Hangi gün?"
+   
+3️⃣ THIRD: What time? (time if not specified)
+   Example: "Saat kaçta olacak?"
+   
+4️⃣ FOURTH (optional): Location? (only if relevant)
+   Example: "Nerede gerçekleşecek? (İsteğe bağlı)"
+
+❗ IMPORTANT RULES:
+- Ask ONE question at a time
+- Wait for user response before asking next question
+- DON'T use any function until you have: title + date + time
+- When you have all required info, THEN use create_event function
+- For queries, ALWAYS use query_events function - NEVER list events manually in text
+- When user asks "bugünün programı", "etkinliklerim", etc., CALL query_events function
+- For updates/deletes, use update_event or delete_event
 - ALWAYS respond in Turkish
-- If user doesn't specify time, ASK "Saat kaçta?" before creating event
-- If user doesn't specify date, ASK "Hangi gün?" before creating event
-- If information is incomplete, ask ONE clarifying question at a time
-- When you have all info, THEN use create_event function
-- When user asks about their events, use query_events to search
-- When updating/deleting, first query to find the event ID if needed
-- Be friendly and helpful
-- Auto-categorize events: work, personal, health, social, finance, education
-- Default reminder: 15 minutes before
-- Use Turkey timezone (UTC+3) for all date/time calculations
+- Use Turkey timezone (UTC+3) for all calculations
+- If user asks about results just shown (e.g., "detayları var mı?"), DON'T call functions - just answer from context
+- Events already displayed have all details - user can see them on screen
 
-When creating events:
-- Parse Turkish dates: "yarın" (tomorrow), "bugün" (today), "pazartesi" (Monday), "salı" (Tuesday), etc.
-- Parse times: "saat 15", "15:00", "3 pm", etc.
-- Default duration: 1 hour if not specified
-- Auto-detect category from context`,
+🏷️ AUTO-CATEGORIZATION:
+Automatically detect category from context:
+- work: toplantı, iş, sunum, proje, müşteri, ofis
+- personal: alışveriş, kişisel, ev, aile
+- health: doktor, randevu, spor, sağlık, diş, check-up
+- social: kahve, yemek, görüşme, buluşma, parti, konser
+- finance: banka, fatura, ödeme, vergi
+- education: ders, kurs, eğitim, sınav, okul, ödev
+Default to 'personal' if unsure.
+
+⏰ Turkish Date/Time Parsing:
+- "bugün" = today
+- "yarın" = tomorrow  
+- "pazartesi", "salı", "çarşamba", "perşembe", "cuma", "cumartesi", "pazar" = weekdays
+- "saat 15", "15:00", "3 pm" = time formats
+- Default duration: 1 hour if end time not specified
+- Default reminder: 15 minutes before
+
+Example conversation flows:
+
+CREATE:
+User: "yarına etkinlik ekle"
+Oscar: "Tamamdır! Ne eklememi istersin?"
+User: "doktor randevusu"
+Oscar: "Anladım! Saat kaçta olacak?"
+User: "saat 15"
+Oscar: [calls create_event]
+
+QUERY:
+User: "bugünün programını göster"
+Oscar: [calls query_events with startDate=today, endDate=today]
+
+User: "bu haftaki toplantılar"
+Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, endDate=week-end]`,
     };
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -227,6 +290,7 @@ When creating events:
 
     // Check if there are tool calls
     const toolCalls = assistantMessage.tool_calls;
+    let messageContent = assistantMessage.content || '';
     
     if (toolCalls && toolCalls.length > 0) {
       // AI wants to call a function
@@ -236,6 +300,9 @@ When creating events:
 
       console.log('[API] Function call:', functionName, functionArgs);
 
+      // Clean up function call format from message (Groq sometimes includes <function=...> in content)
+      messageContent = messageContent.replace(/<function=.*?<\/function>/g, '').trim();
+
       // Convert tool call to AIAction format
       let action;
       switch (functionName) {
@@ -244,6 +311,8 @@ When creating events:
             type: 'CREATE_EVENT',
             payload: functionArgs,
           };
+          // Empty message - client will show action card instead
+          messageContent = '';
           break;
         case 'update_event':
           action = {
@@ -251,29 +320,32 @@ When creating events:
             id: functionArgs.id,
             payload: functionArgs.updates,
           };
+          messageContent = '';
           break;
         case 'delete_event':
           action = {
             type: 'DELETE_EVENT',
             id: functionArgs.id,
           };
+          messageContent = '';
           break;
         case 'query_events':
           action = {
             type: 'QUERY_EVENTS',
             filter: functionArgs,
           };
+          messageContent = ''; // Client will set appropriate message during execution
           break;
         default:
           action = {
             type: 'NO_ACTION',
-            message: assistantMessage.content || 'Anladım!',
+            message: messageContent || 'Anladım!',
           };
       }
 
       return new Response(
         JSON.stringify({
-          message: assistantMessage.content || 'İşlem yapılıyor...',
+          message: messageContent,
           action,
         }),
         {
@@ -284,10 +356,10 @@ When creating events:
       // No function call, just conversation
       return new Response(
         JSON.stringify({
-          message: assistantMessage.content || 'Anladım!',
+          message: messageContent || 'Anladım!',
           action: {
             type: 'NO_ACTION',
-            message: assistantMessage.content || 'Anladım!',
+            message: messageContent || 'Anladım!',
           },
         }),
         {

@@ -10,6 +10,7 @@ export interface ChatMessage {
     event?: Partial<CalendarEvent>;
     conflictingEvents?: CalendarEvent[];
   };
+  queryResults?: CalendarEvent[]; // For displaying query results as cards
 }
 
 export interface ChatSession {

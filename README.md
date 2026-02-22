@@ -8,8 +8,10 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 
 ## Features
 
+> **Note:** Default language is Turkish (TR). Application is optimized for Turkish users with UTC+3 (Turkey) timezone.
+
 - **Local-First Architecture** - All calendar data stored locally in IndexedDB, no cloud dependency
-- **AI-Powered Event Creation** - Create events using natural language via OpenAI GPT-4o
+- **AI-Powered Event Creation** - Create events using natural language via Groq AI
 - **Voice Input** - Speak your events using Deepgram speech-to-text
 - **Manual Event Management** - Full CRUD operations without AI
 - **Event Reminders** - Set reminders (5, 10, 15, 30 min, 1 hour, 1 day before) with browser notifications
@@ -31,7 +33,7 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 
 ### Backend
 - **Vercel Serverless Functions** for API proxies
-- **OpenRouter API** (Arcee AI Trinity) for AI event management
+- **Groq API** for AI event management
 - **Deepgram** for speech-to-text
 
 ### Infrastructure
@@ -44,7 +46,7 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 ### Prerequisites
 
 - Node.js 18+ and npm/pnpm
-- OpenAI API key
+- Groq API key
 - Deepgram API key
 - Vercel account (for deployment)
 
@@ -63,7 +65,7 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 
 3. **Set up environment variables**
    
-   > **Note:** This project uses OpenRouter API (https://openrouter.ai) instead of OpenAI for AI capabilities. The API key is already configured in the serverless function.
+   > **Note:** This project uses Groq API (https://groq.com) for AI capabilities. The API key is already configured in the serverless function.
    
    If you need speech-to-text (Deepgram), create a `.env` file:
    ```bash
@@ -98,12 +100,13 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
    ```bash
    vercel
    ```
-DEEPGRAM_API_KEY` (if using voice features)
-   
-   > **Note:** OpenRouter API key is embedded in the code for this MVP. For production, move it to environment variables.les on Vercel**
+
+4. **Configure environment variables on Vercel**
    - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
-   - Add `OPENAI_API_KEY`
-   - Add `DEEPGRAM_API_KEY`
+   - Add `GROQ_API_KEY` (required - get from https://console.groq.com/keys)
+   - Add `DEEPGRAM_API_KEY` (optional - if using voice features)
+   
+   > **Note:** API keys must be configured as environment variables. Never commit API keys to the repository.
 
 5. **Deploy to production**
    ```bash
@@ -215,11 +218,12 @@ Each phase has detailed documentation in `docs/phases/`. Complete phases sequent
 ## API Keys
 
 ### Getting Your Keys
-Router:**
-- This project uses OpenRouter (https://openrouter.ai) for AI capabilities
-- Current model: arcee-ai/trinity-large-preview:free
+
+**Groq:**
+- This project uses Groq (https://groq.com) for AI capabilities
+- Current model: llama-3.3-70b-versatile
 - API key is already configured for MVP
-- For production, get your own key at https://openrouter.ai/keys
+- For production, get your own key at https://console.groq.com
 
 **Deepgram (Optional):**
 1. Go to https://console.deepgram.com/
@@ -312,7 +316,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 - Built with [React](https://react.dev/)
 - UI components from [shadcn/ui](https://ui.shadcn.com/)
 - Calendar by [FullCalendar](https://fullcalendar.io/)
-- AI by [OpenAI](https://openai.com/)
+- AI by [Groq](https://groq.com/)
 - Speech-to-text by [Deepgram](https://deepgram.com/)
 
 ## Support

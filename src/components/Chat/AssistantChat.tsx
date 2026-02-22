@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Mic, ArrowUp } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Mic, ArrowUp, Calendar, Clock, MapPin } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { useChatHistory, ChatMessage } from '@/context/ChatHistoryContext';
 import { useEvents } from '@/context/EventContext';
@@ -238,39 +239,93 @@ export function AssistantChat() {
           throw new Error('VITE_GROQ_API_KEY not found in .env file');
         }
         
-        // Türkiye timezone'u (UTC+3)
-        const turkeyNow = new Date();
-        const turkeyTime = new Date(turkeyNow.getTime() + (3 * 60 * 60 * 1000)); // UTC+3
+        // Get current Turkey time (browser timezone)
+        const now = new Date();
+        const turkeyTime = now.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long' });
+        const isoTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' })).toISOString();
         
         const systemMessage = {
           role: 'system',
-          content: `You are Oscar, a helpful calendar assistant for Calendiq. You help users manage their calendar in Turkish.
+          content: `You are Oscar, the friendly and witty calendar assistant for Calendiq. You help Turkish users manage their schedules with personality and humor.
 
-Current date/time (Turkey UTC+3): ${turkeyTime.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long' })}
-ISO: ${turkeyTime.toISOString()}
+🗓️ Current date/time (Turkey UTC+3): ${turkeyTime}
+ISO: ${isoTime}
 
-You can:
-- Create new events (use create_event function)
-- Update existing events (use update_event function with event ID)
-- Delete events (use delete_event function with event ID)
-- Query/search events (use query_events function)
-- Have friendly conversations
-- Ask follow-up questions if information is missing (DON'T use any function, just respond normally)
+${events.length > 0 ? `📅 User's current events:\n${events.map((e) => `  • ${e.title} - ${e.start} [ID: ${e.id}]`).join('\n')}` : '📭 User has no events yet.'}
 
-${events.length > 0 ? `Current user events:\n${events.map((e) => `- ${e.title} (${e.start}) [ID: ${e.id}]`).join('\n')}` : 'User has no events yet.'}
+🎯 PERSONALITY & TONE:
+- Speak naturally in Turkish, like a helpful friend
+- Be warm, professional, and clear
+- NO emojis - keep responses clean and text-only
+- Show personality through words, not symbols! Examples:
+  ✓ "Tamam, hadi ekleyelim!"
+  ✓ "Harika! İşte bu kadar!"
+  ✓ "Anladım! Hemen halledelim."
+  ✗ "Etkinlik başarıyla oluşturuldu." (too robotic)
+  ✗ "Harika! 🎉" (NO emojis)
 
-IMPORTANT: 
+📝 GATHERING INFORMATION (CRITICAL - Follow this order):
+When user wants to create an event, ask in THIS ORDER:
+1️⃣ FIRST: What is the event? (title/description)
+   Example: "Ne eklememi istersin? Toplantı mı, randevu mu, başka bir şey mi?"
+   
+2️⃣ SECOND: When is it? (date if not specified)
+   Example: "Tamamdır! Hangi gün?"
+   
+3️⃣ THIRD: What time? (time if not specified)
+   Example: "Saat kaçta olacak?"
+   
+4️⃣ FOURTH (optional): Location? (only if relevant)
+   Example: "Nerede gerçekleşecek? (İsteğe bağlı)"
+
+❗ IMPORTANT RULES:
+- Ask ONE question at a time
+- Wait for user response before asking next question
+- DON'T use any function until you have: title + date + time
+- When you have all required info, THEN use create_event function
+- For queries, ALWAYS use query_events function - NEVER list events manually in text
+- When user asks "bugünün programı", "etkinliklerim", etc., CALL query_events function
+- For updates/deletes, use update_event or delete_event
 - ALWAYS respond in Turkish
-- If user doesn't specify time, ASK "Saat kaçta?" before creating event
-- If user doesn't specify date, ASK "Hangi gün?" before creating event
-- If information is incomplete, ask ONE clarifying question at a time
-- When you have all info, THEN use create_event function
-- When user asks about their events, use query_events to search
-- When updating/deleting, first query to find the event ID if needed
-- Be friendly and helpful
-- Auto-categorize events: work, personal, health, social, finance, education
+- Use Turkey timezone (UTC+3) for all calculations
+- NEVER send empty strings in function parameters - omit optional parameters instead
+- If user asks about results just shown (e.g., "detayları var mı?"), DON'T call functions - just answer from context
+- Events already displayed have all details - user can see them on screen
+
+🏷️ AUTO-CATEGORIZATION:
+Automatically detect category from context:
+- work: toplantı, iş, sunum, proje, müşteri, ofis
+- personal: alışveriş, kişisel, ev, aile
+- health: doktor, randevu, spor, sağlık, diş, check-up
+- social: kahve, yemek, görüşme, buluşma, parti, konser
+- finance: banka, fatura, ödeme, vergi
+- education: ders, kurs, eğitim, sınav, okul, ödev
+Default to 'personal' if unsure.
+
+⏰ Turkish Date/Time Parsing:
+- "bugün" = today
+- "yarın" = tomorrow  
+- "pazartesi", "salı", "çarşamba", "perşembe", "cuma", "cumartesi", "pazar" = weekdays
+- "saat 15", "15:00", "3 pm" = time formats
+- Default duration: 1 hour if end time not specified
 - Default reminder: 15 minutes before
-- Use Turkey timezone (UTC+3) for all date/time calculations`,
+
+Example conversation flows:
+
+CREATE:
+User: "yarına etkinlik ekle"
+Oscar: "Tamamdır! Ne eklememi istersin?"
+User: "doktor randevusu"
+Oscar: "Anladım! Saat kaçta olacak?"
+User: "saat 15"
+Oscar: [calls create_event]
+
+QUERY:
+User: "bugünün programını göster"
+Oscar: [calls query_events with startDate=today, endDate=today]
+
+User: "bu haftaki toplantılar"
+Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, endDate=week-end]`,
         };
 
         const tools = [
@@ -304,10 +359,14 @@ IMPORTANT:
               parameters: {
                 type: 'object',
                 properties: {
-                  startDate: { type: 'string' },
-                  endDate: { type: 'string' },
-                  category: { type: 'string' },
-                  searchTerm: { type: 'string' },
+                  startDate: { type: 'string', description: 'Filter from this date (ISO 8601). Optional.' },
+                  endDate: { type: 'string', description: 'Filter until this date (ISO 8601). Optional.' },
+                  category: { 
+                    type: 'string', 
+                    enum: ['work', 'personal', 'health', 'social', 'finance', 'education'],
+                    description: 'Filter by category. Optional. Only use if user specifies, otherwise omit.' 
+                  },
+                  searchTerm: { type: 'string', description: 'Search in title/description. Optional.' },
                 },
               },
             },
@@ -372,34 +431,43 @@ IMPORTANT:
 
         const toolCalls = assistantMessage.tool_calls;
         let action;
+        let messageContent = assistantMessage.content || '';
 
         if (toolCalls && toolCalls.length > 0) {
           const toolCall = toolCalls[0];
           const functionName = toolCall.function.name;
           const functionArgs = JSON.parse(toolCall.function.arguments);
 
+          // Clean up function call format from message (Groq sometimes includes <function=...> in content)
+          messageContent = messageContent.replace(/<function=.*?<\/function>/g, '').trim();
+
           switch (functionName) {
             case 'create_event':
               action = { type: 'CREATE_EVENT', payload: functionArgs };
+              // Empty message - we'll show action card instead
+              messageContent = '';
               break;
             case 'update_event':
               action = { type: 'UPDATE_EVENT', id: functionArgs.id, payload: functionArgs.updates };
+              messageContent = '';
               break;
             case 'delete_event':
               action = { type: 'DELETE_EVENT', id: functionArgs.id };
+              messageContent = '';
               break;
             case 'query_events':
               action = { type: 'QUERY_EVENTS', filter: functionArgs };
+              messageContent = ''; // Will be set during action execution
               break;
             default:
-              action = { type: 'NO_ACTION', message: assistantMessage.content || 'Anladım!' };
+              action = { type: 'NO_ACTION', message: messageContent || 'Anladım!' };
           }
         } else {
-          action = { type: 'NO_ACTION', message: assistantMessage.content || 'Anladım!' };
+          action = { type: 'NO_ACTION', message: messageContent || 'Anladım!' };
         }
 
         data = {
-          message: assistantMessage.content || 'İşlem yapılıyor...',
+          message: messageContent || 'İşlem yapılıyor...',
           action,
         };
       } else {
@@ -429,8 +497,9 @@ IMPORTANT:
       console.log('[AssistantChat] API response:', data);
 
       // Validate AI action
-      let aiResponseText = data.message || 'Anladım!';
+      let aiResponseText = data.message || '';
       let actionMetadata: ChatMessage['action'] = undefined;
+      let queryResults: CalendarEvent[] | undefined = undefined;
 
       console.log('[AssistantChat] AI response text:', aiResponseText);
       console.log('[AssistantChat] Action data:', data.action);
@@ -512,30 +581,24 @@ IMPORTANT:
               );
             }
 
-            // Add formatted results to AI response
-            if (filteredEvents.length > 0) {
-              const eventList = filteredEvents.map(e => {
-                const startDate = new Date(e.start);
-                const endDate = new Date(e.end);
-                return `• ${e.title}\n  📅 ${format(startDate, 'dd MMMM yyyy, EEEE', { locale: tr })}\n  🕐 ${e.allDay ? 'Tüm gün' : `${format(startDate, 'HH:mm')} - ${format(endDate, 'HH:mm')}`}${e.location ? `\n  📍 ${e.location}` : ''}`;
-              }).join('\n\n');
-              
-              aiResponseText += '\n\n📅 Bulunan etkinlikler:\n\n' + eventList;
-            } else {
-              aiResponseText += '\n\nℹ️ Bu kriterlere uygun etkinlik bulunamadı.';
-            }
+            // Save query results to display as cards
+            queryResults = filteredEvents;
+            
+            // Empty message - cards will show everything
+            aiResponseText = '';
           }
         } catch (validationError) {
           console.error('[AssistantChat] Action validation error:', validationError);
         }
       }
 
-      // Add AI response to chat with action metadata
+      // Add AI response to chat with action metadata and query results
       addMessage({ 
         role: 'assistant', 
         content: aiResponseText,
         timestamp: Date.now(),
         action: actionMetadata,
+        queryResults: queryResults,
       }, sessionId);
       
     } catch (error) {
@@ -598,11 +661,14 @@ IMPORTANT:
                   // User message - no bubble, just text
                   <p className="text-lg max-w-[80%]">{msg.content}</p>
                 ) : (
-                  // AI message - with bubble and optional action card
+                  // AI message - plain text with optional action card or query results
                   <>
-                    <div className="max-w-[80%] rounded-2xl px-5 py-3 bg-muted">
-                      <p className="text-lg text-muted-foreground whitespace-pre-wrap">{msg.content}</p>
-                    </div>
+                    {/* Only show text if there's actual content */}
+                    {msg.content && msg.content.trim() && (
+                      <p className="text-lg text-foreground max-w-[80%] whitespace-pre-wrap">{msg.content}</p>
+                    )}
+                    
+                    {/* Action Card (for create/update/delete/conflict) */}
                     {msg.action && (
                       <div className="w-full max-w-[80%]">
                         <ActionCard 
@@ -610,6 +676,64 @@ IMPORTANT:
                           event={msg.action.event}
                           conflictingEvents={msg.action.conflictingEvents}
                         />
+                      </div>
+                    )}
+                    
+                    {/* Query Results (for query_events) */}
+                    {msg.queryResults !== undefined && (
+                      <div className="w-full max-w-[80%] space-y-2">
+                        {msg.queryResults.length > 0 ? (
+                          msg.queryResults.map((event) => (
+                            <Card key={event.id} className="overflow-hidden">
+                              <CardContent className="p-4">
+                                <div className="space-y-2">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h4 className="font-semibold text-base">{event.title}</h4>
+                                    {event.category && (
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
+                                        {event.category}
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                                    <span>{format(new Date(event.start), 'd MMMM yyyy, EEEE', { locale: tr })}</span>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                                    <span>
+                                      {event.allDay 
+                                        ? 'Tüm gün' 
+                                        : `${format(new Date(event.start), 'HH:mm')} - ${format(new Date(event.end), 'HH:mm')}`
+                                      }
+                                    </span>
+                                  </div>
+                                  
+                                  {event.location && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <MapPin className="w-3.5 h-3.5 shrink-0" />
+                                      <span>{event.location}</span>
+                                    </div>
+                                  )}
+                                  
+                                  {event.description && (
+                                    <p className="text-sm text-muted-foreground pt-2 border-t">
+                                      {event.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))
+                        ) : (
+                          <Card className="overflow-hidden">
+                            <CardContent className="p-4">
+                              <p className="text-sm text-muted-foreground">Bu kriterlere uygun etkinlik bulunamadı.</p>
+                            </CardContent>
+                          </Card>
+                        )}
                       </div>
                     )}
                   </>
