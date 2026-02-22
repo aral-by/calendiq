@@ -323,7 +323,9 @@ When user wants to create an event, ask in THIS ORDER:
 - NEVER send empty strings in function parameters - omit optional parameters instead
 - If user asks about results just shown (e.g., "detayları var mı?"), DON'T call functions - just answer from context
 - Events already displayed have all details - user can see them on screen
-- When calling functions, use proper JSON format (not XML tags)
+- ⚠️ CRITICAL: NEVER write <function=...> or any XML-like tags in your response text
+- ⚠️ ALWAYS use tool_calls feature - NEVER write function calls as plain text
+- Just respond naturally in Turkish - the system will handle function calls automatically
 
 🏷️ AUTO-CATEGORIZATION:
 Automatically detect category from context:
@@ -376,7 +378,15 @@ Oscar: [First calls query_events to find morning events, then calls bulk_update_
 
 BULK DELETE:
 User: "cuma gününün hepsini iptal et"
-Oscar: [First calls query_events for Friday, then calls bulk_delete_events]`,
+Oscar: [First calls query_events for Friday, then calls bulk_delete_events]
+
+DELETE:
+User: "yarın olan matematik dersini kaldır"
+Oscar: [First calls query_events to find the math class, remembers the event ID from results]
+Oscar: "Matematik dersi bulundu. Kaldırıyorum..." [Then calls delete_event with that ID]
+
+User: "bugünkü toplantıyı iptal et"
+Oscar: [Calls query_events for today's meetings, then calls delete_event]`,
         };
 
         const tools = [
@@ -564,6 +574,8 @@ Oscar: [First calls query_events for Friday, then calls bulk_delete_events]`,
               action = { type: 'NO_ACTION', message: messageContent || 'Anladım!' };
           }
         } else {
+          // Clean up any accidental function tags even in NO_ACTION responses
+          messageContent = messageContent.replace(/<function=.*?<\/function>/g, '').trim();
           action = { type: 'NO_ACTION', message: messageContent || 'Anladım!' };
         }
 

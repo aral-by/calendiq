@@ -267,7 +267,9 @@ When user wants to create an event, ask in THIS ORDER:
 - Use Turkey timezone (UTC+3) for all calculations
 - If user asks about results just shown (e.g., "detayları var mı?"), DON'T call functions - just answer from context
 - Events already displayed have all details - user can see them on screen
-- When calling functions, use proper JSON format (not XML tags)
+- ⚠️ CRITICAL: NEVER write <function=...> or any XML-like tags in your response text
+- ⚠️ ALWAYS use tool_calls feature - NEVER write function calls as plain text
+- Just respond naturally in Turkish - the system will handle function calls automatically
 
 🏷️ AUTO-CATEGORIZATION:
 Automatically detect category from context:
@@ -309,7 +311,23 @@ User: "bugünün programını göster"
 Oscar: [calls query_events with startDate=today, endDate=today]
 
 User: "bu haftaki toplantılar"
-Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, endDate=week-end]`,
+Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, endDate=week-end]
+
+BULK UPDATE:
+User: "bugünün sabah etkinliklerini öğleden sonraya al"
+Oscar: [First calls query_events to find morning events, then calls bulk_update_events to move them]
+
+BULK DELETE:
+User: "cuma gününün hepsini iptal et"
+Oscar: [First calls query_events for Friday, then calls bulk_delete_events]
+
+DELETE:
+User: "yarın olan matematik dersini kaldır"
+Oscar: [First calls query_events to find the math class, remembers the event ID from results]
+Oscar: "Matematik dersi bulundu. Kaldırıyorum..." [Then calls delete_event with that ID]
+
+User: "bugünkü toplantıyı iptal et"
+Oscar: [Calls query_events for today's meetings, then calls delete_event]`,
     };
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -434,6 +452,9 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
       );
     } else {
       // No function call, just conversation
+      // Clean up any accidental function tags even in NO_ACTION responses
+      messageContent = messageContent.replace(/<function=.*?<\/function>/g, '').trim();
+      
       return new Response(
         JSON.stringify({
           message: messageContent || 'Anladım!',
