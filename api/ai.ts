@@ -145,11 +145,16 @@ export default async function handler(req: Request) {
 
   try {
     // Add system context with current events
+    // Türkiye timezone (UTC+3)
+    const turkeyNow = new Date();
+    const turkeyTime = new Date(turkeyNow.getTime() + (3 * 60 * 60 * 1000));
+    
     const systemMessage = {
       role: 'system',
       content: `You are Oscar, a helpful calendar assistant for Calendiq. You help users manage their calendar in Turkish.
 
-Current date/time: ${new Date().toISOString()}
+Current date/time (Turkey UTC+3): ${turkeyTime.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long' })}
+ISO: ${turkeyTime.toISOString()}
 
 You can:
 - Create new events (use create_event function)

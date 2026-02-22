@@ -1,9 +1,15 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { CalendarEvent } from '@/types/event';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  action?: {
+    type: 'creating' | 'created' | 'updating' | 'updated' | 'deleting' | 'deleted' | 'conflict' | 'querying';
+    event?: Partial<CalendarEvent>;
+    conflictingEvents?: CalendarEvent[];
+  };
 }
 
 export interface ChatSession {

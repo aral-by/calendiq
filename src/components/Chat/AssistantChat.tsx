@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Mic, ArrowUp } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
-import { useChatHistory } from '@/context/ChatHistoryContext';
+import { useChatHistory, ChatMessage } from '@/context/ChatHistoryContext';
 import { useEvents } from '@/context/EventContext';
 import { AIActionSchema, isCreateEventAction, isUpdateEventAction, isDeleteEventAction, isQueryEventsAction } from '@/types/ai';
-import { format } from 'date-fns';
+import { ActionCard } from '@/components/Chat/ActionCard';
+import { CalendarEvent } from '@/types/event';
 
 function getTimeBasedGreeting(userName?: string): { title: string; subtitle: string } {
   const hour = new Date().getHours();
@@ -137,6 +138,26 @@ export function AssistantChat() {
 
   const messages = currentSession?.messages || [];
 
+  // Helper: Check for event conflicts
+  const checkEventConflicts = (newEvent: { start: string; end: string; allDay?: boolean }): CalendarEvent[] => {
+    const newStart = new Date(newEvent.start);
+    const newEnd = new Date(newEvent.end);
+    
+    return events.filter(existingEvent => {
+      if (newEvent.allDay || existingEvent.allDay) return false; // Skip all-day events
+      
+      const existingStart = new Date(existingEvent.start);
+      const existingEnd = new Date(existingEvent.end);
+      
+      // Check if events overlap
+      return (
+        (newStart >= existingStart && newStart < existingEnd) || // New starts during existing
+        (newEnd > existingStart && newEnd <= existingEnd) ||     // New ends during existing
+        (newStart <= existingStart && newEnd >= existingEnd)     // New encompasses existing
+      );
+    });
+  };
+
   const examplePrompts = [
     "Yarın saat 15'te doktor randevum var",
     "Pazartesi 10'da toplantı ekle",
@@ -215,11 +236,16 @@ export function AssistantChat() {
           throw new Error('VITE_GROQ_API_KEY not found in .env file');
         }
         
+        // Türkiye timezone'u (UTC+3)
+        const turkeyNow = new Date();
+        const turkeyTime = new Date(turkeyNow.getTime() + (3 * 60 * 60 * 1000)); // UTC+3
+        
         const systemMessage = {
           role: 'system',
           content: `You are Oscar, a helpful calendar assistant for Calendiq. You help users manage their calendar in Turkish.
 
-Current date/time: ${new Date().toISOString()}
+Current date/time (Turkey UTC+3): ${turkeyTime.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long' })}
+ISO: ${turkeyTime.toISOString()}
 
 You can:
 - Create new events (use create_event function)
@@ -227,16 +253,22 @@ You can:
 - Delete events (use delete_event function with event ID)
 - Query/search events (use query_events function)
 - Have friendly conversations
+- Ask follow-up questions if information is missing (DON'T use any function, just respond normally)
 
 ${events.length > 0 ? `Current user events:\n${events.map((e) => `- ${e.title} (${e.start}) [ID: ${e.id}]`).join('\n')}` : 'User has no events yet.'}
 
 IMPORTANT: 
 - ALWAYS respond in Turkish
+- If user doesn't specify time, ASK "Saat kaçta?" before creating event
+- If user doesn't specify date, ASK "Hangi gün?" before creating event
+- If information is incomplete, ask ONE clarifying question at a time
+- When you have all info, THEN use create_event function
 - When user asks about their events, use query_events to search
 - When updating/deleting, first query to find the event ID if needed
 - Be friendly and helpful
 - Auto-categorize events: work, personal, health, social, finance, education
-- Default reminder: 15 minutes before`,
+- Default reminder: 15 minutes before
+- Use Turkey timezone (UTC+3) for all date/time calculations`,
         };
 
         const tools = [
@@ -396,7 +428,7 @@ IMPORTANT:
 
       // Validate AI action
       let aiResponseText = data.message || 'Anladım!';
-      let actionResult = '';
+      let actionMetadata: ChatMessage['action'] = undefined;
 
       if (data.action) {
         try {
@@ -410,66 +442,58 @@ IMPORTANT:
               ...validatedAction.payload,
               allDay: validatedAction.payload.allDay ?? false,
             };
-            await createEvent(eventData);
-            actionResult = '\n\n✅ Etkinlik oluşturuldu!';
+            
+            // Check for conflicts
+            const conflicts = checkEventConflicts(eventData);
+            
+            if (conflicts.length > 0) {
+              // Show conflict warning but still create the event
+              actionMetadata = {
+                type: 'conflict',
+                event: eventData,
+                conflictingEvents: conflicts,
+              };
+              await createEvent(eventData);
+            } else {
+              // No conflicts, create successfully
+              await createEvent(eventData);
+              actionMetadata = {
+                type: 'created',
+                event: eventData,
+              };
+            }
           } else if (isUpdateEventAction(validatedAction)) {
             console.log('[AssistantChat] Updating event:', validatedAction.id, validatedAction.payload);
             await updateEvent(validatedAction.id, validatedAction.payload);
-            actionResult = '\n\n✅ Etkinlik güncellendi!';
+            const updatedEvent = events.find(e => e.id === validatedAction.id);
+            actionMetadata = {
+              type: 'updated',
+              event: updatedEvent ? { ...updatedEvent, ...validatedAction.payload } : validatedAction.payload,
+            };
           } else if (isDeleteEventAction(validatedAction)) {
             console.log('[AssistantChat] Deleting event:', validatedAction.id);
+            const deletedEvent = events.find(e => e.id === validatedAction.id);
             await deleteEvent(validatedAction.id);
-            actionResult = '\n\n✅ Etkinlik silindi!';
+            actionMetadata = {
+              type: 'deleted',
+              event: deletedEvent,
+            };
           } else if (isQueryEventsAction(validatedAction)) {
             console.log('[AssistantChat] Querying events:', validatedAction.filter);
-            
-            // Filter events based on query
-            let filteredEvents = [...events];
-            const filter = validatedAction.filter || {};
-            
-            if (filter.startDate) {
-              const startDate = new Date(filter.startDate);
-              filteredEvents = filteredEvents.filter(e => new Date(e.start) >= startDate);
-            }
-            
-            if (filter.endDate) {
-              const endDate = new Date(filter.endDate);
-              filteredEvents = filteredEvents.filter(e => new Date(e.start) <= endDate);
-            }
-            
-            if (filter.category) {
-              filteredEvents = filteredEvents.filter(e => e.category === filter.category);
-            }
-            
-            if (filter.searchTerm) {
-              const term = filter.searchTerm.toLowerCase();
-              filteredEvents = filteredEvents.filter(e => 
-                e.title.toLowerCase().includes(term) || 
-                e.description?.toLowerCase().includes(term)
-              );
-            }
-
-            // Format results
-            if (filteredEvents.length > 0) {
-              actionResult = '\n\n📅 Bulunan etkinlikler:\n\n' + 
-                filteredEvents.map(e => 
-                  `• ${e.title}\n  📍 ${format(new Date(e.start), 'dd MMMM yyyy, HH:mm')} - ${format(new Date(e.end), 'HH:mm')}`
-                ).join('\n\n');
-            } else {
-              actionResult = '\n\nℹ️ Bu kriterlere uygun etkinlik bulunamadı.';
-            }
+            // Query events are shown in text, not as action card
+            // Just keep the AI's text response
           }
         } catch (validationError) {
           console.error('[AssistantChat] Action validation error:', validationError);
-          actionResult = '\n\n⚠️ AI yanıtı doğrulanamadı.';
         }
       }
 
-      // Add AI response to chat
+      // Add AI response to chat with action metadata
       addMessage({ 
         role: 'assistant', 
-        content: aiResponseText + actionResult,
-        timestamp: Date.now()
+        content: aiResponseText,
+        timestamp: Date.now(),
+        action: actionMetadata,
       }, sessionId);
       
     } catch (error) {
@@ -525,17 +549,28 @@ IMPORTANT:
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {msg.role === 'user' ? (
                   // User message - no bubble, just text
                   <p className="text-lg max-w-[80%]">{msg.content}</p>
                 ) : (
-                  // AI message - with bubble
-                  <div className="max-w-[80%] rounded-2xl px-5 py-3 bg-muted">
-                    <p className="text-lg text-muted-foreground">{msg.content}</p>
-                  </div>
+                  // AI message - with bubble and optional action card
+                  <>
+                    <div className="max-w-[80%] rounded-2xl px-5 py-3 bg-muted">
+                      <p className="text-lg text-muted-foreground whitespace-pre-wrap">{msg.content}</p>
+                    </div>
+                    {msg.action && (
+                      <div className="w-full max-w-[80%]">
+                        <ActionCard 
+                          type={msg.action.type} 
+                          event={msg.action.event}
+                          conflictingEvents={msg.action.conflictingEvents}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ))}
