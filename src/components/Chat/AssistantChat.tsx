@@ -283,9 +283,10 @@ export function AssistantChat() {
       
     } catch (error) {
       console.error('[AssistantChat] Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
       addMessage({ 
         role: 'assistant', 
-        content: 'Üzgünüm, bir hata oluştu. Lütfen tekrar dene veya manuel olarak etkinlik ekle.',
+        content: `⚠️ Hata oluştu: ${errorMessage}\n\nLütfen tekrar dene veya manuel olarak etkinlik ekle.`,
         timestamp: Date.now()
       }, sessionId);
     } finally {
