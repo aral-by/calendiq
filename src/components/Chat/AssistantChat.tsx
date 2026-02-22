@@ -181,26 +181,49 @@ export function AssistantChat() {
         }));
 
       // Send to AI endpoint with current events context
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          messages: apiMessages,
-          events: events.map(e => ({
-            id: e.id,
-            title: e.title,
-            start: e.start,
-            end: e.end,
-            category: e.category,
-          })),
-        }),
-      });
+      const USE_MOCK = false; // false = Gerçek API kullan (vercel dev gerekli), true = Mock response
+      
+      let data;
+      if (USE_MOCK) {
+        // Mock response - production'da bu kaldırılacak
+        console.log('[AssistantChat] Using MOCK response (no API)');
+        data = {
+          message: 'Anladım! Etkinliği ekliyorum.',
+          action: {
+            type: 'CREATE_EVENT',
+            payload: {
+              title: userMessage.split('saat')[0].trim() || 'Yeni Etkinlik',
+              start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Yarın
+              end: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // 1 saat sonra
+              allDay: false,
+              category: 'personal',
+              reminder: 15,
+            }
+          }
+        };
+      } else {
+        const response = await fetch('/api/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            messages: apiMessages,
+            events: events.map(e => ({
+              id: e.id,
+              title: e.title,
+              start: e.start,
+              end: e.end,
+              category: e.category,
+            })),
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+
+        data = await response.json();
       }
-
-      const data = await response.json();
+      
       console.log('[AssistantChat] API response:', data);
 
       // Validate AI action
