@@ -8,6 +8,8 @@ import { useEvents } from '@/context/EventContext';
 import { AIActionSchema, isCreateEventAction, isUpdateEventAction, isDeleteEventAction, isQueryEventsAction } from '@/types/ai';
 import { ActionCard } from '@/components/Chat/ActionCard';
 import { CalendarEvent } from '@/types/event';
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
 
 function getTimeBasedGreeting(userName?: string): { title: string; subtitle: string } {
   const hour = new Date().getHours();
@@ -430,6 +432,9 @@ IMPORTANT:
       let aiResponseText = data.message || 'Anladım!';
       let actionMetadata: ChatMessage['action'] = undefined;
 
+      console.log('[AssistantChat] AI response text:', aiResponseText);
+      console.log('[AssistantChat] Action data:', data.action);
+
       if (data.action) {
         try {
           const validatedAction = AIActionSchema.parse(data.action);
@@ -480,8 +485,45 @@ IMPORTANT:
             };
           } else if (isQueryEventsAction(validatedAction)) {
             console.log('[AssistantChat] Querying events:', validatedAction.filter);
-            // Query events are shown in text, not as action card
-            // Just keep the AI's text response
+            
+            // Client-side filtering
+            let filteredEvents = [...events];
+            const filter = validatedAction.filter || {};
+            
+            if (filter.startDate) {
+              const startDate = new Date(filter.startDate);
+              filteredEvents = filteredEvents.filter(e => new Date(e.start) >= startDate);
+            }
+            
+            if (filter.endDate) {
+              const endDate = new Date(filter.endDate);
+              filteredEvents = filteredEvents.filter(e => new Date(e.start) <= endDate);
+            }
+            
+            if (filter.category) {
+              filteredEvents = filteredEvents.filter(e => e.category === filter.category);
+            }
+            
+            if (filter.searchTerm) {
+              const term = filter.searchTerm.toLowerCase();
+              filteredEvents = filteredEvents.filter(e => 
+                e.title.toLowerCase().includes(term) || 
+                e.description?.toLowerCase().includes(term)
+              );
+            }
+
+            // Add formatted results to AI response
+            if (filteredEvents.length > 0) {
+              const eventList = filteredEvents.map(e => {
+                const startDate = new Date(e.start);
+                const endDate = new Date(e.end);
+                return `• ${e.title}\n  📅 ${format(startDate, 'dd MMMM yyyy, EEEE', { locale: tr })}\n  🕐 ${e.allDay ? 'Tüm gün' : `${format(startDate, 'HH:mm')} - ${format(endDate, 'HH:mm')}`}${e.location ? `\n  📍 ${e.location}` : ''}`;
+              }).join('\n\n');
+              
+              aiResponseText += '\n\n📅 Bulunan etkinlikler:\n\n' + eventList;
+            } else {
+              aiResponseText += '\n\nℹ️ Bu kriterlere uygun etkinlik bulunamadı.';
+            }
           }
         } catch (validationError) {
           console.error('[AssistantChat] Action validation error:', validationError);
