@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { ActionCard } from '@/components/Chat/ActionCard';
 import { CalendarEvent } from '@/types/event';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import { ModelSelector, AIModel } from '@/components/Chat/ModelSelector';
 
 function getTimeBasedGreeting(userName?: string): { title: string; subtitle: string } {
   const hour = new Date().getHours();
@@ -132,12 +133,23 @@ function getTimeBasedGreeting(userName?: string): { title: string; subtitle: str
 export function AssistantChat() {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<AIModel>(() => {
+    // Load from localStorage or default to fast model
+    const saved = localStorage.getItem('preferredAIModel');
+    return (saved as AIModel) || 'llama-3.1-8b-instant';
+  });
+  
   const { user } = useUser();
   const { currentSession, currentSessionId, createNewSession, switchSession, addMessage } = useChatHistory();
   const { events, createEvent, updateEvent, deleteEvent } = useEvents();
   
   const userName = user?.firstName;
   const greeting = useMemo(() => getTimeBasedGreeting(userName), [userName]);
+  
+  // Save model preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('preferredAIModel', selectedModel);
+  }, [selectedModel]);
 
   const messages = currentSession?.messages || [];
 
@@ -410,7 +422,7 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile', // Groq's latest model with tool calling support
+            model: selectedModel, // User-selected model from UI
             messages: [systemMessage, ...apiMessages],
             tools,
             tool_choice: 'auto',
@@ -627,15 +639,23 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
   };
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center bg-background p-8">
-      <div className="w-full max-w-3xl flex flex-col items-center justify-center flex-1">
-        {messages.length === 0 ? (
-          // Welcome Screen
-          <div className="flex-1 flex flex-col items-center justify-center space-y-12 w-full animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="text-center space-y-3">
-              <h1 className="text-3xl font-semibold tracking-tight">{greeting.title}</h1>
-              <p className="text-xl text-muted-foreground">{greeting.subtitle}</p>
+    <div className="h-full w-full flex flex-col bg-background">
+      {/* Model Selector - Fixed at top */}
+      <ModelSelector 
+        selectedModel={selectedModel}
+        onModelChange={setSelectedModel}
+      />
+      
+      {/* Chat Content - Scrollable */}
+      <div className="flex-1 overflow-y-auto flex items-center justify-center p-8">
+        <div className="w-full max-w-3xl flex flex-col items-center justify-center">
+          {messages.length === 0 ? (
+            // Welcome Screen
+            <div className="flex-1 flex flex-col items-center justify-center space-y-12 w-full animate-in fade-in duration-500">
+              {/* Header */}
+              <div className="text-center space-y-3">
+                <h1 className="text-3xl font-semibold tracking-tight">{greeting.title}</h1>
+                <p className="text-xl text-muted-foreground">{greeting.subtitle}</p>
             </div>
 
             {/* Example Prompts */}
@@ -758,9 +778,12 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
             )}
           </div>
         )}
+        </div>
+      </div>
 
-        {/* Input Area */}
-        <div className="w-full pb-4">
+      {/* Input Area - Fixed at bottom */}
+      <div className="border-t border-border bg-background/95 backdrop-blur-sm">
+        <div className="max-w-3xl mx-auto p-6">
           <div className="relative flex items-center gap-3 rounded-3xl border border-border bg-background p-4 shadow-lg">
             <Button
               onClick={handleVoiceInput}

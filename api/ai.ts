@@ -257,7 +257,7 @@ Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, en
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant', // Fast model for production (1M tokens/day)
         messages: [systemMessage, ...messages],
         tools,
         tool_choice: 'auto',
