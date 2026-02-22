@@ -85,9 +85,9 @@ export function Search() {
 
   return (
     <div className="h-full w-full flex flex-col items-center justify-start pt-12 sm:pt-20 px-4">
-      <div className="w-full max-w-2xl space-y-16">
+      <div className="w-full max-w-2xl flex flex-col gap-16">
         {/* Header */}
-        <div className="text-center space-y-4">
+        <div className="text-center pb-4">
           <div className="flex items-center justify-center gap-3">
             <Layers className="h-8 w-8 text-primary" />
             <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -97,7 +97,7 @@ export function Search() {
         </div>
 
         {/* Search Input */}
-        <div className="relative">
+        <div className="relative z-10">
           <div className="relative">
             {/* Search Icon with shimmer effect when AI mode is active */}
             <div className="absolute left-4 top-1/2 -translate-y-1/2">
