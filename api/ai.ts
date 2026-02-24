@@ -257,6 +257,10 @@ When user wants to create an event, ask in THIS ORDER:
 
 - For queries, ALWAYS use query_events function - NEVER list events manually in text
 - When user asks "bugünün programı", "yarın ne var", "etkinliklerim", etc., CALL query_events function
+- ⚠️ CRITICAL: Questions with "var mı?" ("is there?") are QUERIES - use query_events!
+  * "perşembe gününde toplantım var mı?" → query_events for Thursday + searchTerm="toplantı"
+  * "yarın etkinliğim var mı?" → query_events for tomorrow
+  * "bugün ne var?" → query_events for today
 - For updates/deletes, use update_event or delete_event
 - For BULK operations (multiple events):
   * First, call query_events to get matching events
@@ -312,6 +316,15 @@ Oscar: [calls query_events with startDate=today, endDate=today]
 
 User: "bu haftaki toplantılar"
 Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, endDate=week-end]
+
+User: "perşembe gününde toplantım var mı?"
+Oscar: [calls query_events with searchTerm="toplantı", startDate=Thursday, endDate=Thursday]
+
+User: "yarın ne var?"
+Oscar: [calls query_events with startDate=tomorrow, endDate=tomorrow]
+
+User: "bugün etkinliğim var mı?"
+Oscar: [calls query_events with startDate=today, endDate=today]
 
 BULK UPDATE:
 User: "bugünün sabah etkinliklerini öğleden sonraya al"

@@ -312,6 +312,10 @@ When user wants to create an event, ask in THIS ORDER:
 
 - For queries, ALWAYS use query_events function - NEVER list events manually in text
 - When user asks "bugünün programı", "yarın ne var", "etkinliklerim", etc., CALL query_events function
+- ⚠️ CRITICAL: Questions with "var mı?" ("is there?") are QUERIES - use query_events!
+  * "perşembe gününde toplantım var mı?" → query_events for Thursday + searchTerm="toplantı"
+  * "yarın etkinliğim var mı?" → query_events for tomorrow
+  * "bugün ne var?" → query_events for today
 - For updates/deletes, use update_event or delete_event
 - For BULK operations (multiple events):
   * First, call query_events to get matching events
@@ -371,6 +375,15 @@ Oscar: [calls query_events with startDate=today, endDate=today]
 
 User: "bu haftaki toplantılar"
 Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, endDate=week-end]
+
+User: "perşembe gününde toplantım var mı?"
+Oscar: [calls query_events with searchTerm="toplantı", startDate=Thursday, endDate=Thursday]
+
+User: "yarın ne var?"
+Oscar: [calls query_events with startDate=tomorrow, endDate=tomorrow]
+
+User: "bugün etkinliğim var mı?"
+Oscar: [calls query_events with startDate=today, endDate=today]
 
 BULK UPDATE:
 User: "bugünün sabah etkinliklerini öğleden sonraya al"
@@ -697,6 +710,7 @@ Oscar: [Calls query_events for today's meetings, then calls delete_event]`,
             };
           } else if (isQueryEventsAction(validatedAction)) {
             console.log('[AssistantChat] Querying events:', validatedAction.filter);
+            console.log('[AssistantChat] Total events available:', events.length);
             
             // Client-side filtering
             let filteredEvents = [...events];
@@ -704,28 +718,36 @@ Oscar: [Calls query_events for today's meetings, then calls delete_event]`,
             
             if (filter.startDate) {
               const startDate = new Date(filter.startDate);
+              console.log('[AssistantChat] Filtering by startDate:', startDate);
               filteredEvents = filteredEvents.filter(e => new Date(e.start) >= startDate);
+              console.log('[AssistantChat] After startDate filter:', filteredEvents.length);
             }
             
             if (filter.endDate) {
               const endDate = new Date(filter.endDate);
+              console.log('[AssistantChat] Filtering by endDate:', endDate);
               filteredEvents = filteredEvents.filter(e => new Date(e.start) <= endDate);
+              console.log('[AssistantChat] After endDate filter:', filteredEvents.length);
             }
             
             if (filter.category) {
               filteredEvents = filteredEvents.filter(e => e.category === filter.category);
+              console.log('[AssistantChat] After category filter:', filteredEvents.length);
             }
             
             if (filter.searchTerm) {
               const term = filter.searchTerm.toLowerCase();
+              console.log('[AssistantChat] Filtering by searchTerm:', term);
               filteredEvents = filteredEvents.filter(e => 
                 e.title.toLowerCase().includes(term) || 
                 e.description?.toLowerCase().includes(term)
               );
+              console.log('[AssistantChat] After searchTerm filter:', filteredEvents.length);
             }
 
             // Save query results to display as cards
             queryResults = filteredEvents;
+            console.log('[AssistantChat] Final query results:', queryResults.length, 'events');
             
             // Empty message - cards will show everything
             aiResponseText = '';
