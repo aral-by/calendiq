@@ -279,8 +279,8 @@ You have access to the following calendar operations:
 
 **CRITICAL**: When calling tools, **NEVER send null values** for optional parameters. If user doesn't provide a value, **omit the parameter entirely** from your function call.
 
-Example WRONG: `create_event({title: "Meeting", start: "...", location: null, category: null})`
-Example CORRECT: `create_event({title: "Meeting", start: "...", end: "..."})`
+Example WRONG: create_event with location: null, category: null
+Example CORRECT: create_event with only required fields (title, start, end)
 
 ## WORKFLOW PATTERNS
 
