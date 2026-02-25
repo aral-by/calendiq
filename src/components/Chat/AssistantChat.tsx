@@ -438,6 +438,125 @@ export function AssistantChat() {
       // Run the agent
       const result = await agentRef.current.run(userMessage, conversationHistory);
 
+      // Process agent steps and create action cards for tool calls
+      if (result.steps && result.steps.length > 0) {
+        for (const step of result.steps) {
+          if (step.action?.toolCall) {
+            const toolName = step.action.toolCall.name;
+            const toolArgs = step.action.toolCall.arguments;
+            
+            // Create event
+            if (toolName === 'create_event' && step.observation) {
+              try {
+                const createdEvent = typeof step.observation === 'string' 
+                  ? JSON.parse(step.observation) 
+                  : step.observation;
+                
+                addMessage({
+                  role: 'assistant',
+                  content: '',
+                  timestamp: Date.now(),
+                  action: {
+                    type: 'created',
+                    event: createdEvent,
+                  },
+                }, sessionId);
+              } catch (e) {
+                console.error('Failed to parse created event:', e);
+              }
+            }
+            
+            // Update event
+            else if (toolName === 'update_event' && step.observation) {
+              try {
+                const eventId = toolArgs.id;
+                const updates = toolArgs.updates;
+                const updatedEvent = events.find(e => e.id === eventId);
+                
+                if (updatedEvent) {
+                  addMessage({
+                    role: 'assistant',
+                    content: '',
+                    timestamp: Date.now(),
+                    action: {
+                      type: 'updated',
+                      event: { ...updatedEvent, ...updates },
+                    },
+                  }, sessionId);
+                }
+              } catch (e) {
+                console.error('Failed to create update card:', e);
+              }
+            }
+            
+            // Delete event
+            else if (toolName === 'delete_event' && step.observation) {
+              try {
+                const eventId = toolArgs.id;
+                const deletedEvent = events.find(e => e.id === eventId);
+                
+                if (deletedEvent) {
+                  addMessage({
+                    role: 'assistant',
+                    content: '',
+                    timestamp: Date.now(),
+                    action: {
+                      type: 'deleted',
+                      event: deletedEvent,
+                    },
+                  }, sessionId);
+                }
+              } catch (e) {
+                console.error('Failed to create delete card:', e);
+              }
+            }
+            
+            // Bulk update events
+            else if (toolName === 'bulk_update_events' && step.observation) {
+              try {
+                const eventIds = toolArgs.eventIds;
+                const updates = toolArgs.updates;
+                const affectedEvents = events.filter(e => eventIds.includes(e.id));
+                
+                addMessage({
+                  role: 'assistant',
+                  content: '',
+                  timestamp: Date.now(),
+                  action: {
+                    type: 'bulk_updated',
+                    events: affectedEvents.map(e => ({ ...e, ...updates })),
+                    count: eventIds.length,
+                  },
+                }, sessionId);
+              } catch (e) {
+                console.error('Failed to create bulk update card:', e);
+              }
+            }
+            
+            // Bulk delete events
+            else if (toolName === 'bulk_delete_events' && step.observation) {
+              try {
+                const eventIds = toolArgs.eventIds;
+                const affectedEvents = events.filter(e => eventIds.includes(e.id));
+                
+                addMessage({
+                  role: 'assistant',
+                  content: '',
+                  timestamp: Date.now(),
+                  action: {
+                    type: 'bulk_deleted',
+                    events: affectedEvents,
+                    count: eventIds.length,
+                  },
+                }, sessionId);
+              } catch (e) {
+                console.error('Failed to create bulk delete card:', e);
+              }
+            }
+          }
+        }
+      }
+
       // Add final answer to chat
       if (result.finalAnswer) {
         addMessage({ 
