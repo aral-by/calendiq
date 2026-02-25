@@ -135,9 +135,9 @@ export function AssistantChat() {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState<AIModel>(() => {
-    // Load from localStorage or default to fast model
+    // Load from localStorage or default to DeepSeek V3
     const saved = localStorage.getItem('preferredAIModel');
-    return (saved as AIModel) || 'llama-3.1-8b-instant';
+    return (saved as AIModel) || 'openai/gpt-oss-120b';
   });
   
   const { user } = useUser();

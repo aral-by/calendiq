@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 export type AIModel = 
+  | 'openai/gpt-oss-120b'
   | 'llama-3.3-70b-versatile' 
   | 'llama-3.1-8b-instant' 
   | 'llama-3.2-90b-text-preview' 
@@ -23,6 +24,14 @@ interface ModelSelectorProps {
 export function ModelSelector({ selectedModel, onModelChange }: ModelSelectorProps) {
   // Determine which logo to show based on selected model
   const renderTriggerIcon = () => {
+    if (selectedModel.startsWith('openai/gpt-oss')) {
+      // DeepSeek model
+      return (
+        <div className="h-5 w-5 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+          <span className="text-white text-[10px] font-bold">DS</span>
+        </div>
+      );
+    }
     if (selectedModel.startsWith('mixtral')) {
       // Use a distinct icon for Mixtral (we could add a Mistral logo later)
       return (
@@ -65,7 +74,23 @@ export function ModelSelector({ selectedModel, onModelChange }: ModelSelectorPro
           {renderTriggerIcon()}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-36">
+      <DropdownMenuContent align="start" className="w-48">
+        {/* DeepSeek V3 - Premium Model */}
+        <DropdownMenuItem
+          onClick={() => onModelChange('openai/gpt-oss-120b')}
+          className={`px-2 py-1.5 ${selectedModel === 'openai/gpt-oss-120b' ? 'bg-accent' : ''}`}
+        >
+          <div className="flex items-center gap-1.5">
+            <div className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <span className="text-white text-[8px] font-bold">DS</span>
+            </div>
+            <span className="text-sm font-medium">DeepSeek V3 120B</span>
+            <span className="ml-auto text-[10px] text-muted-foreground">GPT-4</span>
+          </div>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator className="my-1" />
+        
         {/* Llama 3.3 Models */}
         <DropdownMenuItem
           onClick={() => onModelChange('llama-3.3-70b-versatile')}
