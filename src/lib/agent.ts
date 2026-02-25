@@ -217,7 +217,9 @@ export class CalendarAgent {
           state.isComplete = true;
           state.isRunning = false;
           
-          this.onComplete?.(state.finalAnswer);
+          if (state.finalAnswer) {
+            this.onComplete?.(state.finalAnswer);
+          }
           return state;
         }
       }

@@ -4,15 +4,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mic, ArrowUp, Calendar, Clock, MapPin } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
-import { useChatHistory, ChatMessage } from '@/context/ChatHistoryContext';
+import { useChatHistory } from '@/context/ChatHistoryContext';
 import { useEvents } from '@/context/EventContext';
 import { ActionCard } from '@/components/Chat/ActionCard';
-import { CalendarEvent } from '@/types/event';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { ModelSelector, AIModel } from '@/components/Chat/ModelSelector';
 import { useSidebar } from '@/components/ui/sidebar';
-import { CalendarAgent, type AgentStep, type AgentState } from '@/lib/agent';
+import { CalendarAgent, type AgentStep } from '@/lib/agent';
 import { AgentThoughts } from '@/components/Chat/AgentThoughts';
 import type { ChatCompletionTool } from 'groq-sdk/resources/chat/completions';
 
@@ -375,26 +374,6 @@ export function AssistantChat() {
   }, [selectedModel, events, createEvent, updateEvent, deleteEvent]);
 
   const messages = currentSession?.messages || [];
-
-  // Helper: Check for event conflicts
-  const checkEventConflicts = (newEvent: { start: string; end: string; allDay?: boolean }): CalendarEvent[] => {
-    const newStart = new Date(newEvent.start);
-    const newEnd = new Date(newEvent.end);
-    
-    return events.filter(existingEvent => {
-      if (newEvent.allDay || existingEvent.allDay) return false; // Skip all-day events
-      
-      const existingStart = new Date(existingEvent.start);
-      const existingEnd = new Date(existingEvent.end);
-      
-      // Check if events overlap
-      return (
-        (newStart >= existingStart && newStart < existingEnd) || // New starts during existing
-        (newEnd > existingStart && newEnd <= existingEnd) ||     // New ends during existing
-        (newStart <= existingStart && newEnd >= existingEnd)     // New encompasses existing
-      );
-    });
-  };
 
   const examplePrompts = [
   "I have a doctor appointment tomorrow at 3pm",
