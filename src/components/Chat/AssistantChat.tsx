@@ -288,12 +288,21 @@ export function AssistantChat() {
       
       if (args.startDate) {
         const startDate = new Date(args.startDate);
-        filteredEvents = filteredEvents.filter(e => new Date(e.start) >= startDate);
+        startDate.setHours(0, 0, 0, 0); // Start of day
+        filteredEvents = filteredEvents.filter(e => {
+          const eventDate = new Date(e.start);
+          eventDate.setHours(0, 0, 0, 0);
+          return eventDate >= startDate;
+        });
       }
       
       if (args.endDate) {
         const endDate = new Date(args.endDate);
-        filteredEvents = filteredEvents.filter(e => new Date(e.start) <= endDate);
+        endDate.setHours(23, 59, 59, 999); // End of day
+        filteredEvents = filteredEvents.filter(e => {
+          const eventDate = new Date(e.start);
+          return eventDate <= endDate;
+        });
       }
       
       if (args.category) {

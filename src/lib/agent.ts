@@ -242,6 +242,21 @@ export class CalendarAgent {
 
   // Minimal, focused system prompt for agent behavior
   private getSystemPrompt(): string {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const tomorrow = new Date(now.getTime() + 86400000).toISOString().split('T')[0];
+    
+    // Calculate next occurrence of each weekday
+    const dayNames = ['pazar', 'pazartesi', 'salı', 'çarşamba', 'perşembe', 'cuma', 'cumartesi'];
+    const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const weekdayDates: { [key: string]: string } = {};
+    
+    for (let i = 0; i < 7; i++) {
+      const daysAhead = i === currentDay ? 7 : (i - currentDay + 7) % 7; // Next occurrence
+      const targetDate = new Date(now.getTime() + daysAhead * 86400000);
+      weekdayDates[dayNames[i]] = targetDate.toISOString().split('T')[0];
+    }
+    
     return `You are a Calendar Assistant Agent powered by DeepSeek V3. Your job is to help users manage their calendar events through a conversational interface.
 
 ## CORE PRINCIPLES
@@ -292,14 +307,19 @@ When operating on multiple events:
 
 ## DATE & TIME HANDLING
 
-- Current date: ${new Date().toLocaleDateString('tr-TR')}
-- Always use ISO 8601 format for dates/times
-- Common Turkish date terms:
-  * bugün/today → ${new Date().toISOString().split('T')[0]}
-  * yarın/tomorrow → ${new Date(Date.now() + 86400000).toISOString().split('T')[0]}
-  * perşembe/Thursday, pazartesi/Monday, etc. → calculate next occurrence
-  * gelecek hafta/next week → +7 days
-  * önümüzdeki ay/next month → +30 days
+**CRITICAL: Use these EXACT dates - do NOT calculate yourself:**
+
+- **Today (bugün)**: ${today}
+- **Tomorrow (yarın)**: ${tomorrow}
+- **Pazar (Sunday)**: ${weekdayDates['pazar']}
+- **Pazartesi (Monday)**: ${weekdayDates['pazartesi']}
+- **Salı (Tuesday)**: ${weekdayDates['salı']}
+- **Çarşamba (Wednesday)**: ${weekdayDates['çarşamba']}
+- **Perşembe (Thursday)**: ${weekdayDates['perşembe']}
+- **Cuma (Friday)**: ${weekdayDates['cuma']}
+- **Cumartesi (Saturday)**: ${weekdayDates['cumartesi']}
+
+**IMPORTANT**: Always use ISO 8601 format (YYYY-MM-DD) for dates in tool calls.
 
 ## RESPONSE GUIDELINES
 
@@ -312,10 +332,14 @@ When operating on multiple events:
 ## EXAMPLE SCENARIOS
 
 **User**: "perşembe toplantım var mı?"
-**Agent Thought**: User wants to check for meetings on Thursday. I should query events for next Thursday.
-**Action**: query_events(startDate: "2026-02-27", endDate: "2026-02-27", searchTerm: "toplantı")
+**Agent Thought**: User wants to check for meetings on Thursday. I should use the exact date provided above.
+**Action**: query_events(startDate: "${weekdayDates['perşembe']}", endDate: "${weekdayDates['perşembe']}", searchTerm: "toplantı")
 **Observation**: Found 1 event: "Proje Toplantısı" at 15:00
 **Response**: "Evet, perşembe günü saat 15:00'te 'Proje Toplantısı' var."
+
+**User**: "cumaya etkinlik ekle"
+**Agent Thought**: User wants to add event on Friday. Use ${weekdayDates['cuma']} for the date.
+**Action**: Ask for event details (title, time, etc.)
 
 **User**: "tüm matematik derslerini sil"
 **Agent Thought**: User wants to delete multiple events. I should first find all math-related events to confirm what will be deleted.
