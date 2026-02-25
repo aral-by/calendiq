@@ -14,6 +14,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { CalendarAgent, type AgentStep } from '@/lib/agent';
 import { AgentThoughts } from '@/components/Chat/AgentThoughts';
 import type { ChatCompletionTool } from 'groq-sdk/resources/chat/completions';
+import ReactMarkdown from 'react-markdown';
 
 function getTimeBasedGreeting(userName?: string): { title: string; subtitle: string } {
   const hour = new Date().getHours();
@@ -517,7 +518,7 @@ export function AssistantChat() {
               >
                 {msg.role === 'user' ? (
                   // User message - no bubble, just text
-                  <p className="text-lg max-w-[80%]">{msg.content}</p>
+                  <p className="text-sm max-w-[80%]">{msg.content}</p>
                 ) : (
                   // AI message - plain text with optional action card or query results
                   <>
@@ -530,7 +531,20 @@ export function AssistantChat() {
                     
                     {/* Only show text if there's actual content */}
                     {msg.content && msg.content.trim() && (
-                      <p className="text-lg text-foreground max-w-[80%] whitespace-pre-wrap">{msg.content}</p>
+                      <div className="text-sm text-foreground max-w-[80%] markdown-content">
+                        <ReactMarkdown
+                          components={{
+                            p: ({node, ...props}) => <p className="mb-2" {...props} />,
+                            strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
+                            em: ({node, ...props}) => <em className="italic" {...props} />,
+                            ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-2" {...props} />,
+                            ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-2" {...props} />,
+                            li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
                     )}
                     
                     {/* Action Card (for create/update/delete/conflict) */}
