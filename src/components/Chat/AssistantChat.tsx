@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,13 +6,15 @@ import { Mic, ArrowUp, Calendar, Clock, MapPin } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { useChatHistory, ChatMessage } from '@/context/ChatHistoryContext';
 import { useEvents } from '@/context/EventContext';
-import { AIActionSchema, isCreateEventAction, isUpdateEventAction, isDeleteEventAction, isBulkUpdateEventsAction, isBulkDeleteEventsAction, isQueryEventsAction } from '@/types/ai';
 import { ActionCard } from '@/components/Chat/ActionCard';
 import { CalendarEvent } from '@/types/event';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { ModelSelector, AIModel } from '@/components/Chat/ModelSelector';
 import { useSidebar } from '@/components/ui/sidebar';
+import { CalendarAgent, type AgentStep, type AgentState } from '@/lib/agent';
+import { AgentThoughts } from '@/components/Chat/AgentThoughts';
+import type { ChatCompletionTool } from 'groq-sdk/resources/chat/completions';
 
 function getTimeBasedGreeting(userName?: string): { title: string; subtitle: string } {
   const hour = new Date().getHours();
@@ -140,6 +142,11 @@ export function AssistantChat() {
     return (saved as AIModel) || 'openai/gpt-oss-120b';
   });
   
+  // Agent state for tracking thinking process
+  const [agentSteps, setAgentSteps] = useState<AgentStep[]>([]);
+  const [isAgentRunning, setIsAgentRunning] = useState(false);
+  const agentRef = useRef<CalendarAgent | null>(null);
+  
   const { user } = useUser();
   const { currentSession, currentSessionId, createNewSession, switchSession, addMessage } = useChatHistory();
   const { events, createEvent, updateEvent, deleteEvent } = useEvents();
@@ -152,6 +159,220 @@ export function AssistantChat() {
   useEffect(() => {
     localStorage.setItem('preferredAIModel', selectedModel);
   }, [selectedModel]);
+
+  // Initialize CalendarAgent when model changes
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    if (!apiKey) {
+      console.error('[AssistantChat] No Groq API key found');
+      return;
+    }
+
+    // Create new agent instance
+    const agent = new CalendarAgent(apiKey, selectedModel, 10);
+
+    // Define calendar tools
+    const tools: ChatCompletionTool[] = [
+      {
+        type: 'function',
+        function: {
+          name: 'query_events',
+          description: 'Search and filter calendar events based on various criteria',
+          parameters: {
+            type: 'object',
+            properties: {
+              startDate: { type: 'string', description: 'Filter events starting from this date (ISO 8601)' },
+              endDate: { type: 'string', description: 'Filter events ending before this date (ISO 8601)' },
+              category: { type: 'string', description: 'Filter by event category' },
+              searchTerm: { type: 'string', description: 'Search in title and description' },
+            },
+          },
+        },
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'create_event',
+          description: 'Create a new calendar event',
+          parameters: {
+            type: 'object',
+            properties: {
+              title: { type: 'string', description: 'Event title' },
+              start: { type: 'string', description: 'Start date/time (ISO 8601)' },
+              end: { type: 'string', description: 'End date/time (ISO 8601)' },
+              allDay: { type: 'boolean', description: 'Whether this is an all-day event' },
+              category: { type: 'string', description: 'Event category' },
+              description: { type: 'string', description: 'Event description' },
+              location: { type: 'string', description: 'Event location' },
+              participants: { type: 'array', items: { type: 'string' }, description: 'List of participant emails' },
+            },
+            required: ['title', 'start', 'end'],
+          },
+        },
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'update_event',
+          description: 'Update an existing calendar event',
+          parameters: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', description: 'Event ID to update' },
+              updates: {
+                type: 'object',
+                properties: {
+                  title: { type: 'string' },
+                  start: { type: 'string' },
+                  end: { type: 'string' },
+                  allDay: { type: 'boolean' },
+                  category: { type: 'string' },
+                  description: { type: 'string' },
+                  location: { type: 'string' },
+                  participants: { type: 'array', items: { type: 'string' } },
+                },
+              },
+            },
+            required: ['id', 'updates'],
+          },
+        },
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'delete_event',
+          description: 'Delete a calendar event',
+          parameters: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', description: 'Event ID to delete' },
+            },
+            required: ['id'],
+          },
+        },
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'bulk_update_events',
+          description: 'Update multiple events at once',
+          parameters: {
+            type: 'object',
+            properties: {
+              eventIds: { type: 'array', items: { type: 'string' }, description: 'Array of event IDs' },
+              updates: { type: 'object', description: 'Updates to apply to all events' },
+            },
+            required: ['eventIds', 'updates'],
+          },
+        },
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'bulk_delete_events',
+          description: 'Delete multiple events at once',
+          parameters: {
+            type: 'object',
+            properties: {
+              eventIds: { type: 'array', items: { type: 'string' }, description: 'Array of event IDs to delete' },
+            },
+            required: ['eventIds'],
+          },
+        },
+      },
+    ];
+
+    // Register tools with handlers
+    agent.registerTool(tools[0], async (args) => {
+      // query_events handler
+      let filteredEvents = [...events];
+      
+      if (args.startDate) {
+        const startDate = new Date(args.startDate);
+        filteredEvents = filteredEvents.filter(e => new Date(e.start) >= startDate);
+      }
+      
+      if (args.endDate) {
+        const endDate = new Date(args.endDate);
+        filteredEvents = filteredEvents.filter(e => new Date(e.start) <= endDate);
+      }
+      
+      if (args.category) {
+        filteredEvents = filteredEvents.filter(e => e.category === args.category);
+      }
+      
+      if (args.searchTerm) {
+        const term = args.searchTerm.toLowerCase();
+        filteredEvents = filteredEvents.filter(e => 
+          e.title.toLowerCase().includes(term) || 
+          e.description?.toLowerCase().includes(term)
+        );
+      }
+      
+      return filteredEvents;
+    });
+
+    agent.registerTool(tools[1], async (args) => {
+      // create_event handler
+      const eventData = {
+        ...args,
+        allDay: args.allDay ?? false,
+      };
+      const newEvent = await createEvent(eventData);
+      return newEvent;
+    });
+
+    agent.registerTool(tools[2], async (args) => {
+      // update_event handler
+      await updateEvent(args.id, args.updates);
+      return { success: true, id: args.id, updates: args.updates };
+    });
+
+    agent.registerTool(tools[3], async (args) => {
+      // delete_event handler
+      await deleteEvent(args.id);
+      return { success: true, id: args.id };
+    });
+
+    agent.registerTool(tools[4], async (args) => {
+      // bulk_update_events handler
+      for (const eventId of args.eventIds) {
+        await updateEvent(eventId, args.updates);
+      }
+      return { success: true, count: args.eventIds.length };
+    });
+
+    agent.registerTool(tools[5], async (args) => {
+      // bulk_delete_events handler
+      for (const eventId of args.eventIds) {
+        await deleteEvent(eventId);
+      }
+      return { success: true, count: args.eventIds.length };
+    });
+
+    // Set callbacks for real-time updates
+    agent.setCallbacks(
+      (step) => {
+        setAgentSteps(prev => {
+          const existingIndex = prev.findIndex(s => s.stepNumber === step.stepNumber);
+          if (existingIndex >= 0) {
+            const updated = [...prev];
+            updated[existingIndex] = step;
+            return updated;
+          }
+          return [...prev, step];
+        });
+      },
+      (finalAnswer) => {
+        console.log('[Agent] Complete:', finalAnswer);
+      },
+      (error) => {
+        console.error('[Agent] Error:', error);
+      }
+    );
+
+    agentRef.current = agent;
+  }, [selectedModel, events, createEvent, updateEvent, deleteEvent]);
 
   const messages = currentSession?.messages || [];
 
@@ -185,7 +406,7 @@ export function AssistantChat() {
 ];
 
   const handleSend = async () => {
-    if (!message.trim() || isLoading) return;
+    if (!message.trim() || isLoading || isAgentRunning) return;
     
     // Create a new session if none exists (first message)
     let sessionId = currentSessionId;
@@ -200,6 +421,8 @@ export function AssistantChat() {
     addMessage({ role: 'user', content: userMessage, timestamp: Date.now() }, sessionId);
     setMessage('');
     setIsLoading(true);
+    setIsAgentRunning(true);
+    setAgentSteps([]); // Clear previous steps
     
     try {
       // Check if online
@@ -209,573 +432,49 @@ export function AssistantChat() {
           content: 'Çevrimdışısın. AI özellikleri için internet bağlantısı gerekiyor. Manuel olarak etkinlik ekleyebilirsin.',
           timestamp: Date.now()
         }, sessionId);
-        setIsLoading(false);
         return;
       }
 
-      // Prepare messages for API
-      const apiMessages = messages
-        .concat([{ role: 'user', content: userMessage, timestamp: Date.now() }])
-        .map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        }));
-
-      // Send to AI endpoint with current events context
-      // Development: Direct call to Groq (API key from .env)
-      // Production: Will use /api/ai serverless function
-      const isDevelopment = import.meta.env.DEV;
-      const USE_MOCK_FOR_DEV = false; // Groq API aktif!
-      
-      let data;
-      
-      if (isDevelopment && USE_MOCK_FOR_DEV) {
-        // Mock mode for development (когда API key invalid)
-        console.log('[AssistantChat] Dev mode: Using MOCK (API key not configured)');
-        data = {
-          message: 'Anladım! (Mock mode - gerçek AI yok)',
-          action: {
-            type: 'CREATE_EVENT',
-            payload: {
-              title: userMessage,
-              start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-              end: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(),
-              allDay: false,
-              category: 'personal',
-              reminder: 15,
-            }
-          }
-        };
-      } else if (isDevelopment) {
-        // Direct Groq call for development
-        console.log('[AssistantChat] Dev mode: Calling Groq directly');
-        
-        const apiKey = import.meta.env.VITE_GROQ_API_KEY;
-        
-        if (!apiKey) {
-          throw new Error('VITE_GROQ_API_KEY not found in .env file');
-        }
-        
-        // Get current Turkey time (browser timezone)
-        const now = new Date();
-        const turkeyTime = now.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long' });
-        const isoTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' })).toISOString();
-        
-        const systemMessage = {
-          role: 'system',
-          content: `You are Oscar, the friendly and witty calendar assistant for Calendiq. You help Turkish users manage their schedules with personality and humor.
-
-🗓️ Current date/time (Turkey UTC+3): ${turkeyTime}
-ISO: ${isoTime}
-
-${events.length > 0 ? `📅 User's current events:\n${events.map((e) => `  • ${e.title} - ${e.start} [ID: ${e.id}]`).join('\n')}` : '📭 User has no events yet.'}
-
-🎯 PERSONALITY & TONE:
-- Speak naturally in Turkish, like a helpful friend
-- Be warm, professional, and clear
-- NO emojis - keep responses clean and text-only
-- Show personality through words, not symbols! Examples:
-  ✓ "Tamam, hadi ekleyelim!"
-  ✓ "Harika! İşte bu kadar!"
-  ✓ "Anladım! Hemen halledelim."
-  ✗ "Etkinlik başarıyla oluşturuldu." (too robotic)
-  ✗ "Harika! 🎉" (NO emojis)
-
-📝 GATHERING INFORMATION (CRITICAL - Follow this order):
-When user wants to create an event, ask in THIS ORDER:
-1️⃣ FIRST: What is the event? (title/description)
-   Example: "Ne eklememi istersin? Toplantı mı, randevu mu, başka bir şey mi?"
-   
-2️⃣ SECOND: When is it? (date if not specified)
-   Example: "Tamamdır! Hangi gün?"
-   
-3️⃣ THIRD: What time? (time if not specified)
-   Example: "Saat kaçta olacak?"
-   
-4️⃣ FOURTH (optional): Location? (only if relevant)
-   Example: "Nerede gerçekleşecek? (İsteğe bağlı)"
-
-❗ IMPORTANT RULES:
-- Ask ONE question at a time
-- Wait for user response before asking next question
-- DON'T use any function until you have: title + date + time
-- When you have all required info, THEN use create_event function
-
-🚫 WHEN NOT TO USE FUNCTIONS (CRITICAL):
-- Greetings: "merhaba", "selam", "günaydın", "iyi geceler" → Just respond warmly, NO function
-- Thank you: "teşekkürler", "sağol", "eyvallah" → Just say you're welcome, NO function
-- Casual chat: "nasılsın", "ne var ne yok", "naber" → Just chat, NO function
-- Acknowledgments: "tamam", "anladım", "olur" → Just acknowledge, NO function
-- Farewells: "görüşürüz", "hoşça kal", "bay bay" → Just say goodbye, NO function
-- ONLY use functions when user explicitly asks to: create, add, schedule, update, delete, or query events
-- If unsure, just respond conversationally - it's better than calling wrong function!
-
-- For queries, ALWAYS use query_events function - NEVER list events manually in text
-- When user asks "bugünün programı", "yarın ne var", "etkinliklerim", etc., CALL query_events function
-- ⚠️ CRITICAL: Questions with "var mı?" ("is there?") are QUERIES - use query_events!
-  * "perşembe gününde toplantım var mı?" → query_events for Thursday + searchTerm="toplantı"
-  * "yarın etkinliğim var mı?" → query_events for tomorrow
-  * "bugün ne var?" → query_events for today
-- For updates/deletes, use update_event or delete_event
-- For BULK operations (multiple events):
-  * First, call query_events to get matching events
-  * Then use bulk_update_events or bulk_delete_events with the event IDs
-  * Examples: "sabah etkinliklerini öğleden sonraya al" → query morning events, then bulk_update
-  * "cuma gününü iptal et" → query Friday events, then bulk_delete
-- ALWAYS respond in Turkish
-- Use Turkey timezone (UTC+3) for all calculations
-- NEVER send empty strings in function parameters - omit optional parameters instead
-- If user asks about results just shown (e.g., "detayları var mı?"), DON'T call functions - just answer from context
-- Events already displayed have all details - user can see them on screen
-- ⚠️ CRITICAL: NEVER write <function=...> or any XML-like tags in your response text
-- ⚠️ ALWAYS use tool_calls feature - NEVER write function calls as plain text
-- Just respond naturally in Turkish - the system will handle function calls automatically
-
-🏷️ AUTO-CATEGORIZATION:
-Automatically detect category from context:
-- work: toplantı, iş, sunum, proje, müşteri, ofis
-- personal: alışveriş, kişisel, ev, aile
-- health: doktor, randevu, spor, sağlık, diş, check-up
-- social: kahve, yemek, görüşme, buluşma, parti, konser
-- finance: banka, fatura, ödeme, vergi
-- education: ders, kurs, eğitim, sınav, okul, ödev
-Default to 'personal' if unsure.
-
-⏰ Turkish Date/Time Parsing:
-- "bugün" = today
-- "yarın" = tomorrow  
-- "pazartesi", "salı", "çarşamba", "perşembe", "cuma", "cumartesi", "pazar" = weekdays
-- "saat 15", "15:00", "3 pm" = time formats
-- Default duration: 1 hour if end time not specified
-- Default reminder: 15 minutes before
-
-Example conversation flows:
-
-NO ACTION (Just chat):
-User: "iyi geceler"
-Oscar: "İyi geceler! Yarın görüşürüz." [NO function call]
-
-User: "teşekkürler"
-Oscar: "Rica ederim! Yardımcı olabildiysem ne mutlu." [NO function call]
-
-User: "nasılsın"
-Oscar: "İyiyim, teşekkürler! Sana nasıl yardımcı olabilirim?" [NO function call]
-
-CREATE:
-User: "yarına etkinlik ekle"
-Oscar: "Tamamdır! Ne eklememi istersin?"
-User: "doktor randevusu"
-Oscar: "Anladım! Saat kaçta olacak?"
-User: "saat 15"
-Oscar: [calls create_event]
-
-QUERY:
-User: "bugünün programını göster"
-Oscar: [calls query_events with startDate=today, endDate=today]
-
-User: "bu haftaki toplantılar"
-Oscar: [calls query_events with searchTerm="toplantı", startDate=week-start, endDate=week-end]
-
-User: "perşembe gününde toplantım var mı?"
-Oscar: [calls query_events with searchTerm="toplantı", startDate=Thursday, endDate=Thursday]
-
-User: "yarın ne var?"
-Oscar: [calls query_events with startDate=tomorrow, endDate=tomorrow]
-
-User: "bugün etkinliğim var mı?"
-Oscar: [calls query_events with startDate=today, endDate=today]
-
-BULK UPDATE:
-User: "bugünün sabah etkinliklerini öğleden sonraya al"
-Oscar: [First calls query_events to find morning events, then calls bulk_update_events to move them]
-
-BULK DELETE:
-User: "cuma gününün hepsini iptal et"
-Oscar: [First calls query_events for Friday, then calls bulk_delete_events]
-
-DELETE:
-User: "yarın olan matematik dersini kaldır"
-Oscar: [First calls query_events to find the math class, remembers the event ID from results]
-Oscar: "Matematik dersi bulundu. Kaldırıyorum..." [Then calls delete_event with that ID]
-
-User: "bugünkü toplantıyı iptal et"
-Oscar: [Calls query_events for today's meetings, then calls delete_event]`,
-        };
-
-        const tools = [
-          {
-            type: 'function',
-            function: {
-              name: 'create_event',
-              description: 'Create a new calendar event',
-              parameters: {
-                type: 'object',
-                properties: {
-                  title: { type: 'string' },
-                  start: { type: 'string', description: 'ISO 8601 format' },
-                  end: { type: 'string', description: 'ISO 8601 format' },
-                  description: { type: 'string' },
-                  location: { type: 'string' },
-                  allDay: { type: 'boolean' },
-                  category: { type: 'string', enum: ['work', 'personal', 'health', 'social', 'finance', 'education'] },
-                  reminder: { type: 'number' },
-                  priority: { type: 'string', enum: ['low', 'medium', 'high'] },
-                },
-                required: ['title', 'start', 'end'],
-              },
-            },
-          },
-          {
-            type: 'function',
-            function: {
-              name: 'query_events',
-              description: 'Query/search calendar events',
-              parameters: {
-                type: 'object',
-                properties: {
-                  startDate: { type: 'string', description: 'Filter from this date (ISO 8601). Optional.' },
-                  endDate: { type: 'string', description: 'Filter until this date (ISO 8601). Optional.' },
-                  category: { 
-                    type: 'string', 
-                    enum: ['work', 'personal', 'health', 'social', 'finance', 'education'],
-                    description: 'Filter by category. Optional. Only use if user specifies, otherwise omit.' 
-                  },
-                  searchTerm: { type: 'string', description: 'Search in title/description. Optional.' },
-                },
-              },
-            },
-          },
-          {
-            type: 'function',
-            function: {
-              name: 'update_event',
-              description: 'Update an existing event',
-              parameters: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  updates: { type: 'object' },
-                },
-                required: ['id', 'updates'],
-              },
-            },
-          },
-          {
-            type: 'function',
-            function: {
-              name: 'delete_event',
-              description: 'Delete a calendar event',
-              parameters: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                },
-                required: ['id'],
-              },
-            },
-          },
-          {
-            type: 'function',
-            function: {
-              name: 'bulk_update_events',
-              description: 'Update multiple events at once. Use when user wants to modify multiple events (e.g., "move morning events to afternoon", "change all Monday meetings")',
-              parameters: {
-                type: 'object',
-                properties: {
-                  eventIds: { 
-                    type: 'array', 
-                    items: { type: 'string' },
-                    description: 'Array of event IDs to update'
-                  },
-                  updates: { 
-                    type: 'object',
-                    description: 'Object containing fields to update (e.g., {start, end, location})'
-                  },
-                },
-                required: ['eventIds', 'updates'],
-              },
-            },
-          },
-          {
-            type: 'function',
-            function: {
-              name: 'bulk_delete_events',
-              description: 'Delete multiple events at once. Use when user wants to remove multiple events (e.g., "cancel all Friday events", "delete this week\'s meetings")',
-              parameters: {
-                type: 'object',
-                properties: {
-                  eventIds: { 
-                    type: 'array', 
-                    items: { type: 'string' },
-                    description: 'Array of event IDs to delete'
-                  },
-                },
-                required: ['eventIds'],
-              },
-            },
-          },
-        ];
-
-        const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: selectedModel, // User-selected model from UI
-            messages: [systemMessage, ...apiMessages],
-            tools,
-            tool_choice: 'auto',
-            temperature: 0.7,
-            parallel_tool_calls: false, // Prevent multiple simultaneous function calls
-          }),
-        });
-
-        if (!groqResponse.ok) {
-          const errorText = await groqResponse.text();
-          console.error('[AssistantChat] Groq error:', groqResponse.status, errorText);
-          throw new Error(`Groq error: ${groqResponse.status} - ${errorText}`);
-        }
-
-        const openrouterData = await groqResponse.json();
-        const assistantMessage = openrouterData.choices[0]?.message;
-        
-        if (!assistantMessage) {
-          throw new Error('No assistant message in response');
-        }
-
-        const toolCalls = assistantMessage.tool_calls;
-        let action;
-        let messageContent = assistantMessage.content || '';
-
-        if (toolCalls && toolCalls.length > 0) {
-          const toolCall = toolCalls[0];
-          const functionName = toolCall.function.name;
-          const functionArgs = JSON.parse(toolCall.function.arguments);
-
-          // Clean up function call format from message (Groq sometimes includes <function=...> in content)
-          messageContent = messageContent.replace(/<function=.*?<\/function>/g, '').trim();
-
-          switch (functionName) {
-            case 'create_event':
-              action = { type: 'CREATE_EVENT', payload: functionArgs };
-              // Empty message - we'll show action card instead
-              messageContent = '';
-              break;
-            case 'update_event':
-              action = { type: 'UPDATE_EVENT', id: functionArgs.id, payload: functionArgs.updates };
-              messageContent = '';
-              break;
-            case 'delete_event':
-              action = { type: 'DELETE_EVENT', id: functionArgs.id };
-              messageContent = '';
-              break;
-            case 'bulk_update_events':
-              action = { type: 'BULK_UPDATE_EVENTS', eventIds: functionArgs.eventIds, payload: functionArgs.updates };
-              messageContent = '';
-              break;
-            case 'bulk_delete_events':
-              action = { type: 'BULK_DELETE_EVENTS', eventIds: functionArgs.eventIds };
-              messageContent = '';
-              break;
-            case 'query_events':
-              action = { type: 'QUERY_EVENTS', filter: functionArgs };
-              messageContent = ''; // Will be set during action execution
-              break;
-            default:
-              action = { type: 'NO_ACTION', message: messageContent || 'Anladım!' };
-          }
-        } else {
-          // Clean up any accidental function tags even in NO_ACTION responses
-          messageContent = messageContent.replace(/<function=.*?<\/function>/g, '').trim();
-          action = { type: 'NO_ACTION', message: messageContent || 'Anladım!' };
-        }
-
-        data = {
-          message: messageContent || 'İşlem yapılıyor...',
-          action,
-        };
-      } else {
-        // Production: Use serverless function
-        const response = await fetch('/api/ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            messages: apiMessages,
-            events: events.map(e => ({
-              id: e.id,
-              title: e.title,
-              start: e.start,
-              end: e.end,
-              category: e.category,
-            })),
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`API request failed: ${response.status}`);
-        }
-
-        data = await response.json();
-      }
-      
-      console.log('[AssistantChat] API response:', data);
-
-      // Validate AI action
-      let aiResponseText = data.message || '';
-      let actionMetadata: ChatMessage['action'] = undefined;
-      let queryResults: CalendarEvent[] | undefined = undefined;
-
-      console.log('[AssistantChat] AI response text:', aiResponseText);
-      console.log('[AssistantChat] Action data:', data.action);
-
-      if (data.action) {
-        try {
-          const validatedAction = AIActionSchema.parse(data.action);
-          console.log('[AssistantChat] Validated action:', validatedAction);
-
-          // Execute action
-          if (isCreateEventAction(validatedAction)) {
-            console.log('[AssistantChat] Creating event:', validatedAction.payload);
-            const eventData = {
-              ...validatedAction.payload,
-              allDay: validatedAction.payload.allDay ?? false,
-            };
-            
-            // Check for conflicts
-            const conflicts = checkEventConflicts(eventData);
-            
-            if (conflicts.length > 0) {
-              // Show conflict warning but still create the event
-              actionMetadata = {
-                type: 'conflict',
-                event: eventData,
-                conflictingEvents: conflicts,
-              };
-              await createEvent(eventData);
-            } else {
-              // No conflicts, create successfully
-              await createEvent(eventData);
-              actionMetadata = {
-                type: 'created',
-                event: eventData,
-              };
-            }
-          } else if (isUpdateEventAction(validatedAction)) {
-            console.log('[AssistantChat] Updating event:', validatedAction.id, validatedAction.payload);
-            await updateEvent(validatedAction.id, validatedAction.payload);
-            const updatedEvent = events.find(e => e.id === validatedAction.id);
-            actionMetadata = {
-              type: 'updated',
-              event: updatedEvent ? { ...updatedEvent, ...validatedAction.payload } : validatedAction.payload,
-            };
-          } else if (isDeleteEventAction(validatedAction)) {
-            console.log('[AssistantChat] Deleting event:', validatedAction.id);
-            const deletedEvent = events.find(e => e.id === validatedAction.id);
-            await deleteEvent(validatedAction.id);
-            actionMetadata = {
-              type: 'deleted',
-              event: deletedEvent,
-            };
-          } else if (isBulkUpdateEventsAction(validatedAction)) {
-            console.log('[AssistantChat] Bulk updating events:', validatedAction.eventIds.length, 'events');
-            const updatedEvents = [];
-            for (const eventId of validatedAction.eventIds) {
-              await updateEvent(eventId, validatedAction.payload);
-              const event = events.find(e => e.id === eventId);
-              if (event) {
-                updatedEvents.push({ ...event, ...validatedAction.payload });
-              }
-            }
-            actionMetadata = {
-              type: 'bulk_updated',
-              events: updatedEvents,
-              count: updatedEvents.length,
-            };
-          } else if (isBulkDeleteEventsAction(validatedAction)) {
-            console.log('[AssistantChat] Bulk deleting events:', validatedAction.eventIds.length, 'events');
-            const deletedEvents = [];
-            for (const eventId of validatedAction.eventIds) {
-              const event = events.find(e => e.id === eventId);
-              if (event) {
-                deletedEvents.push(event);
-                await deleteEvent(eventId);
-              }
-            }
-            actionMetadata = {
-              type: 'bulk_deleted',
-              events: deletedEvents,
-              count: deletedEvents.length,
-            };
-          } else if (isQueryEventsAction(validatedAction)) {
-            console.log('[AssistantChat] Querying events:', validatedAction.filter);
-            console.log('[AssistantChat] Total events available:', events.length);
-            
-            // Client-side filtering
-            let filteredEvents = [...events];
-            const filter = validatedAction.filter || {};
-            
-            if (filter.startDate) {
-              const startDate = new Date(filter.startDate);
-              console.log('[AssistantChat] Filtering by startDate:', startDate);
-              filteredEvents = filteredEvents.filter(e => new Date(e.start) >= startDate);
-              console.log('[AssistantChat] After startDate filter:', filteredEvents.length);
-            }
-            
-            if (filter.endDate) {
-              const endDate = new Date(filter.endDate);
-              console.log('[AssistantChat] Filtering by endDate:', endDate);
-              filteredEvents = filteredEvents.filter(e => new Date(e.start) <= endDate);
-              console.log('[AssistantChat] After endDate filter:', filteredEvents.length);
-            }
-            
-            if (filter.category) {
-              filteredEvents = filteredEvents.filter(e => e.category === filter.category);
-              console.log('[AssistantChat] After category filter:', filteredEvents.length);
-            }
-            
-            if (filter.searchTerm) {
-              const term = filter.searchTerm.toLowerCase();
-              console.log('[AssistantChat] Filtering by searchTerm:', term);
-              filteredEvents = filteredEvents.filter(e => 
-                e.title.toLowerCase().includes(term) || 
-                e.description?.toLowerCase().includes(term)
-              );
-              console.log('[AssistantChat] After searchTerm filter:', filteredEvents.length);
-            }
-
-            // Save query results to display as cards
-            queryResults = filteredEvents;
-            console.log('[AssistantChat] Final query results:', queryResults.length, 'events');
-            
-            // Empty message - cards will show everything
-            aiResponseText = '';
-          }
-        } catch (validationError) {
-          console.error('[AssistantChat] Action validation error:', validationError);
-        }
+      // Check if agent is initialized
+      if (!agentRef.current) {
+        throw new Error('Agent not initialized');
       }
 
-      // Add AI response to chat with action metadata and query results
-      addMessage({ 
-        role: 'assistant', 
-        content: aiResponseText,
-        timestamp: Date.now(),
-        action: actionMetadata,
-        queryResults: queryResults,
-      }, sessionId);
+      // Build conversation history for agent
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+      }));
+
+      // Run the agent
+      const result = await agentRef.current.run(userMessage, conversationHistory);
+
+      // Add final answer to chat
+      if (result.finalAnswer) {
+        addMessage({ 
+          role: 'assistant', 
+          content: result.finalAnswer,
+          timestamp: Date.now(),
+        }, sessionId);
+      } else if (result.errorMessage) {
+        addMessage({ 
+          role: 'assistant', 
+          content: `⚠️ ${result.errorMessage}`,
+          timestamp: Date.now()
+        }, sessionId);
+      }
       
     } catch (error) {
       console.error('[AssistantChat] Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
       addMessage({ 
         role: 'assistant', 
-        content: `⚠️ Hata oluştu: ${errorMessage}\n\nLütfen tekrar dene veya manuel olarak etkinlik ekle.`,
+        content: `⚠️ Hata oluştu: ${errorMessage}\n\nLütfen tekrar dene.`,
         timestamp: Date.now()
       }, sessionId);
     } finally {
       setIsLoading(false);
+      setIsAgentRunning(false);
     }
   };
 
@@ -834,6 +533,13 @@ Oscar: [Calls query_events for today's meetings, then calls delete_event]`,
                 ) : (
                   // AI message - plain text with optional action card or query results
                   <>
+                    {/* Agent Thinking Process - Show at the top */}
+                    {index === messages.length - 1 && agentSteps.length > 0 && (
+                      <div className="w-full max-w-[95%]">
+                        <AgentThoughts steps={agentSteps} isRunning={isAgentRunning} />
+                      </div>
+                    )}
+                    
                     {/* Only show text if there's actual content */}
                     {msg.content && msg.content.trim() && (
                       <p className="text-lg text-foreground max-w-[80%] whitespace-pre-wrap">{msg.content}</p>
