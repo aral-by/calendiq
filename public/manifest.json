@@ -1,12 +1,14 @@
 {
-  "name": "Calendiq",
+  "name": "Calendiq - AI Calendar",
   "short_name": "Calendiq",
-  "description": "Local-first AI-powered calendar application",
+  "description": "AI-powered calendar assistant with local-first storage",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
+  "categories": ["productivity", "calendar", "scheduling"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
