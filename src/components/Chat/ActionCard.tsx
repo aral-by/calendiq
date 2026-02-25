@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertCircle, Clock, MapPin, Tag, Calendar, Trash2, Edit3, CalendarPlus } from 'lucide-react';
+import { AlertCircle, Clock, MapPin, Tag, Calendar, Trash2, Edit3, CalendarPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { CalendarEvent } from '@/types/event';

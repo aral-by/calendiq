@@ -441,9 +441,9 @@ export function AssistantChat() {
       // Process agent steps and create action cards for tool calls
       if (result.steps && result.steps.length > 0) {
         for (const step of result.steps) {
-          if (step.action?.toolCall) {
-            const toolName = step.action.toolCall.name;
-            const toolArgs = step.action.toolCall.arguments;
+          if (step.action) {
+            const toolName = step.action.tool;
+            const toolArgs = step.action.arguments;
             
             // Create event
             if (toolName === 'create_event' && step.observation) {
