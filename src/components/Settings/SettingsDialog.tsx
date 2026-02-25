@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings2, Globe, Palette } from 'lucide-react';
+import { Settings2, Globe, Palette, Trash2, AlertTriangle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useUser } from '@/context/UserContext';
+import { useChatHistory } from '@/context/ChatHistoryContext';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -26,9 +37,11 @@ interface SettingsDialogProps {
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { user, updateUser } = useUser();
+  const { sessions, deleteAllSessions } = useChatHistory();
   const [language, setLanguage] = useState('en');
   const [preferredTheme, setPreferredTheme] = useState('system');
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (user && open) {
@@ -72,7 +85,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     }
   };
 
+  const handleDeleteAllChats = () => {
+    deleteAllSessions();
+    setShowDeleteConfirm(false);
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -121,6 +140,25 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2 pt-2 border-t">
+            <Label className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-4 w-4" />
+              Danger Zone
+            </Label>
+            <Button
+              variant="destructive"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full"
+              disabled={sessions.length === 0}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete All Chat History ({sessions.length} chats)
+            </Button>
+            {sessions.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center">No chat history to delete</p>
+            )}
+          </div>
         </div>
         
         <DialogFooter className="flex-col sm:flex-col gap-2">
@@ -141,5 +179,32 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+            <AlertTriangle className="h-10 w-10 text-destructive" />
+          </div>
+          <AlertDialogTitle className="text-center">Delete All Chat History?</AlertDialogTitle>
+          <AlertDialogDescription className="text-center">
+            This will permanently delete all {sessions.length} chat conversations.
+            <br />
+            <strong className="text-destructive">This action cannot be undone.</strong>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex-col sm:flex-col gap-2">
+          <AlertDialogAction
+            onClick={handleDeleteAllChats}
+            className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Yes, Delete All Chats
+          </AlertDialogAction>
+          <AlertDialogCancel className="w-full">Cancel</AlertDialogCancel>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

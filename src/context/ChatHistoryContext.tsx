@@ -33,6 +33,7 @@ interface ChatHistoryContextType {
   addMessage: (message: ChatMessage, sessionId?: string) => void;
   updateSessionTitle: (sessionId: string, title: string) => void;
   deleteSession: (sessionId: string) => void;
+  deleteAllSessions: () => void;
 }
 
 const ChatHistoryContext = createContext<ChatHistoryContextType | undefined>(undefined);
@@ -113,6 +114,12 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteAllSessions = () => {
+    setSessions([]);
+    setCurrentSessionId(null);
+    localStorage.removeItem('calendiq_chat_sessions');
+  };
+
   return (
     <ChatHistoryContext.Provider
       value={{
@@ -125,6 +132,7 @@ export function ChatHistoryProvider({ children }: { children: ReactNode }) {
         addMessage,
         updateSessionTitle,
         deleteSession,
+        deleteAllSessions,
       }}
     >
       {children}
