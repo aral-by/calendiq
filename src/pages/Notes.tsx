@@ -1,5 +1,15 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ZoomIn, ZoomOut, Maximize2, Plus, Trash2 } from 'lucide-react';
 import { useNotes } from '@/context/NoteContext';
 import { StickyNote } from '@/components/Notes/StickyNote';
@@ -13,6 +23,7 @@ export function Notes() {
   const [isPanning, setIsPanning] = useState(false);
   const [startPan, setStartPan] = useState({ x: 0, y: 0 });
   const [selectedColor, setSelectedColor] = useState<NoteColor>('yellow');
+  const [showClearAllDialog, setShowClearAllDialog] = useState(false);
 
   const handleZoomIn = () => {
     setScale(prev => Math.min(prev + 0.1, 2));
@@ -28,6 +39,11 @@ export function Notes() {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Don't pan if clicking on a note card
+    if ((e.target as HTMLElement).closest('.sticky-note-card')) {
+      return;
+    }
+    
     if (e.button === 0) { // Left click
       setIsPanning(true);
       setStartPan({
@@ -73,9 +89,14 @@ export function Notes() {
   };
 
   const handleClearAll = () => {
-    if (notes.length > 0 && confirm(`Are you sure you want to delete all ${notes.length} notes?`)) {
-      clearAllNotes();
+    if (notes.length > 0) {
+      setShowClearAllDialog(true);
     }
+  };
+
+  const confirmClearAll = () => {
+    clearAllNotes();
+    setShowClearAllDialog(false);
   };
 
   return (

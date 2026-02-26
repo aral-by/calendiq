@@ -50,6 +50,9 @@ export function StickyNote({ note, onUpdate, onDelete, scale }: StickyNoteProps)
   }, [isEditingContent]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Stop event from bubbling to canvas
+    e.stopPropagation();
+    
     if ((e.target as HTMLElement).closest('.drag-handle')) {
       e.preventDefault();
       setIsDragging(true);
@@ -130,7 +133,7 @@ export function StickyNote({ note, onUpdate, onDelete, scale }: StickyNoteProps)
     >
       <Card
         className={cn(
-          'w-64 p-4 border-2 shadow-lg transition-all duration-200',
+          'sticky-note-card w-64 p-4 border-2 shadow-lg transition-all duration-200',
           colorStyles[note.color],
           isDragging && 'scale-105 shadow-xl rotate-1',
           'hover:shadow-xl'
