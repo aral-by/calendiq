@@ -3,12 +3,14 @@ import { Note, NoteColor } from '@/types/note';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Trash2, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ColorPicker } from './ColorPicker';
 
 interface StickyNoteProps {
   note: Note;
-  onUpdate: (id: string, updates: { content?: string; position?: { x: number; y: number } }) => void;
+  onUpdate: (id: string, updates: { title?: string; content?: string; color?: NoteColor; position?: { x: number; y: number } }) => void;
   onDelete: (id: string) => void;
   scale: number;
 }
