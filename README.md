@@ -347,28 +347,32 @@ Contributions are welcome! This is a hobby project and open to improvements.
 
 ## Future Plans
 
-Priority roadmap for post-MVP releases:
+Priority roadmap for future releases:
 
-### Phase X: Batch Actions for Complex AI Commands
-- Support multi-step operations ("cancel weekend plans and reschedule")
-- AI returns action arrays for complex workflows
-- Enhanced natural language understanding
+### Near-Term Enhancements
+- **Calendar Import/Export** - iCal format support for data portability
+- **Enhanced Recurring Events** - More complex recurrence patterns
+- **PIN Recovery** - Secure PIN reset mechanism via email
+- **Multi-timezone Support** - Handle events across different timezones
+- **Dark Mode** - System-aware theme toggle
+- **Snooze Reminders** - Defer notifications with custom intervals
 
-### Phase Y: Telegram Chatbot Integration
-- Manage calendar via Telegram bot
-- Receive reminders in Telegram
-- Two-way sync between PWA and Telegram messages
-- Voice and text commands from mobile
+### Advanced Features
+- **Batch Actions** - Complex multi-step operations via AI ("cancel weekend plans and reschedule")
+- **Telegram Chatbot Integration** - Manage calendar via Telegram bot with two-way sync
+- **Oscar Backend Integration** - Connect to Oscar backend via REST API for cloud sync
+- **Multi-user Support** - Shared calendars and collaboration features
+- **Event Templates** - Reusable event configurations
+- **Attachment Support** - Add files and images to events
+- **Advanced Analytics** - Productivity insights and recommendations
 
-### Other Enhancements
-- **Mobile Phone Support** - Responsive UI for smartphones
-- **Oscar Integration** - Connect to Oscar backend via REST API
-- **Recurring Events** - Support for repeating calendar entries
-- **PIN Recovery** - Secure PIN reset mechanism
-- **Export/Import** - iCal format support
-- **Multi-user** - Shared calendars
-- **Snooze Reminders** - Defer notifications
-- **Dark Mode** - Theme toggle
+### Enterprise Features
+- **Team Calendars** - Organization-wide calendar management
+- **Access Control** - Role-based permissions
+- **Audit Logs** - Track changes and modifications
+- **SSO Integration** - Single sign-on support
+- **Calendar Sharing** - Public/private calendar links
+- **Meeting Rooms** - Resource booking system
 
 See [docs/phases/phase-11.md](docs/phases/phase-11.md#future-enhancements) for detailed future roadmap.
 
@@ -380,9 +384,11 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 - Built with [React](https://react.dev/)
 - UI components from [shadcn/ui](https://ui.shadcn.com/)
-- Calendar by [FullCalendar](https://fullcalendar.io/)
-- AI by [Groq](https://groq.com/)
-- Speech-to-text by [Deepgram](https://deepgram.com/)
+- Charts by [Recharts](https://recharts.org/)
+- AI models by [Groq](https://groq.com/)
+- Voice transcription by [Groq Whisper](https://console.groq.com/docs/speech-text)
+- Icons by [Lucide](https://lucide.dev/)
+- Date handling by [date-fns](https://date-fns.org/)
 
 ## Support
 
