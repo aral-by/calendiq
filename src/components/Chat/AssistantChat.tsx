@@ -12,7 +12,6 @@ import { tr } from 'date-fns/locale';
 import { ModelSelector, AIModel } from '@/components/Chat/ModelSelector';
 import { useSidebar } from '@/components/ui/sidebar';
 import { CalendarAgent, type AgentStep } from '@/lib/agent';
-import { AgentThoughts } from '@/components/Chat/AgentThoughts';
 import type { ChatCompletionTool } from 'groq-sdk/resources/chat/completions';
 import ReactMarkdown from 'react-markdown';
 
@@ -143,7 +142,6 @@ export function AssistantChat() {
   });
   
   // Agent state for tracking thinking process
-  const [agentSteps, setAgentSteps] = useState<AgentStep[]>([]);
   const [isAgentRunning, setIsAgentRunning] = useState(false);
   const agentRef = useRef<CalendarAgent | null>(null);
   
@@ -361,16 +359,8 @@ export function AssistantChat() {
 
     // Set callbacks for real-time updates
     agent.setCallbacks(
-      (step) => {
-        setAgentSteps(prev => {
-          const existingIndex = prev.findIndex(s => s.stepNumber === step.stepNumber);
-          if (existingIndex >= 0) {
-            const updated = [...prev];
-            updated[existingIndex] = step;
-            return updated;
-          }
-          return [...prev, step];
-        });
+      () => {
+        // Agent step updates (not displayed in UI)
       },
       (finalAnswer) => {
         console.log('[Agent] Complete:', finalAnswer);
@@ -411,7 +401,6 @@ export function AssistantChat() {
     setMessage('');
     setIsLoading(true);
     setIsAgentRunning(true);
-    setAgentSteps([]); // Clear previous steps
     
     try {
       // Check if online
@@ -641,13 +630,6 @@ export function AssistantChat() {
                 ) : (
                   // AI message - plain text with optional action card or query results
                   <>
-                    {/* Agent Thinking Process - Show at the top */}
-                    {index === messages.length - 1 && agentSteps.length > 0 && (
-                      <div className="w-full max-w-[95%]">
-                        <AgentThoughts steps={agentSteps} isRunning={isAgentRunning} />
-                      </div>
-                    )}
-                    
                     {/* Only show text if there's actual content */}
                     {msg.content && msg.content.trim() && (
                       <div className="text-sm text-foreground max-w-[80%] markdown-content">
@@ -684,42 +666,44 @@ export function AssistantChat() {
                       <div className="w-full max-w-[80%] space-y-2">
                         {msg.queryResults.length > 0 ? (
                           msg.queryResults.map((event) => (
-                            <Card key={event.id} className="overflow-hidden">
-                              <CardContent className="p-4">
-                                <div className="space-y-2">
+                            <Card key={event.id} className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
+                              <CardContent className="p-3">
+                                <div className="space-y-1.5">
                                   <div className="flex items-start justify-between gap-2">
-                                    <h4 className="font-semibold text-base">{event.title}</h4>
+                                    <h4 className="font-semibold text-sm">{event.title}</h4>
                                     {event.category && (
-                                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary shrink-0">
                                         {event.category}
                                       </span>
                                     )}
                                   </div>
                                   
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Calendar className="w-3.5 h-3.5 shrink-0" />
-                                    <span>{format(new Date(event.start), 'd MMMM yyyy, EEEE', { locale: tr })}</span>
-                                  </div>
-                                  
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Clock className="w-3.5 h-3.5 shrink-0" />
-                                    <span>
-                                      {event.allDay 
-                                        ? 'Tüm gün' 
-                                        : `${format(new Date(event.start), 'HH:mm')} - ${format(new Date(event.end), 'HH:mm')}`
-                                      }
-                                    </span>
-                                  </div>
-                                  
-                                  {event.location && (
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                      <MapPin className="w-3.5 h-3.5 shrink-0" />
-                                      <span>{event.location}</span>
+                                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-1.5">
+                                      <Calendar className="w-3 h-3" />
+                                      <span>{format(new Date(event.start), 'd MMM', { locale: tr })}</span>
                                     </div>
-                                  )}
+                                    
+                                    <div className="flex items-center gap-1.5">
+                                      <Clock className="w-3 h-3" />
+                                      <span>
+                                        {event.allDay 
+                                          ? 'Tüm gün' 
+                                          : `${format(new Date(event.start), 'HH:mm')}–${format(new Date(event.end), 'HH:mm')}`
+                                        }
+                                      </span>
+                                    </div>
+                                    
+                                    {event.location && (
+                                      <div className="flex items-center gap-1.5">
+                                        <MapPin className="w-3 h-3" />
+                                        <span>{event.location}</span>
+                                      </div>
+                                    )}
+                                  </div>
                                   
                                   {event.description && (
-                                    <p className="text-sm text-muted-foreground pt-2 border-t">
+                                    <p className="text-xs text-muted-foreground pt-1.5 border-t line-clamp-2">
                                       {event.description}
                                     </p>
                                   )}
@@ -728,9 +712,9 @@ export function AssistantChat() {
                             </Card>
                           ))
                         ) : (
-                          <Card className="overflow-hidden">
-                            <CardContent className="p-4">
-                              <p className="text-sm text-muted-foreground">Bu kriterlere uygun etkinlik bulunamadı.</p>
+                          <Card className="border-l-4 border-l-gray-300">
+                            <CardContent className="p-3">
+                              <p className="text-xs text-muted-foreground">Bu kriterlere uygun etkinlik bulunamadı.</p>
                             </CardContent>
                           </Card>
                         )}
