@@ -51,6 +51,29 @@ interface MainLayoutProps {
   onNavigate: (page: 'dashboard' | 'search' | 'calendar' | 'ai-chat' | 'notes' | 'statistics') => void;
 }
 
+function SidebarHeaderContent() {
+  const { isMobile, setOpenMobile } = useSidebar();
+  
+  return (
+    <div className="flex items-center justify-between px-2 py-2">
+      <div className="flex items-center gap-2">
+        <Calendar className="h-6 w-6" />
+        <span className="font-semibold text-lg">Calendiq</span>
+      </div>
+      {/* Mobile close button */}
+      {isMobile && (
+        <button
+          onClick={() => setOpenMobile(false)}
+          className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-sidebar-accent transition-colors"
+          aria-label="Close sidebar"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProps) {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('calendiqTheme') as 'light' | 'dark' | null;
@@ -104,10 +127,7 @@ export function MainLayout({ children, currentPage, onNavigate }: MainLayoutProp
         {/* Sidebar */}
         <Sidebar>
           <SidebarHeader>
-            <div className="flex items-center gap-2 px-2 py-2">
-              <Calendar className="h-6 w-6" />
-              <span className="font-semibold text-lg">Calendiq</span>
-            </div>
+            <SidebarHeaderContent />
           </SidebarHeader>
           
           <SidebarContent className="scrollbar-hide">
