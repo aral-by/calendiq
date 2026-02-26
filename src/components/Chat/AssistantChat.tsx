@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { ModelSelector, AIModel } from '@/components/Chat/ModelSelector';
 import { useSidebar } from '@/components/ui/sidebar';
-import { CalendarAgent, type AgentStep } from '@/lib/agent';
+import { CalendarAgent } from '@/lib/agent';
 import type { ChatCompletionTool } from 'groq-sdk/resources/chat/completions';
 import ReactMarkdown from 'react-markdown';
 
