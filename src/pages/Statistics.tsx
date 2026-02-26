@@ -241,8 +241,8 @@ export function Statistics() {
           </Card>
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        {/* Charts - Hidden on mobile, visible on desktop */}
+        <div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {/* Category Distribution */}
           <Card>
             <CardHeader>
