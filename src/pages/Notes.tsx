@@ -192,9 +192,6 @@ export function Notes() {
             </div>
           )}
         </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
