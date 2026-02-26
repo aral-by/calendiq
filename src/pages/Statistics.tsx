@@ -2,9 +2,38 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvents } from '@/context/EventContext';
 import { useNotes } from '@/context/NoteContext';
-import { Calendar, StickyNote, TrendingUp, Clock, Tag, Palette } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { Calendar, StickyNote, TrendingUp, Clock, BarChart3, Activity } from 'lucide-react';
+import { 
+  format, 
+  startOfWeek, 
+  endOfWeek, 
+  startOfMonth, 
+  endOfMonth, 
+  isWithinInterval,
+  subWeeks,
+  subDays,
+  startOfDay,
+  endOfDay,
+  getHours,
+  getDay
+} from 'date-fns';
+import {
+  Bar,
+  BarChart,
+  Line,
+  LineChart,
+  Area,
+  AreaChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from 'recharts';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
 
 export function Statistics() {
   const { events } = useEvents();
@@ -12,8 +41,8 @@ export function Statistics() {
 
   const stats = useMemo(() => {
     const now = new Date();
-    const weekStart = startOfWeek(now, { locale: tr });
-    const weekEnd = endOfWeek(now, { locale: tr });
+    const weekStart = startOfWeek(now);
+    const weekEnd = endOfWeek(now);
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
 
@@ -35,44 +64,80 @@ export function Statistics() {
     });
 
     const categoryLabels: Record<string, string> = {
-      work: 'İş',
-      personal: 'Kişisel',
-      health: 'Sağlık',
-      social: 'Sosyal',
-      finance: 'Finans',
-      education: 'Eğitim',
+      work: 'Work',
+      personal: 'Personal',
+      health: 'Health',
+      social: 'Social',
+      finance: 'Finance',
+      education: 'Education',
     };
 
-    const sortedCategories = Object.entries(categoryCount)
+    const categoryColors: Record<string, string> = {
+      work: 'hsl(var(--chart-1))',
+      personal: 'hsl(var(--chart-2))',
+      health: 'hsl(var(--chart-3))',
+      social: 'hsl(var(--chart-4))',
+      finance: 'hsl(var(--chart-5))',
+      education: 'hsl(220, 70%, 50%)',
+    };
+
+    const categoryData = Object.entries(categoryCount)
       .sort(([, a], [, b]) => b - a)
-      .map(([cat, count]) => ({
+      .map(([cat]) => ({
         category: categoryLabels[cat] || cat,
-        count,
+        count: categoryCount[cat],
+        fill: categoryColors[cat] || 'hsl(var(--chart-1))',
       }));
 
-    // Note statistics
-    const totalNotes = notes.length;
-    const colorCount: Record<string, number> = {};
-    notes.forEach(n => {
-      colorCount[n.color] = (colorCount[n.color] || 0) + 1;
+    // Weekly trend (last 4 weeks)
+    const weeklyData = [];
+    for (let i = 3; i >= 0; i--) {
+      const weekDate = subWeeks(now, i);
+      const ws = startOfWeek(weekDate);
+      const we = endOfWeek(weekDate);
+      const count = events.filter(e =>
+        isWithinInterval(new Date(e.start), { start: ws, end: we })
+      ).length;
+      weeklyData.push({
+        week: `Week ${4 - i}`,
+        events: count,
+      });
+    }
+
+    // Daily activity (last 7 days)
+    const dailyData = [];
+    for (let i = 6; i >= 0; i--) {
+      const dayDate = subDays(now, i);
+      const dayStart = startOfDay(dayDate);
+      const dayEnd = endOfDay(dayDate);
+      const count = events.filter(e =>
+        isWithinInterval(new Date(e.start), { start: dayStart, end: dayEnd })
+      ).length;
+      dailyData.push({
+        day: format(dayDate, 'EEE'),
+        events: count,
+      });
+    }
+
+    // Busiest hour
+    const hourCounts: Record<number, number> = {};
+    events.forEach(e => {
+      const hour = getHours(new Date(e.start));
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
     });
+    const busiestHour = Object.entries(hourCounts)
+      .sort(([, a], [, b]) => b - a)[0]?.[0];
 
-    const colorLabels: Record<string, string> = {
-      yellow: 'Sarı',
-      pink: 'Pembe',
-      blue: 'Mavi',
-      green: 'Yeşil',
-      purple: 'Mor',
-      orange: 'Turuncu',
-    };
+    // Busiest day of week
+    const dayCounts: Record<number, number> = {};
+    events.forEach(e => {
+      const day = getDay(new Date(e.start));
+      dayCounts[day] = (dayCounts[day] || 0) + 1;
+    });
+    const busiestDay = Object.entries(dayCounts)
+      .sort(([, a], [, b]) => b - a)[0]?.[0];
 
-    const sortedColors = Object.entries(colorCount)
-      .sort(([, a], [, b]) => b - a)
-      .map(([color, count]) => ({
-        color: colorLabels[color] || color,
-        colorKey: color,
-        count,
-      }));
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     // Upcoming events (next 7 days)
     const upcomingEvents = events.filter(e => {
@@ -87,227 +152,281 @@ export function Statistics() {
       eventsThisWeek,
       eventsThisMonth,
       upcomingEvents,
-      sortedCategories,
-      totalNotes,
-      sortedColors,
+      totalNotes: notes.length,
+      categoryData,
+      weeklyData,
+      dailyData,
+      busiestHour: busiestHour ? `${busiestHour}:00` : '-',
+      busiestDay: busiestDay !== undefined ? dayNames[Number(busiestDay)] : '-',
+      avgEventsPerWeek: totalEvents > 0 ? (totalEvents / 4).toFixed(1) : '0',
     };
   }, [events, notes]);
-
-  const colorClasses: Record<string, string> = {
-    yellow: 'bg-yellow-300',
-    pink: 'bg-pink-300',
-    blue: 'bg-blue-300',
-    green: 'bg-green-300',
-    purple: 'bg-purple-300',
-    orange: 'bg-orange-300',
-  };
 
   return (
     <div className="h-full w-full overflow-y-auto p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">İstatistikler</h1>
+          <h1 className="text-3xl font-bold">Statistics</h1>
           <p className="text-muted-foreground">
-            Etkinlik ve not kullanım istatistikleriniz
+            Your event and productivity insights
           </p>
         </div>
 
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Toplam Etkinlik</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Events</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalEvents}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.eventsThisWeek} bu hafta
+                All time
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Bu Ay</CardTitle>
+              <CardTitle className="text-sm font-medium">This Week</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.eventsThisWeek}</div>
+              <p className="text-xs text-muted-foreground">
+                {format(new Date(), 'MMM d')} - {format(endOfWeek(new Date()), 'MMM d')}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">This Month</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.eventsThisMonth}</div>
               <p className="text-xs text-muted-foreground">
-                {format(new Date(), 'MMMM', { locale: tr })}
+                {format(new Date(), 'MMMM')}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Yaklaşan</CardTitle>
+              <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.upcomingEvents}</div>
               <p className="text-xs text-muted-foreground">
-                Sonraki 7 gün
+                Next 7 days
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Toplam Not</CardTitle>
+              <CardTitle className="text-sm font-medium">Notes</CardTitle>
               <StickyNote className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalNotes}</div>
               <p className="text-xs text-muted-foreground">
-                Sticky notlar
+                Sticky notes
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Detailed Statistics */}
+        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Category Distribution */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Tag className="h-5 w-5" />
-                Kategori Dağılımı
+                <BarChart3 className="h-5 w-5" />
+                Category Distribution
               </CardTitle>
               <CardDescription>
-                Etkinliklerinizin kategorilere göre dağılımı
+                Events by category
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {stats.sortedCategories.length > 0 ? (
-                <div className="space-y-3">
-                  {stats.sortedCategories.map(({ category, count }) => {
-                    const percentage = stats.totalEvents > 0 
-                      ? Math.round((count / stats.totalEvents) * 100) 
-                      : 0;
-                    return (
-                      <div key={category} className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium">{category}</span>
-                          <span className="text-muted-foreground">
-                            {count} ({percentage}%)
-                          </span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary transition-all duration-500"
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+              {stats.categoryData.length > 0 ? (
+                <ChartContainer
+                  config={{
+                    count: {
+                      label: 'Events',
+                      color: 'hsl(var(--chart-1))',
+                    },
+                  }}
+                  className="h-[300px]"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats.categoryData}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis 
+                        dataKey="category" 
+                        className="text-xs"
+                        tick={{ fill: 'hsl(var(--foreground))' }}
+                      />
+                      <YAxis 
+                        className="text-xs"
+                        tick={{ fill: 'hsl(var(--foreground))' }}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="count" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  Henüz kategori bulunmuyor
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  No events yet
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Note Color Distribution */}
+          {/* Weekly Trend */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Not Renk Dağılımı
+                <TrendingUp className="h-5 w-5" />
+                Weekly Trend
               </CardTitle>
               <CardDescription>
-                Notlarınızın renklere göre dağılımı
+                Last 4 weeks activity
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {stats.sortedColors.length > 0 ? (
-                <div className="space-y-3">
-                  {stats.sortedColors.map(({ color, colorKey, count }) => {
-                    const percentage = stats.totalNotes > 0 
-                      ? Math.round((count / stats.totalNotes) * 100) 
-                      : 0;
-                    return (
-                      <div key={colorKey} className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${colorClasses[colorKey]}`} />
-                            <span className="font-medium">{color}</span>
-                          </div>
-                          <span className="text-muted-foreground">
-                            {count} ({percentage}%)
-                          </span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-500 ${colorClasses[colorKey]}`}
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  Henüz not bulunmuyor
-                </div>
-              )}
+              <ChartContainer
+                config={{
+                  events: {
+                    label: 'Events',
+                    color: 'hsl(var(--chart-2))',
+                  },
+                }}
+                className="h-[300px]"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={stats.weeklyData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="week" 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <YAxis 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="events" 
+                      stroke="hsl(var(--chart-2))" 
+                      strokeWidth={2}
+                      dot={{ fill: 'hsl(var(--chart-2))' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Quick Insights */}
-        {stats.totalEvents > 0 && (
+          {/* Daily Activity */}
           <Card>
             <CardHeader>
-              <CardTitle>Hızlı Özetler</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Daily Activity
+              </CardTitle>
+              <CardDescription>
+                Last 7 days
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <ChartContainer
+                config={{
+                  events: {
+                    label: 'Events',
+                    color: 'hsl(var(--chart-3))',
+                  },
+                }}
+                className="h-[300px]"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={stats.dailyData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="day" 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <YAxis 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--foreground))' }}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area 
+                      type="monotone" 
+                      dataKey="events" 
+                      stroke="hsl(var(--chart-3))" 
+                      fill="hsl(var(--chart-3))"
+                      fillOpacity={0.2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* Insights */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Insights</CardTitle>
+              <CardDescription>
+                Your productivity patterns
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <div className="font-medium mb-1">En Çok Kullanılan Kategori</div>
-                  <div className="text-2xl font-bold text-primary">
-                    {stats.sortedCategories[0]?.category || '-'}
+                  <div className="text-sm font-medium text-muted-foreground mb-1">
+                    Busiest Day
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {stats.sortedCategories[0]?.count || 0} etkinlik
+                  <div className="text-2xl font-bold">
+                    {stats.busiestDay}
                   </div>
                 </div>
                 
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <div className="font-medium mb-1">Haftalık Ortalama</div>
-                  <div className="text-2xl font-bold text-primary">
-                    {stats.totalEvents > 0 ? Math.round(stats.eventsThisWeek) : 0}
+                  <div className="text-sm font-medium text-muted-foreground mb-1">
+                    Busiest Hour
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    etkinlik/hafta
+                  <div className="text-2xl font-bold">
+                    {stats.busiestHour}
                   </div>
                 </div>
 
-                {stats.totalNotes > 0 && (
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <div className="font-medium mb-1">En Sevilen Not Rengi</div>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full ${colorClasses[stats.sortedColors[0]?.colorKey]}`} />
-                      <div className="text-2xl font-bold text-primary">
-                        {stats.sortedColors[0]?.color || '-'}
-                      </div>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {stats.sortedColors[0]?.count || 0} not
-                    </div>
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <div className="text-sm font-medium text-muted-foreground mb-1">
+                    Average per Week
                   </div>
-                )}
+                  <div className="text-2xl font-bold">
+                    {stats.avgEventsPerWeek}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    events/week
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
-        )}
+        </div>
       </div>
     </div>
   );
