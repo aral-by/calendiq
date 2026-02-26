@@ -1,12 +1,18 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Plus, Trash2 } from 'lucide-react';
+import { useNotes } from '@/context/NoteContext';
+import { StickyNote } from '@/components/Notes/StickyNote';
+import { ColorPicker } from '@/components/Notes/ColorPicker';
+import { NoteColor } from '@/types/note';
 
 export function Notes() {
+  const { notes, createNote, updateNote, deleteNote, clearAllNotes } = useNotes();
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [startPan, setStartPan] = useState({ x: 0, y: 0 });
+  const [selectedColor, setSelectedColor] = useState<NoteColor>('yellow');
 
   const handleZoomIn = () => {
     setScale(prev => Math.min(prev + 0.1, 2));
@@ -50,34 +56,83 @@ export function Notes() {
     setScale(prev => Math.min(Math.max(prev + delta, 0.5), 2));
   };
 
+  const handleAddNote = () => {
+    // Create note in the center of the visible viewport
+    const viewportCenterX = (window.innerWidth / 2 - position.x) / scale;
+    const viewportCenterY = (window.innerHeight / 2 - position.y) / scale;
+
+    createNote({
+      content: '',
+      color: selectedColor,
+      position: {
+        x: viewportCenterX - 128, // Half of note width (256px / 2)
+        y: viewportCenterY - 128, // Half of note height
+      },
+    });
+  };
+
+  const handleClearAll = () => {
+    if (notes.length > 0 && confirm(`Are you sure you want to delete all ${notes.length} notes?`)) {
+      clearAllNotes();
+    }
+  };
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-background">
-      {/* Zoom Controls */}
-      <div className="absolute top-4 right-4 z-50 flex gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleZoomOut}
-          className="bg-background/95 backdrop-blur-sm shadow-lg"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleResetZoom}
-          className="bg-background/95 backdrop-blur-sm shadow-lg"
-        >
-          <Maximize2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleZoomIn}
-          className="bg-background/95 backdrop-blur-sm shadow-lg"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
+      {/* Top Toolbar */}
+      <div className="absolute top-4 left-4 right-4 z-50 flex items-center justify-between gap-4">
+        {/* Left Side - Add Note */}
+        <div className="flex items-center gap-3 bg-background/95 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-border">
+          <ColorPicker selectedColor={selectedColor} onColorChange={setSelectedColor} />
+          <div className="w-px h-8 bg-border" />
+          <Button
+            onClick={handleAddNote}
+            size="sm"
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Note
+          </Button>
+        </div>
+
+        {/* Right Side - Controls */}
+        <div className="flex items-center gap-2">
+          {notes.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearAll}
+              className="bg-background/95 backdrop-blur-sm shadow-lg gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Clear All ({notes.length})
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleZoomOut}
+            className="bg-background/95 backdrop-blur-sm shadow-lg"
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleResetZoom}
+            className="bg-background/95 backdrop-blur-sm shadow-lg"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleZoomIn}
+            className="bg-background/95 backdrop-blur-sm shadow-lg"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Zoom Level Indicator */}
