@@ -4,22 +4,40 @@
 
 Calendiq is a privacy-focused calendar app that runs entirely on your device. Built with React, TypeScript, and IndexedDB, it offers AI-powered event creation through natural language and voice input while keeping all your data local.
 
-**Current MVP:** Optimized for 10.5" tablets (landscape mode). Mobile phone support planned for future releases.
+**Current Status:** Fully responsive design supporting tablets, desktops, and mobile devices.
 
 ## Features
 
 > **Note:** Default language is Turkish (TR). Application is optimized for Turkish users with UTC+3 (Turkey) timezone.
 
+### Core Features
+
 - **Local-First Architecture** - All calendar data stored locally in IndexedDB, no cloud dependency
 - **AI-Powered Event Creation** - Create events using natural language via Groq AI
-- **Voice Input** - Speak your events using Deepgram speech-to-text
+- **Voice Input with Real-Time Visualization** - Speak your events using Groq Whisper API with live audio level indicators and automatic silence detection
+- **Multi-Model AI Support** - Choose from multiple AI models including GPT-4, Claude, DeepSeek, and more
 - **Manual Event Management** - Full CRUD operations without AI
 - **Event Reminders** - Set reminders (5, 10, 15, 30 min, 1 hour, 1 day before) with browser notifications
 - **Conflict Detection** - Automatically warns about overlapping events
 - **PIN Authentication** - Secure 4-digit PIN with SHA-256 hashing
 - **Offline Capable** - Works completely offline for calendar operations
-- **PWA Support** - Install as a native app on tablets
-- **Tablet-Optimized** - MVP designed for 10.5" landscape tablets (mobile support coming soon)
+- **PWA Support** - Install as a native app on any device
+
+### Productivity Features
+
+- **Statistics Dashboard** - Comprehensive analytics with charts showing event distribution, time allocation, and productivity metrics
+- **Quick Search** - Keyboard shortcut (Cmd+K / Ctrl+K) for instant search across all events with fuzzy matching
+- **Sticky Notes** - Quick note-taking feature integrated into the calendar interface
+- **Chat History Management** - Session-based conversation tracking with the ability to create, switch, and manage multiple chat sessions
+- **Mobile Responsive Design** - Fully optimized UI for mobile phones, tablets, and desktop screens with touch-friendly controls
+
+### User Experience
+
+- **Smart Sidebar** - Collapsible navigation with mobile-optimized close button
+- **Markdown Support** - Rich text formatting in AI responses and event descriptions
+- **Greeting System** - Personalized time-based and casual greetings
+- **Loading States** - Visual feedback for AI processing and voice transcription
+- **Error Handling** - User-friendly dialog-based error messages instead of alerts
 
 ## Tech Stack
 
@@ -27,27 +45,31 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 - **React 18** with TypeScript
 - **TailwindCSS** for styling
 - **shadcn/ui** component library
-- **FullCalendar** for calendar views
+- **Recharts** for statistics and data visualization
 - **Dexie.js** for IndexedDB management
 - **Zod** for validation
+- **react-markdown** for rich text rendering
+- **date-fns** for date manipulation
+- **lucide-react** for icons
+- **rrule** for recurring events
 
 ### Backend
 - **Vercel Serverless Functions** for API proxies
-- **Groq API** for AI event management
-- **Deepgram** for speech-to-text
+- **Groq API** for AI model access (llama-3.3-70b-versatile, gpt-4o, claude-sonnet-4, deepseek-r1, and more)
+- **Groq Whisper** (whisper-large-v3-turbo) for speech-to-text with Turkish language support
 
 ### Infrastructure
 - **Vite** for build tooling
 - **Vercel** for deployment
 - **PWA** via Vite PWA Plugin
+- **Web Audio API** for real-time audio visualization
 
 ## Installation
 
 ### Prerequisites
 
 - Node.js 18+ and npm/pnpm
-- Groq API key
-- Deepgram API key
+- Groq API key (get from https://console.groq.com/keys - free tier available)
 - Vercel account (for deployment)
 
 ### Local Development
@@ -65,17 +87,19 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 
 3. **Set up environment variables**
    
-   > **Note:** This project uses Groq API (https://groq.com) for AI capabilities. The API key is already configured in the serverless function.
-   
-   If you need speech-to-text (Deepgram), create a `.env` file:
+   Create a `.env` file:
    ```bash
    cp .env.example .env
    ```
    
-   Edit `.env` and add your Deepgram API key:
+   Edit `.env` and add your Groq API key:
    ```
-   DEEPGRAM_API_KEY=...
+   # Required for both AI chat and voice input
+   VITE_GROQ_API_KEY=your_groq_api_key_here
+   GROQ_API_KEY=your_groq_api_key_here
    ```
+   
+   > **Note:** `VITE_GROQ_API_KEY` is used for development (direct API calls), while `GROQ_API_KEY` is used in production (serverless functions).
 
 4. **Run development server**
    ```bash
@@ -104,9 +128,8 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 4. **Configure environment variables on Vercel**
    - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
    - Add `GROQ_API_KEY` (required - get from https://console.groq.com/keys)
-   - Add `DEEPGRAM_API_KEY` (optional - if using voice features)
    
-   > **Note:** API keys must be configured as environment variables. Never commit API keys to the repository.
+   > **Note:** Never commit API keys to the repository. Always use environment variables.
 
 5. **Deploy to production**
    ```bash
@@ -115,12 +138,16 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 
 ### Install as PWA
 
-**On Tablet:**
-1. Open deployed URL in Safari (iPad) or Chrome (Android tablet)
-2. Tap Share → Add to Home Screen
-3. Launch from home screen for fullscreen experience
+**On Any Device:**
+1. Open deployed URL in your browser (Chrome, Safari, Firefox, Edge)
+2. Look for "Install" or "Add to Home Screen" prompt
+3. Tap/click Install
+4. Launch from home screen or app drawer for fullscreen experience
 
-**On Phone:** Mobile-responsive version coming in future updates
+**Platform-specific:**
+- **iPad/iPhone:** Safari → Share → Add to Home Screen
+- **Android:** Chrome → Menu → Add to Home Screen
+- **Desktop:** Chrome/Edge → Address bar → Install icon
 
 ## Usage
 
@@ -134,26 +161,52 @@ Calendiq is a privacy-focused calendar app that runs entirely on your device. Bu
 ### Creating Events
 
 **Via AI Chat:**
-- Type: "Meeting with Sarah tomorrow at 3pm for 1 hour"
-- Voice: Tap mic → speak your request → confirm → send
+- Type natural language: "Meeting with Sarah tomorrow at 3pm for 1 hour"
+- Voice input: Tap microphone icon → speak your request → automatic transcription after 2 seconds of silence
+- Real-time visualization: Audio bars respond to your voice level during recording
+- Automatic stop: Recording stops automatically after 2 seconds of silence
 
 **Manually:**
 - Click any time slot on the calendar
-- Fill in event details
+- Fill in event details (title, date, time, location, notes, reminders)
 - Save
 
-**Via Chat:**
-Type natural language requests like:
+**Natural Language Examples:**
 - "Lunch with John next Monday at noon"
 - "Dentist appointment on Friday at 2pm"
 - "Team meeting every day at 9am for this week"
+- "Cancel all my meetings tomorrow"
 
 ### Managing Events
 
-- **View:** All events display on the weekly calendar
+- **View:** All events display on the weekly calendar view
 - **Edit:** Click an event → modify details → save
 - **Delete:** Click an event → delete button → confirm
-- **Conflicts:** System warns if events overlap
+- **Conflicts:** System warns if events overlap with existing ones
+- **Search:** Press Cmd+K (Mac) or Ctrl+K (Windows/Linux) to open quick search
+- **Filter:** Search by title, location, or date
+
+### Statistics Dashboard
+
+Access comprehensive analytics:
+- **Overview Cards:** Total events, upcoming events, completed events, today's events, total hours
+- **Event Distribution:** Visual breakdown by category and status
+- **Time Allocation:** Bar chart showing hours spent per category
+- **Weekly Activity:** Line chart tracking event patterns over time
+
+### Chat Features
+
+- **Model Selection:** Choose from multiple AI models (GPT-4, Claude, DeepSeek, etc.)
+- **Session Management:** Create new chat sessions, switch between sessions, view history
+- **Markdown Support:** AI responses support rich text formatting
+- **Voice Input:** Microphone button with real-time audio visualization
+- **Auto-suggestions:** Quick action prompts for common tasks
+
+### Sticky Notes
+
+- Quick note-taking feature accessible from sidebar
+- Perfect for temporary reminders and quick thoughts
+- Integrated with the calendar interface
 
 ## Architecture
 
@@ -199,62 +252,74 @@ See [docs/directory-structure.md](docs/directory-structure.md) for complete stru
 
 ## Development Phases
 
-This project is organized into 11 phases for systematic development:
+This project was developed through systematic phases:
 
 1. **Project Setup & Infrastructure**
 2. **Database Layer & Repository Pattern**
 3. **Authentication & PIN System**
 4. **Calendar UI & Manual CRUD**
 5. **Chat Interface & AI Integration**
-6. **Speech-to-Text Integration (Deepgram)**
+6. **Voice Input Integration (Groq Whisper)**
 7. **Reminder & Notification System**
 8. **Conflict Detection & Validation**
-9. **PWA Configuration & Deployment**
-10. **Testing & Optimization**
-11. **Documentation & Release**
+9. **Statistics Dashboard & Analytics**
+10. **Search Functionality & Quick Actions**
+11. **Mobile Responsive Design**
+12. **PWA Configuration & Deployment**
 
-Each phase has detailed documentation in `docs/phases/`. Complete phases sequentially for best results.
+Each phase built upon the previous, ensuring a solid foundation. See `docs/phases/` for detailed documentation.
 
 ## API Keys
 
 ### Getting Your Keys
 
 **Groq:**
-- This project uses Groq (https://groq.com) for AI capabilities
-- Current model: llama-3.3-70b-versatile
-- API key is already configured for MVP
-- For production, get your own key at https://console.groq.com
+1. Visit https://console.groq.com/
+2. Sign up for a free account (no credit card required)
+3. Navigate to API Keys section
+4. Create a new API key
+5. Copy and save securely
 
-**Deepgram (Optional):**
-1. Go to https://console.deepgram.com/
-2. Create an API key
-3. Copy and save securely
+**Free Tier Benefits:**
+- 14,400 requests per day
+- Access to multiple models including:
+  - llama-3.3-70b-versatile (default)
+  - gpt-4o
+  - claude-sonnet-4
+  - deepseek-r1-distill-llama-70b
+  - whisper-large-v3-turbo (for voice)
 
 ### Security
 
-- API keys should be stored in Vercel environment variables for production
-- Frontend bundle contains **no** API keys in production setupriables
-- Frontend bundle contains **no** API keys
-- All API calls go through serverless proxy functions
+- API keys are stored in environment variables, never in code
+- Production uses serverless proxy functions to protect keys
+- Development mode supports direct API calls for faster iteration
+- Frontend bundle contains no API keys in production build
+- All sensitive operations go through secure serverless endpoints
 
 ## Browser Support
 
-- **Recommended:** Safari on iPad, Chrome on Android tablets/phones
-- **Requirements:** Modern browser with IndexedDB support
-- **MVP Tested on:** iPad (10.5"), Android tablets (10.1")
-- **Mobile Support:** Coming soon
+- **Recommended:** Chrome, Safari, Edge, Firefox (latest versions)
+- **Requirements:** 
+  - Modern browser with IndexedDB support
+  - Web Audio API support (for voice input)
+  - MediaRecorder API support (for voice recording)
+- **Tested on:** 
+  - Desktop: Chrome, Safari, Edge, Firefox
+  - Mobile: Safari (iOS), Chrome (Android)
+  - Tablets: iPad, Android tablets
 
 ## Known Limitations
 
 This is an MVP with intentional scope limitations:
 
-- No recurring events
-- No cloud sync
-- Single user only
-- No PIN recovery
-- No timezone management
-- Mobile phone UI not yet optimized (tablet-first MVP)
-- No calendar import/export
+- **Authentication:** No PIN recovery mechanism
+- **Data Management:** No cloud sync or backup
+- **User Management:** Single user only
+- **Events:** Limited recurring event support
+- **Timezone:** Fixed UTC+3 (Turkey timezone)
+- **Export/Import:** No calendar file export/import
+- **Offline Voice:** Voice transcription requires internet connection (Groq API)
 
 See [docs/known-limitations.md](docs/phases/phase-10.md#known-limitations) for complete list.
 
