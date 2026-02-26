@@ -12,6 +12,7 @@ import { AssistantChat } from '@/components/Chat/AssistantChat';
 import { Calendar } from '@/components/Calendar';
 import { Search } from '@/pages/Search';
 import { Notes } from '@/pages/Notes';
+import { Statistics } from '@/pages/Statistics';
 import { CursorProvider, Cursor } from '@/components/animate-ui/components/animate/cursor';
 
 function AppContent() {
@@ -101,7 +102,7 @@ function AppContent() {
             {currentPage === 'calendar' && <Calendar />}
             {currentPage === 'ai-chat' && <AssistantChat />}
             {currentPage === 'notes' && <Notes />}
-            {currentPage === 'statistics' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Statistics Page</h1></div>}
+            {currentPage === 'statistics' && <Statistics />}
           </MainLayout>
         </ChatHistoryProvider>
       </NoteProvider>
