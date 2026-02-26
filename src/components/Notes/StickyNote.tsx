@@ -4,6 +4,16 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Trash2, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ColorPicker } from './ColorPicker';
@@ -28,6 +38,7 @@ export function StickyNote({ note, onUpdate, onDelete, scale }: StickyNoteProps)
   const [isDragging, setIsDragging] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingContent, setIsEditingContent] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -120,6 +131,15 @@ export function StickyNote({ note, onUpdate, onDelete, scale }: StickyNoteProps)
     onUpdate(note.id, { color });
   };
 
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    onDelete(note.id);
+    setShowDeleteDialog(false);
+  };
+
   return (
     <div
       ref={noteRef}
@@ -150,7 +170,7 @@ export function StickyNote({ note, onUpdate, onDelete, scale }: StickyNoteProps)
               variant="ghost"
               size="icon"
               className="h-6 w-6 hover:bg-red-500/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-              onClick={() => onDelete(note.id)}
+              onClick={handleDeleteClick}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
