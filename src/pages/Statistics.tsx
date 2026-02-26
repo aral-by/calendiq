@@ -163,78 +163,78 @@ export function Statistics() {
   }, [events, notes]);
 
   return (
-    <div className="h-full w-full overflow-y-auto p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="h-full w-full overflow-y-auto p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
         {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Statistics</h1>
-          <p className="text-muted-foreground">
+        <div className="space-y-1 md:space-y-2">
+          <h1 className="text-2xl md:text-3xl font-bold">Statistics</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Your event and productivity insights
           </p>
         </div>
 
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 md:pb-2">
+              <CardTitle className="text-xs md:text-sm font-medium">Total Events</CardTitle>
+              <Calendar className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalEvents}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="pb-3 md:pb-6">
+              <div className="text-xl md:text-2xl font-bold">{stats.totalEvents}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">
                 All time
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Week</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 md:pb-2">
+              <CardTitle className="text-xs md:text-sm font-medium">This Week</CardTitle>
+              <Activity className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.eventsThisWeek}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="pb-3 md:pb-6">
+              <div className="text-xl md:text-2xl font-bold">{stats.eventsThisWeek}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">
                 {format(new Date(), 'MMM d')} - {format(endOfWeek(new Date()), 'MMM d')}
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 md:pb-2">
+              <CardTitle className="text-xs md:text-sm font-medium">This Month</CardTitle>
+              <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.eventsThisMonth}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="pb-3 md:pb-6">
+              <div className="text-xl md:text-2xl font-bold">{stats.eventsThisMonth}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">
                 {format(new Date(), 'MMMM')}
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 md:pb-2">
+              <CardTitle className="text-xs md:text-sm font-medium">Upcoming</CardTitle>
+              <Clock className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.upcomingEvents}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="pb-3 md:pb-6">
+              <div className="text-xl md:text-2xl font-bold">{stats.upcomingEvents}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">
                 Next 7 days
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Notes</CardTitle>
-              <StickyNote className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 md:pb-2">
+              <CardTitle className="text-xs md:text-sm font-medium">Notes</CardTitle>
+              <StickyNote className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalNotes}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="pb-3 md:pb-6">
+              <div className="text-xl md:text-2xl font-bold">{stats.totalNotes}</div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">
                 Sticky notes
               </p>
             </CardContent>
@@ -242,15 +242,15 @@ export function Statistics() {
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {/* Category Distribution */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
                 Category Distribution
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs md:text-sm">
                 Events by category
               </CardDescription>
             </CardHeader>
@@ -263,8 +263,8 @@ export function Statistics() {
                       color: 'hsl(var(--chart-1))',
                     },
                   }}
-                  className="h-[300px]"
-                >
+                  className="h-[200px] md:h-[300px]">
+                
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats.categoryData}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -283,7 +283,7 @@ export function Statistics() {
                   </ResponsiveContainer>
                 </ChartContainer>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[200px] md:h-[300px] flex items-center justify-center text-xs md:text-sm text-muted-foreground">
                   No events yet
                 </div>
               )}
@@ -293,11 +293,11 @@ export function Statistics() {
           {/* Weekly Trend */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
                 Weekly Trend
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs md:text-sm">
                 Last 4 weeks activity
               </CardDescription>
             </CardHeader>
@@ -340,11 +340,11 @@ export function Statistics() {
           {/* Daily Activity */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <Activity className="h-4 w-4 md:h-5 md:w-5" />
                 Daily Activity
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs md:text-sm">
                 Last 7 days
               </CardDescription>
             </CardHeader>
@@ -387,36 +387,36 @@ export function Statistics() {
           {/* Insights */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Insights</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-base md:text-lg">Quick Insights</CardTitle>
+              <CardDescription className="text-xs md:text-sm">
                 Your productivity patterns
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <div className="text-sm font-medium text-muted-foreground mb-1">
+              <div className="space-y-3 md:space-y-4">
+                <div className="p-3 md:p-4 rounded-lg bg-muted/50">
+                  <div className="text-xs md:text-sm font-medium text-muted-foreground mb-1">
                     Busiest Day
                   </div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl md:text-2xl font-bold">
                     {stats.busiestDay}
                   </div>
                 </div>
                 
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <div className="text-sm font-medium text-muted-foreground mb-1">
+                <div className="p-3 md:p-4 rounded-lg bg-muted/50">
+                  <div className="text-xs md:text-sm font-medium text-muted-foreground mb-1">
                     Busiest Hour
                   </div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl md:text-2xl font-bold">
                     {stats.busiestHour}
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <div className="text-sm font-medium text-muted-foreground mb-1">
+                <div className="p-3 md:p-4 rounded-lg bg-muted/50">
+                  <div className="text-xs md:text-sm font-medium text-muted-foreground mb-1">
                     Average per Week
                   </div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl md:text-2xl font-bold">
                     {stats.avgEventsPerWeek}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
