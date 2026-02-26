@@ -62,6 +62,7 @@ export function Notes() {
     const viewportCenterY = (window.innerHeight / 2 - position.y) / scale;
 
     createNote({
+      title: '',
       content: '',
       color: selectedColor,
       position: {

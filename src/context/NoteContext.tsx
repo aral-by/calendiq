@@ -25,6 +25,7 @@ export function NoteProvider({ children }: { children: ReactNode }) {
   const createNote = (input: CreateNoteInput): Note => {
     const newNote: Note = {
       id: `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title: input.title,
       content: input.content,
       color: input.color,
       position: input.position,
