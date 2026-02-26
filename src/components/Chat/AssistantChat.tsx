@@ -160,6 +160,8 @@ export function AssistantChat() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const silenceStartTimeRef = useRef<number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   
   const { user } = useUser();
   const { currentSession, currentSessionId, createNewSession, switchSession, addMessage } = useChatHistory();
@@ -597,7 +599,7 @@ export function AssistantChat() {
 
   const handleVoiceInput = async () => {
     if (isRecording) {
-      // Stop recording
+      // Stop recording manually
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
@@ -607,8 +609,11 @@ export function AssistantChat() {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
       setIsRecording(false);
-      setAudioLevel(0);
+      // Don't reset audioLevel here - let it animate during processing
       return;
     }
 
@@ -625,14 +630,55 @@ export function AssistantChat() {
       
       audioContextRef.current = audioContext;
       analyserRef.current = analyser;
+      streamRef.current = stream;
+      silenceStartTimeRef.current = null; // Reset silence timer
       
-      // Visualize audio level
+      // Silence detection constants
+      const SILENCE_THRESHOLD = 0.02; // Audio level threshold
+      const SILENCE_DURATION = 2000; // 2 seconds of silence
+      
+      // Auto-stop function
+      const stopRecording = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop();
+        }
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+        }
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+        setIsRecording(false);
+      };
+      
+      // Visualize audio level with silence detection
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       const updateLevel = () => {
         if (analyserRef.current) {
           analyserRef.current.getByteFrequencyData(dataArray);
           const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-          setAudioLevel(average / 255); // Normalize to 0-1
+          const normalizedLevel = average / 255; // Normalize to 0-1
+          
+          setAudioLevel(normalizedLevel);
+          
+          // Silence detection logic
+          if (normalizedLevel > SILENCE_THRESHOLD) {
+            // Sound detected - reset silence timer
+            silenceStartTimeRef.current = null;
+          } else {
+            // Silence detected
+            if (silenceStartTimeRef.current === null) {
+              silenceStartTimeRef.current = Date.now();
+            } else {
+              const silenceDuration = Date.now() - silenceStartTimeRef.current;
+              if (silenceDuration >= SILENCE_DURATION) {
+                // Auto-stop after silence duration
+                stopRecording();
+                return;
+              }
+            }
+          }
+          
           animationFrameRef.current = requestAnimationFrame(updateLevel);
         }
       };
@@ -650,34 +696,76 @@ export function AssistantChat() {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         
         // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+        }
         
         // Send to Groq Whisper API
         try {
           setIsLoading(true);
-          const formData = new FormData();
-          formData.append('file', audioBlob, 'audio.webm');
           
-          const response = await fetch('/api/transcribe', {
-            method: 'POST',
-            body: formData,
-          });
+          // In development, call Groq API directly
+          // In production, use serverless function
+          const isDev = import.meta.env.DEV;
           
-          if (!response.ok) {
-            throw new Error('Transcription failed');
+          if (isDev) {
+            // Direct Groq API call (development)
+            const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
+            if (!groqApiKey) {
+              throw new Error('VITE_GROQ_API_KEY is not set. Please add it to your .env file.');
+            }
+            
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'audio.webm');
+            formData.append('model', 'whisper-large-v3-turbo');
+            formData.append('language', 'tr');
+            formData.append('response_format', 'json');
+            
+            const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${groqApiKey}`,
+              },
+              body: formData,
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('Groq API error:', errorText);
+              throw new Error('Transcription failed');
+            }
+            
+            const data = await response.json();
+            setMessage(data.text);
+          } else {
+            // Use serverless function (production)
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'audio.webm');
+            
+            const response = await fetch('/api/transcribe', {
+              method: 'POST',
+              body: formData,
+            });
+            
+            if (!response.ok) {
+              throw new Error('Transcription failed');
+            }
+            
+            const data = await response.json();
+            setMessage(data.text);
           }
-          
-          const data = await response.json();
-          setMessage(data.text);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Transcription error:', error);
           setErrorDialog({
             open: true,
             title: 'Ses Çevirme Hatası',
-            description: 'Ses çevirme başarısız oldu. Lütfen tekrar deneyin.'
+              description: error.message?.includes('VITE_GROQ_API_KEY') 
+              ? 'API anahtarı ayarlanmamış. Lütfen .env dosyasına VITE_GROQ_API_KEY ekleyin.' 
+              : 'Ses çevirme başarısız oldu. Lütfen tekrar deneyin.'
           });
         } finally {
           setIsLoading(false);
+          setAudioLevel(0); // Reset audio level after processing
         }
       };
       
@@ -882,31 +970,38 @@ export function AssistantChat() {
               onClick={handleVoiceInput}
               variant="ghost"
               size="icon"
-              className={`shrink-0 rounded-full relative ${isRecording ? 'bg-red-500 hover:bg-red-600' : ''}`}
-              title={isRecording ? "Stop recording" : "Voice input"}
+              className={`shrink-0 rounded-full relative ${
+                isRecording 
+                  ? 'bg-red-500 hover:bg-red-600' 
+                  : isLoading && audioLevel > 0 
+                    ? 'bg-blue-500' 
+                    : ''
+              }`}
+              title={isRecording ? "Kaydı durdur" : "Sesli giriş"}
+              disabled={isLoading && audioLevel === 0}
             >
-              {isRecording ? (
+              {(isRecording || (isLoading && audioLevel > 0)) ? (
                 <div className="relative h-5 w-5 flex items-center justify-center gap-0.5">
                   {/* Audio visualization bars */}
                   <div 
-                    className="w-0.5 bg-white rounded-full transition-all duration-75"
-                    style={{ height: `${Math.max(30, audioLevel * 100)}%` }}
+                    className="w-0.5 bg-white rounded-full transition-all duration-100 ease-out"
+                    style={{ height: `${Math.max(20, Math.min(90, audioLevel * 150 * 0.7))}%` }}
                   />
                   <div 
-                    className="w-0.5 bg-white rounded-full transition-all duration-75"
-                    style={{ height: `${Math.max(40, audioLevel * 100 * 0.8)}%` }}
+                    className="w-0.5 bg-white rounded-full transition-all duration-100 ease-out"
+                    style={{ height: `${Math.max(30, Math.min(90, audioLevel * 150 * 1.0))}%` }}
                   />
                   <div 
-                    className="w-0.5 bg-white rounded-full transition-all duration-75"
-                    style={{ height: `${Math.max(50, audioLevel * 100 * 1.2)}%` }}
+                    className="w-0.5 bg-white rounded-full transition-all duration-100 ease-out"
+                    style={{ height: `${Math.max(40, Math.min(90, audioLevel * 150 * 1.3))}%` }}
                   />
                   <div 
-                    className="w-0.5 bg-white rounded-full transition-all duration-75"
-                    style={{ height: `${Math.max(40, audioLevel * 100 * 0.9)}%` }}
+                    className="w-0.5 bg-white rounded-full transition-all duration-100 ease-out"
+                    style={{ height: `${Math.max(30, Math.min(90, audioLevel * 150 * 0.9))}%` }}
                   />
                   <div 
-                    className="w-0.5 bg-white rounded-full transition-all duration-75"
-                    style={{ height: `${Math.max(30, audioLevel * 100 * 0.7)}%` }}
+                    className="w-0.5 bg-white rounded-full transition-all duration-100 ease-out"
+                    style={{ height: `${Math.max(20, Math.min(90, audioLevel * 150 * 0.6))}%` }}
                   />
                 </div>
               ) : (
