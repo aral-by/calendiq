@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { Note, NoteColor, CreateNoteInput, UpdateNoteInput } from '@/types/note';
+import { Note, CreateNoteInput, UpdateNoteInput } from '@/types/note';
 
 interface NoteContextType {
   notes: Note[];
