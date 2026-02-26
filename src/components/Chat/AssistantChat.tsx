@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Mic, ArrowUp, Calendar, Clock, MapPin } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { useChatHistory } from '@/context/ChatHistoryContext';
@@ -148,6 +149,13 @@ export function AssistantChat() {
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
+  
+  // Error dialog state
+  const [errorDialog, setErrorDialog] = useState<{ open: boolean; title: string; description: string }>({ 
+    open: false, 
+    title: '', 
+    description: '' 
+  });
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -663,7 +671,11 @@ export function AssistantChat() {
           setMessage(data.text);
         } catch (error) {
           console.error('Transcription error:', error);
-          alert('Ses çevirme başarısız oldu. Lütfen tekrar deneyin.');
+          setErrorDialog({
+            open: true,
+            title: 'Ses Çevirme Hatası',
+            description: 'Ses çevirme başarısız oldu. Lütfen tekrar deneyin.'
+          });
         } finally {
           setIsLoading(false);
         }
@@ -674,7 +686,11 @@ export function AssistantChat() {
       setIsRecording(true);
     } catch (error) {
       console.error('Microphone access error:', error);
-      alert('Mikrofon erişimi reddedildi. Lütfen tarayıcı izinlerini kontrol edin.');
+      setErrorDialog({
+        open: true,
+        title: 'Mikrofon Erişimi Reddedildi',
+        description: 'Mikrofon erişimi için tarayıcı izinlerini kontrol edin ve sayfayı yenileyin.'
+      });
     }
   };
 
