@@ -130,46 +130,73 @@ export function StickyNote({ note, onUpdate, onDelete, scale }: StickyNoteProps)
     >
       <Card
         className={cn(
-          'w-64 min-h-64 p-4 border-2 shadow-lg transition-all duration-200',
+          'w-64 p-4 border-2 shadow-lg transition-all duration-200',
           colorStyles[note.color],
           isDragging && 'scale-105 shadow-xl rotate-1',
           'hover:shadow-xl'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-3 -mt-1">
+        <div className="flex items-center justify-between mb-2 -mt-1">
           <div className="drag-handle cursor-grab active:cursor-grabbing p-1 -ml-2 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors">
             <GripVertical className="w-4 h-4 text-muted-foreground" />
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 hover:bg-red-500/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-            onClick={() => onDelete(note.id)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <ColorPicker selectedColor={note.color} onColorChange={handleColorChange} />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 hover:bg-red-500/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              onClick={() => onDelete(note.id)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="mb-3">
+          {isEditingTitle ? (
+            <Input
+              ref={titleInputRef}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleSaveTitle}
+              onKeyDown={handleTitleKeyDown}
+              className="h-8 px-2 text-sm font-semibold bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="Title..."
+            />
+          ) : (
+            <div
+              className="px-2 py-1 text-sm font-semibold cursor-text hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors min-h-[32px] flex items-center"
+              onClick={() => setIsEditingTitle(true)}
+            >
+              {note.title || (
+                <span className="text-muted-foreground italic font-normal">Click to add title...</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Content */}
-        <div className="min-h-[180px]">
-          {isEditing ? (
+        <div className="min-h-[150px]">
+          {isEditingContent ? (
             <Textarea
               ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              onBlur={handleSave}
-              onKeyDown={handleKeyDown}
+              onBlur={handleSaveContent}
+              onKeyDown={handleContentKeyDown}
               className={cn(
-                'min-h-[180px] resize-none border-none p-2 -mx-2 text-sm bg-transparent',
+                'min-h-[150px] resize-none border-none p-2 -mx-2 text-sm bg-transparent',
                 'focus-visible:ring-0 focus-visible:ring-offset-0'
               )}
               placeholder="Write your note..."
             />
           ) : (
             <div
-              className="min-h-[180px] p-2 -mx-2 text-sm whitespace-pre-wrap break-words cursor-text hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
-              onClick={() => setIsEditing(true)}
+              className="min-h-[150px] p-2 -mx-2 text-sm whitespace-pre-wrap break-words cursor-text hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
+              onClick={() => setIsEditingContent(true)}
             >
               {note.content || (
                 <span className="text-muted-foreground italic">Click to edit...</span>
