@@ -164,15 +164,34 @@ export function Notes() {
           }}
           className="relative h-full w-full"
         >
-          {/* Sticky notes will be added here */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
-            <div className="text-center space-y-4">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Notes Canvas
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Drag to pan • Scroll to zoom
-              </p>
+          {/* Sticky Notes */}
+          {notes.map((note) => (
+            <StickyNote
+              key={note.id}
+              note={note}
+              onUpdate={updateNote}
+              onDelete={deleteNote}
+              scale={scale}
+            />
+          ))}
+
+          {/* Empty State */}
+          {notes.length === 0 && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+              <div className="text-center space-y-4">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                  Notes Canvas
+                </h1>
+                <p className="text-muted-foreground text-lg">
+                  Click "Add Note" to create your first sticky note
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Drag to pan • Scroll to zoom • Drag notes to move
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
             </div>
           </div>
         </div>

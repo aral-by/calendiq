@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { UserProvider, useUser } from '@/context/UserContext';
 import { EventProvider } from '@/context/EventContext';
 import { ChatHistoryProvider } from '@/context/ChatHistoryContext';
+import { NoteProvider } from '@/context/NoteContext';
 import { SetupWizard } from '@/components/Setup/SetupWizard';
 import { WelcomeScreen } from '@/components/Welcome/WelcomeScreen';
 import { PINScreen } from '@/components/PIN/PINScreen';
@@ -92,16 +93,18 @@ function AppContent() {
 
   return (
     <EventProvider>
-      <ChatHistoryProvider>
-        <MainLayout currentPage={currentPage} onNavigate={handleNavigate}>
-          {currentPage === 'dashboard' && <Dashboard onNavigate={handleDashboardCardClick} />}
-          {currentPage === 'search' && <Search />}
-          {currentPage === 'calendar' && <Calendar />}
-          {currentPage === 'ai-chat' && <AssistantChat />}
-          {currentPage === 'notes' && <Notes />}
-          {currentPage === 'statistics' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Statistics Page</h1></div>}
-        </MainLayout>
-      </ChatHistoryProvider>
+      <NoteProvider>
+        <ChatHistoryProvider>
+          <MainLayout currentPage={currentPage} onNavigate={handleNavigate}>
+            {currentPage === 'dashboard' && <Dashboard onNavigate={handleDashboardCardClick} />}
+            {currentPage === 'search' && <Search />}
+            {currentPage === 'calendar' && <Calendar />}
+            {currentPage === 'ai-chat' && <AssistantChat />}
+            {currentPage === 'notes' && <Notes />}
+            {currentPage === 'statistics' && <div className="flex items-center justify-center h-full"><h1 className="text-2xl font-bold">Statistics Page</h1></div>}
+          </MainLayout>
+        </ChatHistoryProvider>
+      </NoteProvider>
     </EventProvider>
   );
 }
