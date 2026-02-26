@@ -1,11 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { Readable } from 'stream';
 import formidable from 'formidable';
 import fs from 'fs';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
 
-// Disable default body parser
+// Disable default body parser (required for formidable)
 export const config = {
   api: {
     bodyParser: false,
