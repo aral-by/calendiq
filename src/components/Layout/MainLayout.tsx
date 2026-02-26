@@ -1,5 +1,5 @@
 import { useState, ReactNode, useEffect } from 'react';
-import { Calendar, Sun, Moon, TrendingUp, Home, Sparkles, ChevronUp, ChevronDown, User, Settings, LogOut, Bell, Search, MessageSquare, Trash2, NotebookPen } from 'lucide-react';
+import { Calendar, Sun, Moon, TrendingUp, Home, Sparkles, ChevronUp, ChevronDown, User, Settings, LogOut, Bell, Search, MessageSquare, Trash2, NotebookPen, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useUser } from '@/context/UserContext';
 import { useChatHistory } from '@/context/ChatHistoryContext';
@@ -29,6 +29,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   Collapsible,
