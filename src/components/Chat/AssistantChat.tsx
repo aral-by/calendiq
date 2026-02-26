@@ -145,6 +145,14 @@ export function AssistantChat() {
   const [isAgentRunning, setIsAgentRunning] = useState(false);
   const agentRef = useRef<CalendarAgent | null>(null);
   
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioLevel, setAudioLevel] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  
   const { user } = useUser();
   const { currentSession, currentSessionId, createNewSession, switchSession, addMessage } = useChatHistory();
   const { events, createEvent, updateEvent, deleteEvent } = useEvents();
@@ -579,9 +587,95 @@ export function AssistantChat() {
     setMessage(prompt);
   };
 
-  const handleVoiceInput = () => {
-    // TODO: Implement voice input (Phase 6 - Deepgram integration)
-    console.log('Voice input will be implemented in Phase 6');
+  const handleVoiceInput = async () => {
+    if (isRecording) {
+      // Stop recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      setIsRecording(false);
+      setAudioLevel(0);
+      return;
+    }
+
+    try {
+      // Start recording
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Setup audio context for visualization
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(stream);
+      microphone.connect(analyser);
+      analyser.fftSize = 256;
+      
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+      
+      // Visualize audio level
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const updateLevel = () => {
+        if (analyserRef.current) {
+          analyserRef.current.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+          setAudioLevel(average / 255); // Normalize to 0-1
+          animationFrameRef.current = requestAnimationFrame(updateLevel);
+        }
+      };
+      updateLevel();
+      
+      // Setup MediaRecorder
+      const mediaRecorder = new MediaRecorder(stream);
+      const audioChunks: Blob[] = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Send to Groq Whisper API
+        try {
+          setIsLoading(true);
+          const formData = new FormData();
+          formData.append('file', audioBlob, 'audio.webm');
+          
+          const response = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (!response.ok) {
+            throw new Error('Transcription failed');
+          }
+          
+          const data = await response.json();
+          setMessage(data.text);
+        } catch (error) {
+          console.error('Transcription error:', error);
+          alert('Ses çevirme başarısız oldu. Lütfen tekrar deneyin.');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Microphone access error:', error);
+      alert('Mikrofon erişimi reddedildi. Lütfen tarayıcı izinlerini kontrol edin.');
+    }
   };
 
   return (

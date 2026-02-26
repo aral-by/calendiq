@@ -6,6 +6,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { Brain } from 'lucide-react';
 
 export type AIModel = 
   | 'openai/gpt-oss-120b'
@@ -22,164 +23,73 @@ interface ModelSelectorProps {
 }
 
 export function ModelSelector({ selectedModel, onModelChange }: ModelSelectorProps) {
-  // Determine which logo to show based on selected model
-  const renderTriggerIcon = () => {
-    if (selectedModel.startsWith('openai/gpt-oss')) {
-      // DeepSeek model
-      return (
-        <div className="h-5 w-5 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-          <span className="text-white text-[10px] font-bold">DS</span>
-        </div>
-      );
-    }
-    if (selectedModel.startsWith('mixtral')) {
-      // Use a distinct icon for Mixtral (we could add a Mistral logo later)
-      return (
-        <img 
-          src="/icons/llama-logo.png" 
-          alt="Mixtral"
-          className="h-5 w-5 dark:invert"
-        />
-      );
-    }
-    if (selectedModel.startsWith('gemma')) {
-      // Use a distinct icon for Gemma (we could add a Google/Gemma logo later)
-      return (
-        <img 
-          src="/icons/llama-logo.png" 
-          alt="Gemma"
-          className="h-5 w-5 dark:invert"
-        />
-      );
-    }
-    // For llama models (default)
-    return (
-      <img 
-        src="/icons/llama-logo.png" 
-        alt="Llama"
-        className="h-5 w-5 dark:invert"
-      />
-    );
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="shrink-0 rounded-full"
+          className="h-7 w-7 shrink-0 rounded-full"
           title="Select AI Model"
         >
-          {renderTriggerIcon()}
+          <Brain className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-48">
+      <DropdownMenuContent align="start" className="w-36">
         {/* DeepSeek V3 - Premium Model */}
         <DropdownMenuItem
           onClick={() => onModelChange('openai/gpt-oss-120b')}
-          className={`px-2 py-1.5 ${selectedModel === 'openai/gpt-oss-120b' ? 'bg-accent' : ''}`}
+          className={`px-1.5 py-1 ${selectedModel === 'openai/gpt-oss-120b' ? 'bg-accent' : ''}`}
         >
-          <div className="flex items-center gap-1.5">
-            <div className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white text-[8px] font-bold">DS</span>
-            </div>
-            <span className="text-sm font-medium">DeepSeek V3 120B</span>
-            <span className="ml-auto text-[10px] text-muted-foreground">GPT-4</span>
-          </div>
+          <span className="text-xs">DeepSeek V3</span>
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator className="my-1" />
+        <DropdownMenuSeparator className="my-0.5" />
         
-        {/* Llama 3.3 Models */}
+        {/* Llama Models */}
         <DropdownMenuItem
           onClick={() => onModelChange('llama-3.3-70b-versatile')}
-          className={`px-2 py-1.5 ${selectedModel === 'llama-3.3-70b-versatile' ? 'bg-accent' : ''}`}
+          className={`px-1.5 py-1 ${selectedModel === 'llama-3.3-70b-versatile' ? 'bg-accent' : ''}`}
         >
-          <div className="flex items-center gap-1.5">
-            <img 
-              src="/icons/llama-logo.png" 
-              alt="Llama"
-              className="h-3.5 w-3.5 dark:invert"
-            />
-            <span className="text-sm">Llama 70B</span>
-          </div>
+          <span className="text-xs">Llama 70B</span>
         </DropdownMenuItem>
         
         <DropdownMenuItem
           onClick={() => onModelChange('llama-3.1-8b-instant')}
-          className={`px-2 py-1.5 ${selectedModel === 'llama-3.1-8b-instant' ? 'bg-accent' : ''}`}
+          className={`px-1.5 py-1 ${selectedModel === 'llama-3.1-8b-instant' ? 'bg-accent' : ''}`}
         >
-          <div className="flex items-center gap-1.5">
-            <img 
-              src="/icons/llama-logo.png" 
-              alt="Llama"
-              className="h-3.5 w-3.5 dark:invert"
-            />
-            <span className="text-sm">Llama 8B</span>
-          </div>
+          <span className="text-xs">Llama 8B</span>
         </DropdownMenuItem>
-
-        <DropdownMenuSeparator className="my-1" />
         
-        {/* Llama 3.2 Models */}
         <DropdownMenuItem
           onClick={() => onModelChange('llama-3.2-90b-text-preview')}
-          className={`px-2 py-1.5 ${selectedModel === 'llama-3.2-90b-text-preview' ? 'bg-accent' : ''}`}
+          className={`px-1.5 py-1 ${selectedModel === 'llama-3.2-90b-text-preview' ? 'bg-accent' : ''}`}
         >
-          <div className="flex items-center gap-1.5">
-            <img 
-              src="/icons/llama-logo.png" 
-              alt="Llama"
-              className="h-3.5 w-3.5 dark:invert"
-            />
-            <span className="text-sm">Llama 90B</span>
-          </div>
+          <span className="text-xs">Llama 90B</span>
         </DropdownMenuItem>
         
         <DropdownMenuItem
           onClick={() => onModelChange('llama-3.2-11b-text-preview')}
-          className={`px-2 py-1.5 ${selectedModel === 'llama-3.2-11b-text-preview' ? 'bg-accent' : ''}`}
+          className={`px-1.5 py-1 ${selectedModel === 'llama-3.2-11b-text-preview' ? 'bg-accent' : ''}`}
         >
-          <div className="flex items-center gap-1.5">
-            <img 
-              src="/icons/llama-logo.png" 
-              alt="Llama"
-              className="h-3.5 w-3.5 dark:invert"
-            />
-            <span className="text-sm">Llama 11B</span>
-          </div>
+          <span className="text-xs">Llama 11B</span>
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator className="my-1" />
+        <DropdownMenuSeparator className="my-0.5" />
         
         {/* Other Models */}
         <DropdownMenuItem
           onClick={() => onModelChange('mixtral-8x7b-32768')}
-          className={`px-2 py-1.5 ${selectedModel === 'mixtral-8x7b-32768' ? 'bg-accent' : ''}`}
+          className={`px-1.5 py-1 ${selectedModel === 'mixtral-8x7b-32768' ? 'bg-accent' : ''}`}
         >
-          <div className="flex items-center gap-1.5">
-            <img 
-              src="/icons/llama-logo.png" 
-              alt="Mixtral"
-              className="h-3.5 w-3.5 dark:invert"
-            />
-            <span className="text-sm">Mixtral 8x7B</span>
-          </div>
+          <span className="text-xs">Mixtral 8x7B</span>
         </DropdownMenuItem>
         
         <DropdownMenuItem
           onClick={() => onModelChange('gemma2-9b-it')}
-          className={`px-2 py-1.5 ${selectedModel === 'gemma2-9b-it' ? 'bg-accent' : ''}`}
+          className={`px-1.5 py-1 ${selectedModel === 'gemma2-9b-it' ? 'bg-accent' : ''}`}
         >
-          <div className="flex items-center gap-1.5">
-            <img 
-              src="/icons/llama-logo.png" 
-              alt="Gemma"
-              className="h-3.5 w-3.5 dark:invert"
-            />
-            <span className="text-sm">Gemma 9B</span>
-          </div>
+          <span className="text-xs">Gemma 9B</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
