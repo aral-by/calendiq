@@ -26,18 +26,28 @@ const colorStyles: Record<NoteColor, string> = {
 
 export function StickyNote({ note, onUpdate, onDelete, scale }: StickyNoteProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingContent, setIsEditingContent] = useState(false);
+  const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const noteRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+      titleInputRef.current.select();
+    }
+  }, [isEditingTitle]);
+
+  useEffect(() => {
+    if (isEditingContent && textareaRef.current) {
       textareaRef.current.focus();
       textareaRef.current.setSelectionRange(content.length, content.length);
     }
-  }, [isEditing]);
+  }, [isEditingContent]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.drag-handle')) {
@@ -73,18 +83,38 @@ export function StickyNote({ note, onUpdate, onDelete, scale }: StickyNoteProps)
     }
   }, [isDragging, dragStart, scale]);
 
-  const handleSave = () => {
+  const handleSaveTitle = () => {
+    if (title.trim() !== note.title) {
+      onUpdate(note.id, { title: title.trim() });
+    }
+    setIsEditingTitle(false);
+  };
+
+  const handleSaveContent = () => {
     if (content.trim() !== note.content) {
       onUpdate(note.id, { content: content.trim() });
     }
-    setIsEditing(false);
+    setIsEditingContent(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveTitle();
+    } else if (e.key === 'Escape') {
+      setTitle(note.title);
+      setIsEditingTitle(false);
+    }
+  };
+
+  const handleContentKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       setContent(note.content);
-      setIsEditing(false);
+      setIsEditingContent(false);
     }
+  };
+
+  const handleColorChange = (color: NoteColor) => {
+    onUpdate(note.id, { color });
   };
 
   return (
