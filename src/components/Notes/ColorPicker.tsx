@@ -1,5 +1,4 @@
 import { NoteColor } from '@/types/note';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface ColorPickerProps {
@@ -18,16 +17,15 @@ const colors: { value: NoteColor; label: string; class: string }[] = [
 
 export function ColorPicker({ selectedColor, onColorChange }: ColorPickerProps) {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-1">
       {colors.map((color) => (
-        <Button
+        <button
           key={color.value}
-          variant="outline"
-          size="icon"
+          type="button"
           className={cn(
-            'w-8 h-8 rounded-full border-2 transition-all',
+            'w-5 h-5 rounded-full border transition-all hover:scale-110',
             color.class,
-            selectedColor === color.value && 'ring-2 ring-offset-2 ring-primary scale-110'
+            selectedColor === color.value && 'ring-1 ring-offset-1 ring-foreground scale-105'
           )}
           onClick={() => onColorChange(color.value)}
           title={color.label}

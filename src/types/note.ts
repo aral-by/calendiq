@@ -2,6 +2,7 @@ export type NoteColor = 'yellow' | 'pink' | 'blue' | 'green' | 'purple' | 'orang
 
 export interface Note {
   id: string;
+  title: string;
   content: string;
   color: NoteColor;
   position: {
