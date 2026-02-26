@@ -866,10 +866,36 @@ export function AssistantChat() {
               onClick={handleVoiceInput}
               variant="ghost"
               size="icon"
-              className="shrink-0 rounded-full"
-              title="Voice input (coming soon)"
+              className={`shrink-0 rounded-full relative ${isRecording ? 'bg-red-500 hover:bg-red-600' : ''}`}
+              title={isRecording ? "Stop recording" : "Voice input"}
             >
-              <Mic className="h-5 w-5" />
+              {isRecording ? (
+                <div className="relative h-5 w-5 flex items-center justify-center gap-0.5">
+                  {/* Audio visualization bars */}
+                  <div 
+                    className="w-0.5 bg-white rounded-full transition-all duration-75"
+                    style={{ height: `${Math.max(30, audioLevel * 100)}%` }}
+                  />
+                  <div 
+                    className="w-0.5 bg-white rounded-full transition-all duration-75"
+                    style={{ height: `${Math.max(40, audioLevel * 100 * 0.8)}%` }}
+                  />
+                  <div 
+                    className="w-0.5 bg-white rounded-full transition-all duration-75"
+                    style={{ height: `${Math.max(50, audioLevel * 100 * 1.2)}%` }}
+                  />
+                  <div 
+                    className="w-0.5 bg-white rounded-full transition-all duration-75"
+                    style={{ height: `${Math.max(40, audioLevel * 100 * 0.9)}%` }}
+                  />
+                  <div 
+                    className="w-0.5 bg-white rounded-full transition-all duration-75"
+                    style={{ height: `${Math.max(30, audioLevel * 100 * 0.7)}%` }}
+                  />
+                </div>
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
             </Button>
 
             <Button
